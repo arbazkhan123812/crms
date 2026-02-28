@@ -5,7 +5,7 @@
     <div class="content">
         <div class="page-header d-md-flex justify-content-between">
             <div class="mt-3 mt-md-0">
-                @can('add_user') 
+                @can('users.create') 
                 
                 <button class="btn btn-primary" onclick="openUserModal('add')">
                     <i class="fa fa-plus mr-2"></i> Add New Admins
