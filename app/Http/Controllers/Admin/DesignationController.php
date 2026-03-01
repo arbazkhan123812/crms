@@ -11,7 +11,8 @@ class DesignationController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Designation::with(['department']);
+        $query = Designation::with(['department'])
+                        ->withCount('employees');
         
         if ($request->filled('department_id')) {
             $query->where('department_id', $request->department_id);

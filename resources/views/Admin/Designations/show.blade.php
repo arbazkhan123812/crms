@@ -15,7 +15,7 @@
                 <a href="{{ route('admin.designations.edit', $designation) }}" class="btn btn-warning btn-sm">
                     <i class="fas fa-edit mr-1"></i> Edit
                 </a>
-                <a href="{{ route('admin.designations.index') }}" class="btn btn-outline-secondary btn-sm ml-2">
+                <a href="{{ route('admin.designations.index') }}" class="btn btn-secondary btn-sm ml-2">
                     <i class="fas fa-arrow-left mr-1"></i> Back to List
                 </a>
             </div>

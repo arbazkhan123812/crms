@@ -11,7 +11,7 @@ class DepartmentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Department::with(['parent', 'manager']);
+        $query = Department::with(['parent', 'manager'])->withCount('employees');
         
         if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
@@ -68,7 +68,7 @@ class DepartmentController extends Controller
                                       ->where('is_active', true)
                                       ->get();
         
-        $managers = Employee::where('status', 'active')->get();
+        $managers = Employee::where('status', 'active')->where('is_reporting_manager' , 1)->get();
         
         return view('admin.departments.edit', compact('department', 'parentDepartments', 'managers'));
     }

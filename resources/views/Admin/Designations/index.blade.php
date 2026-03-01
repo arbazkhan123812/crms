@@ -123,14 +123,14 @@
                                 @endif
                             </td>
                             <td class="text-right">
-                                <a href="{{ route('admin.designations.show', $designation) }}" class="btn btn-sm btn-link text-info">
-                                    <i class="fas fa-eye"></i>
+                                <a href="{{ route('admin.designations.show', $designation) }}" class="btn btn-sm btn-primary btn-link text-info">
+                                    view
                                 </a>
-                                <a href="{{ route('admin.designations.edit', $designation) }}" class="btn btn-sm btn-link text-warning">
-                                    <i class="fas fa-edit"></i>
+                                <a href="{{ route('admin.designations.edit', $designation) }}" class="btn btn-sm btn-primary btn-link text-warning">
+                                    edit
                                 </a>
-                                <button type="button" class="btn btn-sm btn-link text-danger" onclick="deleteDesignation({{ $designation->id }})">
-                                    <i class="fas fa-trash"></i>
+                                <button type="button" class="btn btn-sm btn-primary text-danger" onclick="deleteDesignation({{ $designation->id }})">
+                                    del
                                 </button>
                             </td>
                         </tr>

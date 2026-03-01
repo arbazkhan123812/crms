@@ -12,10 +12,10 @@
                 <p class="text-muted mb-0">View complete department information</p>
             </div>
             <div class="col-auto">
-                <a href="{{ route('admin.departments.edit', $department) }}" class="btn btn-warning btn-sm">
+                <a href="{{ route('admin.departments.edit', $department) }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-edit mr-1"></i> Edit
                 </a>
-                <a href="{{ route('admin.departments.index') }}" class="btn btn-outline-secondary btn-sm ml-2">
+                <a href="{{ route('admin.departments.index') }}" class="btn btn-primary btn-sm ml-2">
                     <i class="fas fa-arrow-left mr-1"></i> Back to List
                 </a>
             </div>

@@ -14,7 +14,7 @@
                 </div>
                 <div class="col-auto">
                     <a href="{{ route('admin.employees.create') }}" class="btn btn-primary btn-sm" ">
-                            <i class=" fas fa-plus mr-1"></i> Add Employee
+                                <i class=" fas fa-plus mr-1"></i> Add Employee
                     </a>
                     <div class="btn-group ml-2">
                         <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle"
@@ -171,17 +171,17 @@
                                         @endif
                                     </td>
                                     <td class="text-right">
-                                        <button type="button" class="btn btn-sm btn-link text-info"
+                                        <button type="button" class="btn btn-sm btn-primary text-info"
                                             onclick="viewEmployee({{ $employee->id }})" title="View">
-                                            <i class="fas fa-eye"></i>
+                                          details
                                         </button>
-<a href="{{ route('admin.employees.edit', $employee) }}" 
-   class="btn btn-sm btn-link text-warning" title="Edit">
-                                            <i class="fas fa-edit"></i>
+                                        <a href="{{ route('admin.employees.edit', $employee) }}"
+                                            class="btn btn-sm btn-primary text-warning" title="Edit">
+                                            edit
                                         </a>
-                                        <button type="button" class="btn btn-sm btn-link text-danger"
+                                        <button type="button" class="btn btn-sm btn-primary text-danger"
                                             onclick="deleteEmployee({{ $employee->id }})" title="Delete">
-                                            <i class="fas fa-trash"></i>
+                                            del
                                         </button>
                                     </td>
                                 </tr>
@@ -691,10 +691,10 @@
             if (count > 0) {
                 if ($('#bulkActionBtn').length == 0) {
                     $('.page-header .col-auto').append(`
-                        <button type="button" class="btn btn-warning btn-sm ml-2" id="bulkActionBtn" onclick="openBulkActionModal()">
-                            <i class="fas fa-tasks mr-1"></i> Bulk Actions
-                        </button>
-                    `);
+                            <button type="button" class="btn btn-warning btn-sm ml-2" id="bulkActionBtn" onclick="openBulkActionModal()">
+                                <i class="fas fa-tasks mr-1"></i> Bulk Actions
+                            </button>
+                        `);
                 }
             } else {
                 $('#bulkActionBtn').remove();
@@ -917,317 +917,317 @@
             });
         }
 
-// View employee function
-function viewEmployee(id) {
-    $('#viewEmployeeModal').modal('show');
-    $('#employeeDetails').html(`
-        <div class="text-center py-5">
-            <div class="spinner-border text-primary" role="status">
-                <span class="sr-only">Loading...</span>
-            </div>
-            <p class="mt-2 text-muted">Loading employee details...</p>
-        </div>
-    `);
-
-    $.ajax({
-        url: "{{ url('admin/employees') }}/" + id,
-        type: 'GET',
-        dataType: 'json',
-        success: function(response) {
-            let employee = response.employee;
-            let age = response.age;
-            let totalExperience = response.totalExperience;
-            let education = response.education || [];
-            let experience = response.experience || [];
-            let assets = response.assets || [];
-
-            let html = generateEmployeeProfile(employee, age, totalExperience, education, experience, assets);
-            $('#employeeDetails').html(html);
-        },
-        error: function() {
+        // View employee function
+        function viewEmployee(id) {
+            $('#viewEmployeeModal').modal('show');
             $('#employeeDetails').html(`
-                <div class="alert alert-danger m-4">
-                    <i class="fas fa-exclamation-circle mr-2"></i> Error loading employee details
+            <div class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
                 </div>
-            `);
+                <p class="mt-2 text-muted">Loading employee details...</p>
+            </div>
+        `);
+
+            $.ajax({
+                url: "{{ url('admin/employees') }}/" + id,
+                type: 'GET',
+                dataType: 'json',
+                success: function (response) {
+                    let employee = response.employee;
+                    let age = response.age;
+                    let totalExperience = response.totalExperience;
+                    let education = response.education || [];
+                    let experience = response.experience || [];
+                    let assets = response.assets || [];
+
+                    let html = generateEmployeeProfile(employee, age, totalExperience, education, experience, assets);
+                    $('#employeeDetails').html(html);
+                },
+                error: function () {
+                    $('#employeeDetails').html(`
+                    <div class="alert alert-danger m-4">
+                        <i class="fas fa-exclamation-circle mr-2"></i> Error loading employee details
+                    </div>
+                `);
+                }
+            });
         }
-    });
-}
 
-// Generate Clean Bootstrap 4 Profile HTML
-function generateEmployeeProfile(employee, age, totalExperience, education, experience, assets) {
-    const val = (data) => data && data !== null && data !== '' ? data : '-';
+        // Generate Clean Bootstrap 4 Profile HTML
+        function generateEmployeeProfile(employee, age, totalExperience, education, experience, assets) {
+            const val = (data) => data && data !== null && data !== '' ? data : '-';
 
-    const formatDate = (dateStr) => {
-        if (!dateStr) return '-';
-        let date = new Date(dateStr);
-        return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    };
+            const formatDate = (dateStr) => {
+                if (!dateStr) return '-';
+                let date = new Date(dateStr);
+                return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+            };
 
-    const formatCurrency = (amount) => {
-        if (!amount) return '-';
-        return 'PKR ' + Number(amount).toLocaleString();
-    };
+            const formatCurrency = (amount) => {
+                if (!amount) return '-';
+                return 'PKR ' + Number(amount).toLocaleString();
+            };
 
-    // Education HTML
-    let educationHtml = '';
-    if (education && education.length > 0) {
-        educationHtml = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Course</th><th>Institution</th><th>Marks</th><th>Year</th></tr></thead><tbody>';
-        education.forEach(edu => {
-            educationHtml += `<tr>
-                <td>${val(edu.course)}</td>
-                <td>${val(edu.institution)}</td>
-                <td>${edu.marks ? edu.marks + '%' : '-'}</td>
-                <td>${val(edu.year)}</td>
-            </tr>`;
-        });
-        educationHtml += '</tbody></table></div>';
-    } else {
-        educationHtml = '<p class="text-muted text-center py-3 mb-0">No education records</p>';
-    }
+            // Education HTML
+            let educationHtml = '';
+            if (education && education.length > 0) {
+                educationHtml = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Course</th><th>Institution</th><th>Marks</th><th>Year</th></tr></thead><tbody>';
+                education.forEach(edu => {
+                    educationHtml += `<tr>
+                    <td>${val(edu.course)}</td>
+                    <td>${val(edu.institution)}</td>
+                    <td>${edu.marks ? edu.marks + '%' : '-'}</td>
+                    <td>${val(edu.year)}</td>
+                </tr>`;
+                });
+                educationHtml += '</tbody></table></div>';
+            } else {
+                educationHtml = '<p class="text-muted text-center py-3 mb-0">No education records</p>';
+            }
 
-    // Experience HTML
-    let experienceHtml = '';
-    if (experience && experience.length > 0) {
-        experienceHtml = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Company</th><th>Designation</th><th>Period</th></tr></thead><tbody>';
-        experience.forEach(exp => {
-            let fromDate = exp.from_date ? new Date(exp.from_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '-';
-            let toDate = exp.is_current ? 'Present' : (exp.to_date ? new Date(exp.to_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '-');
-            experienceHtml += `<tr>
-                <td>${val(exp.company)} ${exp.is_current ? '<span class="badge badge-success">Current</span>' : ''}</td>
-                <td>${val(exp.designation)}</td>
-                <td>${fromDate} - ${toDate}</td>
-            </tr>`;
-        });
-        experienceHtml += '</tbody></table></div>';
-    } else {
-        experienceHtml = '<p class="text-muted text-center py-3 mb-0">No experience records</p>';
-    }
+            // Experience HTML
+            let experienceHtml = '';
+            if (experience && experience.length > 0) {
+                experienceHtml = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Company</th><th>Designation</th><th>Period</th></tr></thead><tbody>';
+                experience.forEach(exp => {
+                    let fromDate = exp.from_date ? new Date(exp.from_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '-';
+                    let toDate = exp.is_current ? 'Present' : (exp.to_date ? new Date(exp.to_date).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) : '-');
+                    experienceHtml += `<tr>
+                    <td>${val(exp.company)} ${exp.is_current ? '<span class="badge badge-success">Current</span>' : ''}</td>
+                    <td>${val(exp.designation)}</td>
+                    <td>${fromDate} - ${toDate}</td>
+                </tr>`;
+                });
+                experienceHtml += '</tbody></table></div>';
+            } else {
+                experienceHtml = '<p class="text-muted text-center py-3 mb-0">No experience records</p>';
+            }
 
-    // Assets HTML
-    let assetsHtml = '';
-    if (assets && assets.length > 0) {
-        assetsHtml = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Asset</th><th>Type</th><th>Serial No</th><th>Status</th></tr></thead><tbody>';
-        assets.forEach(asset => {
-            let statusClass = asset.status === 'assigned' ? 'success' : (asset.status === 'damaged' ? 'danger' : 'warning');
-            assetsHtml += `<tr>
-                <td>${val(asset.asset_name)}</td>
-                <td>${val(asset.asset_type)}</td>
-                <td>${val(asset.serial_no)}</td>
-                <td><span class="badge badge-${statusClass}">${val(asset.status)}</span></td>
-            </tr>`;
-        });
-        assetsHtml += '</tbody></table></div>';
-    } else {
-        assetsHtml = '<p class="text-muted text-center py-3 mb-0">No assets assigned</p>';
-    }
+            // Assets HTML
+            let assetsHtml = '';
+            if (assets && assets.length > 0) {
+                assetsHtml = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th>Asset</th><th>Type</th><th>Serial No</th><th>Status</th></tr></thead><tbody>';
+                assets.forEach(asset => {
+                    let statusClass = asset.status === 'assigned' ? 'success' : (asset.status === 'damaged' ? 'danger' : 'warning');
+                    assetsHtml += `<tr>
+                    <td>${val(asset.asset_name)}</td>
+                    <td>${val(asset.asset_type)}</td>
+                    <td>${val(asset.serial_no)}</td>
+                    <td><span class="badge badge-${statusClass}">${val(asset.status)}</span></td>
+                </tr>`;
+                });
+                assetsHtml += '</tbody></table></div>';
+            } else {
+                assetsHtml = '<p class="text-muted text-center py-3 mb-0">No assets assigned</p>';
+            }
 
-    // Main Profile HTML - SIMPLE AND CLEAN
-    return `
-        <div class="p-3">
-            <!-- Profile Header -->
-            <div class="row mb-4">
-                <div class="col-md-2 text-center">
-                    ${employee.profile_image ?
-                        `<img src="/storage/${employee.profile_image}" class="rounded-circle border" style="width: 100px; height: 100px; object-fit: cover;">` :
-                        `<div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px; font-size: 36px;">
-                            ${employee.first_name ? employee.first_name.charAt(0) : ''}${employee.last_name ? employee.last_name.charAt(0) : ''}
-                        </div>`
-                    }
+            // Main Profile HTML - SIMPLE AND CLEAN
+            return `
+            <div class="p-3">
+                <!-- Profile Header -->
+                <div class="row mb-4">
+                    <div class="col-md-2 text-center">
+                        ${employee.profile_image ?
+                    `<img src="/storage/${employee.profile_image}" class="rounded-circle border" style="width: 100px; height: 100px; object-fit: cover;">` :
+                    `<div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px; font-size: 36px;">
+                                ${employee.first_name ? employee.first_name.charAt(0) : ''}${employee.last_name ? employee.last_name.charAt(0) : ''}
+                            </div>`
+                }
+                    </div>
+                    <div class="col-md-6">
+                        <h5 class="mb-1">${employee.first_name || ''} ${employee.middle_name || ''} ${employee.last_name || ''}</h5>
+                        <p class="mb-1">
+                            <span class="badge badge-primary">${val(employee.employee_code)}</span>
+                            <span class="badge badge-${employee.status === 'active' ? 'success' : 'secondary'}">${employee.status || '-'}</span>
+                            ${employee.is_reporting_manager ? '<span class="badge badge-warning">Manager</span>' : ''}
+                        </p>
+                        <p class="mb-1">${employee.designation ? employee.designation.title : '-'}</p>
+                        <p class="mb-1">${employee.department ? employee.department.name : '-'}</p>
+                        <p class="mb-0">${employee.email || '-'}</p>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <div class="border rounded p-2 text-center">
+                                    <small>Joining</small><br>
+                                    ${formatDate(employee.joining_date)}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="border rounded p-2 text-center">
+                                    <small>Birth</small><br>
+                                    ${formatDate(employee.birth_date)}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-2 text-center">
+                                    <small>Age</small><br>
+                                    ${age ? age + ' yrs' : '-'}</strong>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="border rounded p-2 text-center">
+                                    <small>Experience</small><br>
+                                    ${totalExperience || '-'}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-md-6">
-                    <h5 class="mb-1">${employee.first_name || ''} ${employee.middle_name || ''} ${employee.last_name || ''}</h5>
-                    <p class="mb-1">
-                        <span class="badge badge-primary">${val(employee.employee_code)}</span>
-                        <span class="badge badge-${employee.status === 'active' ? 'success' : 'secondary'}">${employee.status || '-'}</span>
-                        ${employee.is_reporting_manager ? '<span class="badge badge-warning">Manager</span>' : ''}
-                    </p>
-                    <p class="mb-1">${employee.designation ? employee.designation.title : '-'}</p>
-                    <p class="mb-1">${employee.department ? employee.department.name : '-'}</p>
-                    <p class="mb-0">${employee.email || '-'}</p>
-                </div>
-                <div class="col-md-4">
-                    <div class="row">
-                        <div class="col-6 mb-2">
-                            <div class="border rounded p-2 text-center">
-                                <small>Joining</small><br>
-                                ${formatDate(employee.joining_date)}</strong>
+
+                <!-- Simple Navigation Tabs -->
+                <ul class="nav nav-tabs nav-justified mb-3" id="profileTabs" role="tablist">
+                    <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#work">Work</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#personal">Personal</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contact">Contact</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#salary">Salary</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#education">Education</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#experience">Experience</a></li>
+                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#assets">Assets</a></li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content">
+                    <!-- Work Tab -->
+                    <div class="tab-pane fade show active" id="work">
+                        <div class="border rounded p-3">
+                            <h6 class="font-weight-bold mb-3">Employment Details</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-2"><small>Department</small><br>${employee.department ? employee.department.name : '-'}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Designation</small><br>${employee.designation ? employee.designation.title : '-'}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Reporting To</small><br>${employee.reporting_to ? employee.reporting_to.full_name : '-'}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Employment Type</small><br>${val(employee.employment_type)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Level</small><br>${val(employee.employee_level)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Work Location</small><br>${val(employee.work_location)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Joining Date</small><br>${formatDate(employee.joining_date)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Confirmation</small><br>${formatDate(employee.confirmation_date)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Probation</small><br>${val(employee.probation_period)} months</strong></div>
+                                <div class="col-md-4 mb-2"><small>Notice Period</small><br>${val(employee.notice_period)} days</strong></div>
+                                <div class="col-md-4 mb-2"><small>CTC</small><br><strong class="">${formatCurrency(employee.ctc)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Experience Status</small><br>${val(employee.experience_status)}</strong></div>
                             </div>
                         </div>
-                        <div class="col-6 mb-2">
-                            <div class="border rounded p-2 text-center">
-                                <small>Birth</small><br>
-                                ${formatDate(employee.birth_date)}</strong>
+                    </div>
+
+                    <!-- Personal Tab -->
+                    <div class="tab-pane fade" id="personal">
+                        <div class="border rounded p-3">
+                            <h6 class="font-weight-bold mb-3">Personal Details</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-2"><small>Full Name</small><br>${employee.first_name || ''} ${employee.middle_name || ''} ${employee.last_name || ''}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Father's Name</small><br>${val(employee.father_name)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Mother's Name</small><br>${val(employee.mother_name)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>CNIC</small><br>${val(employee.cnic)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Gender</small><br>${val(employee.gender)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Date of Birth</small><br>${formatDate(employee.birth_date)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Blood Group</small><br>${val(employee.blood_group)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Marital Status</small><br>${val(employee.marital_status)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Nationality</small><br>${val(employee.nationality)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Religion</small><br>${val(employee.religion)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Hobbies</small><br>${val(employee.hobbies)}</strong></div>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <div class="border rounded p-2 text-center">
-                                <small>Age</small><br>
-                                ${age ? age + ' yrs' : '-'}</strong>
+                    </div>
+
+                    <!-- Contact Tab -->
+                    <div class="tab-pane fade" id="contact">
+                        <div class="border rounded p-3">
+                            <h6 class="font-weight-bold mb-3">Contact Information</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-4 mb-2"><small>Official Email</small><br>${val(employee.email)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Personal Email</small><br>${val(employee.personal_email)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Phone</small><br>${val(employee.phone)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>WhatsApp</small><br>${val(employee.whatsapp_number)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Alternate Phone</small><br>${val(employee.alternate_phone)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Emergency</small><br>${val(employee.emergency_phone)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Emergency Contact</small><br>${val(employee.emergency_contact_name)} (${val(employee.emergency_relation)})</strong></div>
+                            </div>
+
+                            <h6 class="font-weight-bold mt-3 mb-2">Present Address</h6>
+                            <p class="border rounded p-2 bg-light">
+                                ${val(employee.present_address_line1)}<br>
+                                ${employee.present_address_line2 ? employee.present_address_line2 + '<br>' : ''}
+                                ${val(employee.city)}, ${val(employee.state)}<br>
+                                ${val(employee.country)} - ${val(employee.postal_code)}
+                            </p>
+
+                            <h6 class="font-weight-bold mt-3 mb-2">Permanent Address</h6>
+                            <p class="border rounded p-2 bg-light">
+                                ${val(employee.permanent_address_line1)}<br>
+                                ${employee.permanent_address_line2 ? employee.permanent_address_line2 + '<br>' : ''}
+                                ${val(employee.permanent_city)}, ${val(employee.permanent_state)}<br>
+                                ${val(employee.permanent_country)} - ${val(employee.permanent_postal_code)}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Salary Tab -->
+                    <div class="tab-pane fade" id="salary">
+                        <div class="border rounded p-3">
+                            <h6 class="font-weight-bold mb-3">Salary & Bank Details</h6>
+                            <div class="row mb-3">
+                                <div class="col-md-6 mb-2">
+                                    <div class="border rounded p-2">
+                                        <small>Annual CTC</small><br>
+                                        <strong class="text-success">${formatCurrency(employee.ctc)}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <div class="border rounded p-2">
+                                        <small>Basic Salary</small><br>
+                                        ${formatCurrency(employee.basic_salary)}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-3 mb-2"><small>HRA</small><br>${formatCurrency(employee.hra)}</strong></div>
+                                <div class="col-md-3 mb-2"><small>DA</small><br>${formatCurrency(employee.da)}</strong></div>
+                                <div class="col-md-3 mb-2"><small>Conveyance</small><br>${formatCurrency(employee.conveyance)}</strong></div>
+                                <div class="col-md-3 mb-2"><small>Medical</small><br>${formatCurrency(employee.medical_allowance)}</strong></div>
+                            </div>
+
+                            <h6 class="font-weight-bold mt-3 mb-2">Bank Details</h6>
+                            <div class="row">
+                                <div class="col-md-4 mb-2"><small>Bank Name</small><br>${val(employee.bank_name)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Account Title</small><br>${val(employee.account_holder_name)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>Account Number</small><br>${val(employee.account_number)}</strong></div>
+                                <div class="col-md-4 mb-2"><small>IBAN</small><br>${val(employee.iban)}</strong></div>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <div class="border rounded p-2 text-center">
-                                <small>Experience</small><br>
-                                ${totalExperience || '-'}</strong>
+                    </div>
+
+                    <!-- Education Tab -->
+                    <div class="tab-pane fade" id="education">
+                        <div class="border rounded p-3">
+                            <h6 class="font-weight-bold mb-3">Education History</h6>
+                            ${educationHtml}
+                        </div>
+                    </div>
+
+                    <!-- Experience Tab -->
+                    <div class="tab-pane fade" id="experience">
+                        <div class="border rounded p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="font-weight-bold mb-0">Work Experience</h6>
+                                <span class="badge badge-info">Total: ${totalExperience || '-'}</span>
                             </div>
+                            ${experienceHtml}
+                        </div>
+                    </div>
+
+                    <!-- Assets Tab -->
+                    <div class="tab-pane fade" id="assets">
+                        <div class="border rounded p-3">
+                            <h6 class="font-weight-bold mb-3">Assigned Assets</h6>
+                            ${assetsHtml}
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Simple Navigation Tabs -->
-            <ul class="nav nav-tabs nav-justified mb-3" id="profileTabs" role="tablist">
-                <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#work">Work</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#personal">Personal</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#contact">Contact</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#salary">Salary</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#education">Education</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#experience">Experience</a></li>
-                <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#assets">Assets</a></li>
-            </ul>
-
-            <!-- Tab Content -->
-            <div class="tab-content">
-                <!-- Work Tab -->
-                <div class="tab-pane fade show active" id="work">
-                    <div class="border rounded p-3">
-                        <h6 class="font-weight-bold mb-3">Employment Details</h6>
-                        <div class="row">
-                            <div class="col-md-4 mb-2"><small>Department</small><br>${employee.department ? employee.department.name : '-'}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Designation</small><br>${employee.designation ? employee.designation.title : '-'}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Reporting To</small><br>${employee.reporting_to ? employee.reporting_to.full_name : '-'}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Employment Type</small><br>${val(employee.employment_type)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Level</small><br>${val(employee.employee_level)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Work Location</small><br>${val(employee.work_location)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Joining Date</small><br>${formatDate(employee.joining_date)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Confirmation</small><br>${formatDate(employee.confirmation_date)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Probation</small><br>${val(employee.probation_period)} months</strong></div>
-                            <div class="col-md-4 mb-2"><small>Notice Period</small><br>${val(employee.notice_period)} days</strong></div>
-                            <div class="col-md-4 mb-2"><small>CTC</small><br><strong class="">${formatCurrency(employee.ctc)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Experience Status</small><br>${val(employee.experience_status)}</strong></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Personal Tab -->
-                <div class="tab-pane fade" id="personal">
-                    <div class="border rounded p-3">
-                        <h6 class="font-weight-bold mb-3">Personal Details</h6>
-                        <div class="row">
-                            <div class="col-md-4 mb-2"><small>Full Name</small><br>${employee.first_name || ''} ${employee.middle_name || ''} ${employee.last_name || ''}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Father's Name</small><br>${val(employee.father_name)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Mother's Name</small><br>${val(employee.mother_name)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>CNIC</small><br>${val(employee.cnic)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Gender</small><br>${val(employee.gender)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Date of Birth</small><br>${formatDate(employee.birth_date)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Blood Group</small><br>${val(employee.blood_group)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Marital Status</small><br>${val(employee.marital_status)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Nationality</small><br>${val(employee.nationality)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Religion</small><br>${val(employee.religion)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Hobbies</small><br>${val(employee.hobbies)}</strong></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Contact Tab -->
-                <div class="tab-pane fade" id="contact">
-                    <div class="border rounded p-3">
-                        <h6 class="font-weight-bold mb-3">Contact Information</h6>
-                        <div class="row mb-3">
-                            <div class="col-md-4 mb-2"><small>Official Email</small><br>${val(employee.email)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Personal Email</small><br>${val(employee.personal_email)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Phone</small><br>${val(employee.phone)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>WhatsApp</small><br>${val(employee.whatsapp_number)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Alternate Phone</small><br>${val(employee.alternate_phone)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Emergency</small><br>${val(employee.emergency_phone)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Emergency Contact</small><br>${val(employee.emergency_contact_name)} (${val(employee.emergency_relation)})</strong></div>
-                        </div>
-                        
-                        <h6 class="font-weight-bold mt-3 mb-2">Present Address</h6>
-                        <p class="border rounded p-2 bg-light">
-                            ${val(employee.present_address_line1)}<br>
-                            ${employee.present_address_line2 ? employee.present_address_line2 + '<br>' : ''}
-                            ${val(employee.city)}, ${val(employee.state)}<br>
-                            ${val(employee.country)} - ${val(employee.postal_code)}
-                        </p>
-
-                        <h6 class="font-weight-bold mt-3 mb-2">Permanent Address</h6>
-                        <p class="border rounded p-2 bg-light">
-                            ${val(employee.permanent_address_line1)}<br>
-                            ${employee.permanent_address_line2 ? employee.permanent_address_line2 + '<br>' : ''}
-                            ${val(employee.permanent_city)}, ${val(employee.permanent_state)}<br>
-                            ${val(employee.permanent_country)} - ${val(employee.permanent_postal_code)}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- Salary Tab -->
-                <div class="tab-pane fade" id="salary">
-                    <div class="border rounded p-3">
-                        <h6 class="font-weight-bold mb-3">Salary & Bank Details</h6>
-                        <div class="row mb-3">
-                            <div class="col-md-6 mb-2">
-                                <div class="border rounded p-2">
-                                    <small>Annual CTC</small><br>
-                                    <strong class="text-success">${formatCurrency(employee.ctc)}</strong>
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-2">
-                                <div class="border rounded p-2">
-                                    <small>Basic Salary</small><br>
-                                    ${formatCurrency(employee.basic_salary)}</strong>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-md-3 mb-2"><small>HRA</small><br>${formatCurrency(employee.hra)}</strong></div>
-                            <div class="col-md-3 mb-2"><small>DA</small><br>${formatCurrency(employee.da)}</strong></div>
-                            <div class="col-md-3 mb-2"><small>Conveyance</small><br>${formatCurrency(employee.conveyance)}</strong></div>
-                            <div class="col-md-3 mb-2"><small>Medical</small><br>${formatCurrency(employee.medical_allowance)}</strong></div>
-                        </div>
-
-                        <h6 class="font-weight-bold mt-3 mb-2">Bank Details</h6>
-                        <div class="row">
-                            <div class="col-md-4 mb-2"><small>Bank Name</small><br>${val(employee.bank_name)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Account Title</small><br>${val(employee.account_holder_name)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>Account Number</small><br>${val(employee.account_number)}</strong></div>
-                            <div class="col-md-4 mb-2"><small>IBAN</small><br>${val(employee.iban)}</strong></div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Education Tab -->
-                <div class="tab-pane fade" id="education">
-                    <div class="border rounded p-3">
-                        <h6 class="font-weight-bold mb-3">Education History</h6>
-                        ${educationHtml}
-                    </div>
-                </div>
-
-                <!-- Experience Tab -->
-                <div class="tab-pane fade" id="experience">
-                    <div class="border rounded p-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h6 class="font-weight-bold mb-0">Work Experience</h6>
-                            <span class="badge badge-info">Total: ${totalExperience || '-'}</span>
-                        </div>
-                        ${experienceHtml}
-                    </div>
-                </div>
-
-                <!-- Assets Tab -->
-                <div class="tab-pane fade" id="assets">
-                    <div class="border rounded p-3">
-                        <h6 class="font-weight-bold mb-3">Assigned Assets</h6>
-                        ${assetsHtml}
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-}        function deleteEmployee(id) {
+        `;
+        } function deleteEmployee(id) {
             if (confirm('Are you sure you want to delete this employee?')) {
                 $.ajax({
                     url: '/admin/employees/' + id,

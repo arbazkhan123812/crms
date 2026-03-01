@@ -346,7 +346,7 @@
                                     </div>
                                     <span class="badge badge-light ml-auto">${operations.length}</span>
                                     <button type="button" 
-                                            class="btn btn-sm btn-link text-dark ml-2 toggle-operations" 
+                                            class="btn btn-sm btn-primary text-dark ml-2 toggle-operations" 
                                             data-module-id="${moduleId}">
                                         <i class="fas fa-chevron-down"></i>
                                     </button>

@@ -25,20 +25,22 @@
                     <span>User Management</span>
                 </a>
                 <ul>
-                    
+
                     <li>
                         {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/users/index') }}" class="{{ request()->is('admin/users*') ? 'active' : '' }}">
+                        <a href="{{ url('admin/users/index') }}"
+                            class="{{ request()->is('admin/users*') ? 'active' : '' }}">
                             <span class="nav-link-icon">
                                 <i class="fas fa-users"></i>
                             </span>
                             <span>Users</span>
                         </a>
                     </li>
-        
+
                     <li>
                         {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/roles/index') }}" class="{{ request()->is('admin/roles*') ? 'active' : '' }}">
+                        <a href="{{ url('admin/roles/index') }}"
+                            class="{{ request()->is('admin/roles*') ? 'active' : '' }}">
                             <span class="nav-link-icon"><i data-feather="star"></i></span>
                             <span>Roles</span>
                         </a>
@@ -53,38 +55,71 @@
                     </li>
                 </ul>
             </li>
-             <li>
-                <a href="{{ url('admin/companies') }}" class="{{ request()->is('admin/companies') ? 'active' : '' }}">
+            <li>
+                <a href="#">
                     <span class="nav-link-icon">
-                        <i class="fas fa-home"></i>
+                        <i data-feather="user"></i>
                     </span>
-                    <span>Company</span>
+                    <span>Employees</span>
                 </a>
+                <ul>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/employees/create') }}"
+                            class="{{ request()->is('admin/users/create') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="users"></i>
+                            </span>
+                            <span>Add Employees</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/employees') }}"
+                            class="{{ request()->is('admin/employees') ? 'active' : '' }}">
+                            <span class="nav-link-icon"><i data-feather="eye"></i></span>
+                            <span>View Employees</span>
+                        </a>
+                    </li>
+
+                </ul>
             </li>
-             <li>
-                <a href="{{ url('admin/employees') }}" class="{{ request()->is('admin/employees') ? 'active' : '' }}">
+            <li>
+                <a href="#">
                     <span class="nav-link-icon">
-                        <i class="fas fa-home"></i>
+                        <i data-feather="user"></i>
                     </span>
-                    <span>Employess</span>
+                    <span>Designations</span>
                 </a>
+                <ul>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/designation/create') }}"
+                            class="{{ request()->is('admin/designation/create') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="users"></i>
+                            </span>
+                            <span>Add Designation</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/designation') }}"
+                            class="{{ request()->is('admin/designation') ? 'active' : '' }}">
+                            <span class="nav-link-icon"><i data-feather="eye"></i></span>
+                            <span>View Designation</span>
+                        </a>
+                    </li>
+
+                </ul>
             </li>
-             <li>
-                <a href="{{ url('admin/departments') }}" class="{{ request()->is('admin/departments') ? 'active' : '' }}">
-                    <span class="nav-link-icon">
-                        <i class="fas fa-home"></i>
-                    </span>
-                    <span>Departments</span>
-                </a>
-            </li>
-             <li>
-                <a href="{{ url('admin/designations') }}" class="{{ request()->is('admin/designations') ? 'active' : '' }}">
-                    <span class="nav-link-icon">
-                        <i class="fas fa-home"></i>
-                    </span>
-                    <span>Designation</span>
-                </a>
-            </li>
+           
+            
+            
         </ul>
     </div>
 </div>

@@ -15,7 +15,7 @@
                 <a href="{{ route('admin.departments.create') }}" class="btn btn-primary btn-sm">
                     <i class="fas fa-plus mr-1"></i> Add Department
                 </a>
-                <a href="{{ route('admin.departments.hierarchy') }}" class="btn btn-outline-secondary btn-sm ml-2">
+                <a href="{{ route('admin.departments.hierarchy') }}" class="btn btn-primary btn-sm ml-2">
                     <i class="fas fa-project-diagram mr-1"></i> View Hierarchy
                 </a>
             </div>
@@ -118,13 +118,13 @@
                                 @endif
                             </td>
                             <td class="text-right">
-                                <a href="{{ route('admin.departments.show', $department) }}" class="btn btn-sm btn-link text-info">
+                                <a href="{{ route('admin.departments.show', $department) }}" class="btn btn-sm btn-primary text-info">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{{ route('admin.departments.edit', $department) }}" class="btn btn-sm btn-link text-warning">
+                                <a href="{{ route('admin.departments.edit', $department) }}" class="btn btn-sm btn-primary text-warning">
                                     <i class="fas fa-edit"></i>
                                 </a>
-                                <button type="button" class="btn btn-sm btn-link text-danger" onclick="deleteDepartment({{ $department->id }})">
+                                <button type="button" class="btn btn-sm btn-primary text-danger" onclick="deleteDepartment({{ $department->id }})">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
