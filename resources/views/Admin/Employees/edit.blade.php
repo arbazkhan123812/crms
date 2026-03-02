@@ -49,6 +49,15 @@
 
     <form id="employeeForm" action="{{ route('admin.employees.update', $employee->id) }}" method="POST" enctype="multipart/form-data">
         @csrf
+@if ($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm mb-4">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
         @method('PUT')
 
         <!-- BASIC INFORMATION -->

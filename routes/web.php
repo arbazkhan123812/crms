@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\PermissionController;
+use App\Http\Controllers\Admin\RecruitmentController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
@@ -45,8 +46,40 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('/permissions/copy-role-to-user', [PermissionController::class, 'copyRoleToUser'])->name('permissions.copy-role-to-user');
     Route::resource('companies', CompanyController::class);
 
+    // Recruitment Module
+    Route::get('recruitment', [RecruitmentController::class, 'index'])->name('recruitment.index');
+
+    // Jobs
+    Route::get('recruitment/jobs', [RecruitmentController::class, 'jobs'])->name('recruitment.jobs');
+    Route::get('recruitment/jobs/create', [RecruitmentController::class, 'createJob'])->name('recruitment.jobs.create');
+    Route::post('recruitment/jobs', [RecruitmentController::class, 'storeJob'])->name('recruitment.jobs.store');
+    Route::get('recruitment/jobs/{id}', [RecruitmentController::class, 'showJob'])->name('recruitment.jobs.show');
+    Route::get('recruitment/jobs/{id}/edit', [RecruitmentController::class, 'editJob'])->name('recruitment.jobs.edit');
+    Route::put('recruitment/jobs/{id}', [RecruitmentController::class, 'updateJob'])->name('recruitment.jobs.update');
+    Route::post('recruitment/jobs/{id}/status', [RecruitmentController::class, 'updateJobStatus'])->name('recruitment.jobs.status');
+
+    // Candidates
+    Route::get('recruitment/candidates', [RecruitmentController::class, 'candidates'])->name('recruitment.candidates');
+    Route::get('recruitment/candidates/create', [RecruitmentController::class, 'createCandidate'])->name('recruitment.candidates.create');
+    Route::post('recruitment/candidates', [RecruitmentController::class, 'storeCandidate'])->name('recruitment.candidates.store');
+    Route::get('recruitment/candidates/{id}', [RecruitmentController::class, 'showCandidate'])->name('recruitment.candidates.show');
+    Route::post('recruitment/candidates/{id}/status', [RecruitmentController::class, 'updateCandidateStatus'])->name('recruitment.candidates.status');
+    // Delete routes - using GET for simple href delete
+    Route::get('recruitment/jobs/{id}/delete', [RecruitmentController::class, 'destroyJob'])
+        ->name('recruitment.jobs.destroy');
+
+    Route::get('recruitment/candidates/{id}/delete', [RecruitmentController::class, 'destroyCandidate'])
+        ->name('recruitment.candidates.destroy');
+
+    Route::get('recruitment/interviews/{id}/delete', [RecruitmentController::class, 'destroyInterview'])
+        ->name('recruitment.interviews.destroy');
+
+    // Interviews
+    Route::get('recruitment/interviews', [RecruitmentController::class, 'interviews'])->name('recruitment.interviews');
+    Route::post('recruitment/interviews/schedule', [RecruitmentController::class, 'scheduleInterview'])->name('recruitment.interviews.schedule');
+    Route::post('recruitment/interviews/feedback/{id}', [RecruitmentController::class, 'updateInterviewFeedback'])->name('recruitment.interviews.feedback');
     // Additional company routes
-     Route::get('company', [CompanyController::class, 'index'])->name('companies.index');
+    Route::get('company', [CompanyController::class, 'index'])->name('companies.index');
     Route::post('company/update', [CompanyController::class, 'update'])->name('companies.update');
     Route::get('company/edit', [CompanyController::class, 'edit'])->name('companies.edit');
     Route::post('company/upload-logo', [CompanyController::class, 'uploadLogo'])->name('companies.upload-logo');

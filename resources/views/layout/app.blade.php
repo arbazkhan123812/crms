@@ -101,6 +101,10 @@
 <script>
     $(document).ready(function () {
 
+        $(document).ready(function() {
+    $('#myTable').DataTable();
+});
+
         // Function to initialize or update NiceScroll
         function initializeNiceScroll() {
             $(".content").niceScroll(); // Initialize

@@ -29,6 +29,15 @@
         <div class="card-body">
             <form action="{{ route('admin.departments.store') }}" method="POST">
                 @csrf
+@if ($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm mb-4">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
                 
                 <div class="row">
                     <div class="col-md-6">

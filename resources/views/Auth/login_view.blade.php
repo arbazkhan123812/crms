@@ -471,6 +471,15 @@
                     
                     <form class="login-form" id="loginForm">
                        @csrf
+@if ($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm mb-4">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
                         <div class="form-group">
                             <label class="form-label" for="identity">Username or Email</label>
                             <div class="input-with-icon">

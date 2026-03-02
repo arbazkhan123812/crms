@@ -83,6 +83,9 @@
 		height: 36px !important;
 	}
 
+	.table-responsive{
+		padding: 10px !important;
+	}
 	.select2-container--default .select2-selection--single .select2-selection__rendered {
 		line-height: 36px !important;
 	}

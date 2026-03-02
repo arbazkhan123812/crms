@@ -11,39 +11,39 @@ return new class extends Migration
      *
      * @return void
      */
-    public function up()
+   public function up()
     {
         Schema::create('jobs', function (Blueprint $table) {
             $table->id();
             $table->string('title');
-            $table->foreignId('department_id')->constrained();
-            $table->foreignId('designation_id')->constrained();
+            $table->foreignId('department_id')->constrained()->onDelete('cascade');
+            $table->foreignId('designation_id')->constrained()->onDelete('cascade');
             $table->integer('vacancies');
             $table->text('description');
             $table->text('requirements');
-            $table->enum('type', ['full_time', 'part_time', 'contract', 'internship']);
-            $table->enum('status', ['draft', 'published', 'closed'])->default('draft');
+            $table->text('responsibilities')->nullable();
+            $table->text('qualifications')->nullable();
+            $table->enum('experience_level', ['entry', 'mid', 'senior', 'lead', 'manager'])->default('mid');
+            $table->enum('job_type', ['full_time', 'part_time', 'contract', 'internship', 'remote'])->default('full_time');
+            $table->enum('status', ['draft', 'published', 'closed', 'on_hold'])->default('draft');
             $table->date('posted_date');
             $table->date('closing_date');
             $table->decimal('min_salary', 15, 2)->nullable();
             $table->decimal('max_salary', 15, 2)->nullable();
+            $table->string('location')->nullable();
+            $table->json('skills_required')->nullable();
+            $table->json('benefits')->nullable();
+            $table->integer('views_count')->default(0);
+            $table->integer('applications_count')->default(0);
+            $table->foreignId('created_by')->constrained('users');
             $table->timestamps();
-        });
+            $table->softDeletes();
 
-        Schema::create('candidates', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('job_id')->constrained();
-            $table->string('name');
-            $table->string('email');
-            $table->string('phone');
-            $table->string('resume')->nullable();
-            $table->enum('status', ['applied', 'shortlisted', 'interviewed', 'hired', 'rejected'])->default('applied');
-            $table->integer('experience_years')->nullable();
-            $table->text('skills')->nullable();
-            $table->date('applied_date');
-            $table->timestamps();
+            $table->index(['status', 'closing_date']);
+            $table->index('posted_date');
         });
     }
+
 
     /**
      * Reverse the migrations.

@@ -118,6 +118,70 @@
                 </ul>
             </li>
            
+            <li>
+                <a href="#">
+                    <span class="nav-link-icon">
+                        <i data-feather="user"></i>
+                    </span>
+                    <span>Recruitment</span>
+                </a>
+                <ul>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/recruitment/jobs/create') }}"
+                            class="{{ request()->is('admin/recruitment/jobs/create') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="users"></i>
+                            </span>
+                            <span>Add Recruitment</span>
+                        </a>
+                    </li>
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/recruitment') }}"
+                            class="{{ request()->is('admin/recruitment/jobs/') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="eye"></i>
+                            </span>
+                            <span>View Recruitments</span>
+                        </a>
+                    </li>
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/recruitment/candidates/create') }}"
+                            class="{{ request()->is('admin/candidates/create') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="eye"></i>
+                            </span>
+                            <span>Add Candidates</span>
+                        </a>
+                    </li>
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/recruitment/candidates') }}"
+                            class="{{ request()->is('admin/recruitment/candidates') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="eye"></i>
+                            </span>
+                            <span>View Candidates</span>
+                        </a>
+                    </li>
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/recruitment/jobs') }}"
+                            class="{{ request()->is('admin/recruitment/jobs') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="eye"></i>
+                            </span>
+                            <span>View Jobs</span>
+                        </a>
+                    </li>
+
+
+                </ul>
+            </li>
+           
             
             
         </ul>

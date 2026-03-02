@@ -39,6 +39,15 @@
                         
                         <form id="logoUploadForm" enctype="multipart/form-data" style="display: none;">
                             @csrf
+@if ($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm mb-4">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
                             <input type="file" id="logoUpload" name="logo" accept="image/*" onchange="uploadLogo(this)">
                         </form>
                     </div>
@@ -208,6 +217,15 @@
             
             <form id="companyEditForm" enctype="multipart/form-data">
                 @csrf
+@if ($errors->any())
+        <div class="alert alert-danger border-0 shadow-sm mb-4">
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
                 <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                     <!-- Basic Information -->
                     <div class="card mb-3 border">
