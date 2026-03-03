@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Employee extends Model
@@ -147,6 +148,9 @@ class Employee extends Model
         return trim($this->first_name . ' ' . $this->middle_name . ' ' . $this->last_name);
     }
 
+    public function attendance(){
+        return $this->HasMany(Attendance::class,'employee_id');
+    }
     public function getAgeAttribute()
     {
         return $this->birth_date ? $this->birth_date->age : null;
@@ -162,4 +166,11 @@ class Employee extends Model
         }
         return floor($totalDays / 365) . ' years ' . floor(($totalDays % 365) / 30) . ' months';
     }
+    public function getShiftAttribute()
+{
+    if ($this->designation) {
+        return $this->designation;
+    }
+    return null;
+}
 }

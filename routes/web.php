@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
@@ -113,7 +114,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         ->name('employees.delete');
 
     Route::get('get-designations/{departmentId}', [EmployeeController::class, 'getDesignationsByDepartment'])
-    ->name('getDesignations');
+        ->name('getDesignations');
 
     Route::post('employees/import/excel', [EmployeeController::class, 'import'])
         ->name('employees.import');
@@ -149,6 +150,25 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         ->name('employees.bulk.delete');
     Route::post('employees/bulk/status-update', [EmployeeController::class, 'bulkStatusUpdate'])
         ->name('employees.bulk.status-update');
+
+    Route::put('attendance/update', [AttendanceController::class, 'update'])->name('attendance.update');
+
+
+    Route::delete('attendance/{id}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
+    // Attendance Routes
+    Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::post('attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
+    Route::post('attendance/bulk', [AttendanceController::class, 'markBulkAttendance'])->name('attendance.bulk');
+    Route::get('attendance/monthly', [AttendanceController::class, 'monthlyReport'])->name('attendance.monthly');
+
+    Route::get('attendance/employee/{id}/shift', [AttendanceController::class, 'getEmployeeShift'])
+        ->name('attendance.employee.shift');
+    Route::get('attendance/today-status', [AttendanceController::class, 'getTodayShiftStatus'])
+        ->name('attendance.today-status');
+    // Employee Check-in/Check-out (for mobile/web)
+    Route::post('attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
+    Route::post('attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
+    Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
 });
 Route::get('/', [AuthController::class, 'index']);
 Route::post('/Auth/login', [AuthController::class, 'process_login'])->name('auth.login.process');

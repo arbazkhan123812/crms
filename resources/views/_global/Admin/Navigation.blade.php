@@ -148,6 +148,7 @@
 
                 </ul>
             </li>
+            
            
             <li>
                 <a href="#">
@@ -213,6 +214,39 @@
                 </ul>
             </li>
            
+             <li>
+                <a href="#">
+                    <span class="nav-link-icon">
+                        <i data-feather="user"></i>
+                    </span>
+                    <span>Attendance</span>
+                </a>
+                <ul>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/attendance') }}"
+                            class="{{ request()->is('admin/attendance') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="users"></i>
+                            </span>
+                            <span>View Attendance</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/attendance/monthly') }}"
+                            class="{{ request()->is('admin/attendance/monthly') ? 'active' : '' }}">
+                            <span class="nav-link-icon"><i data-feather="eye"></i></span>
+                            <span>View Attendance Monthly</span>
+                        </a>
+                    </li>
+
+                </ul>
+            </li>
+            
+
             
             
         </ul>
