@@ -97,7 +97,7 @@
 
                     <li>
                         {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/designation/create') }}"
+                        <a href="{{ url('admin/designations/create') }}"
                             class="{{ request()->is('admin/designation/create') ? 'active' : '' }}">
                             <span class="nav-link-icon">
                                 <i data-feather="users"></i>
@@ -108,10 +108,41 @@
 
                     <li>
                         {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/designation') }}"
+                        <a href="{{ url('admin/designations') }}"
                             class="{{ request()->is('admin/designation') ? 'active' : '' }}">
                             <span class="nav-link-icon"><i data-feather="eye"></i></span>
                             <span>View Designation</span>
+                        </a>
+                    </li>
+
+                </ul>
+            </li>
+            <li>
+                <a href="#">
+                    <span class="nav-link-icon">
+                        <i data-feather="user"></i>
+                    </span>
+                    <span>Departments</span>
+                </a>
+                <ul>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/departments/create') }}"
+                            class="{{ request()->is('admin/designation/create') ? 'active' : '' }}">
+                            <span class="nav-link-icon">
+                                <i data-feather="users"></i>
+                            </span>
+                            <span>Add Departments</span>
+                        </a>
+                    </li>
+
+                    <li>
+                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                        <a href="{{ url('admin/departments') }}"
+                            class="{{ request()->is('admin/designation') ? 'active' : '' }}">
+                            <span class="nav-link-icon"><i data-feather="eye"></i></span>
+                            <span>View Departments</span>
                         </a>
                     </li>
 

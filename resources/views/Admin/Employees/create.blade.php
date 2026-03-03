@@ -49,15 +49,15 @@
 
         <form id="employeeForm" action="{{ route('admin.employees.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
-@if ($errors->any())
-        <div class="alert alert-danger border-0 shadow-sm mb-4">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+            @if ($errors->any())
+                <div class="alert alert-danger border-0 shadow-sm mb-4">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <!-- BASIC INFORMATION -->
             <div class="card mb-4">
@@ -351,7 +351,7 @@
                             </div>
                         </div>
 
-                       
+
 
                         <!-- Emergency Contact Person -->
                         <div class="col-md-4">
@@ -866,20 +866,27 @@
                                 <div class="experience-entry border rounded p-2 mb-2">
                                     <div class="row">
                                         <div class="col-md-3">
+                                            <label for="">Company Name</label>
                                             <input type="text" class="form-control form-control-sm"
                                                 name="experience[{{ $index }}][company]" value="{{ $exp['company'] }}"
                                                 placeholder="Company">
                                         </div>
                                         <div class="col-md-3">
+                                            <label for="">Designation</label>
+
                                             <input type="text" class="form-control form-control-sm"
                                                 name="experience[{{ $index }}][designation]" value="{{ $exp['designation'] }}"
                                                 placeholder="Designation">
                                         </div>
                                         <div class="col-md-2">
+                                            <label for="">Starting Date</label>
+
                                             <input type="date" class="form-control form-control-sm"
                                                 name="experience[{{ $index }}][from]" value="{{ $exp['from'] }}">
                                         </div>
                                         <div class="col-md-2">
+                                            <label for="">Ending Date</label>
+
                                             <input type="date" class="form-control form-control-sm"
                                                 name="experience[{{ $index }}][to]" value="{{ $exp['to'] }}">
                                         </div>
@@ -895,17 +902,24 @@
                             <div class="experience-entry border rounded p-2 mb-2">
                                 <div class="row">
                                     <div class="col-md-3">
+                                        <label for="">Company Name</label>
+
                                         <input type="text" class="form-control form-control-sm" name="experience[0][company]"
                                             placeholder="Company Name">
                                     </div>
                                     <div class="col-md-3">
+                                        <label for=""> Designation</label>
+
                                         <input type="text" class="form-control form-control-sm"
                                             name="experience[0][designation]" placeholder="Designation">
                                     </div>
                                     <div class="col-md-2">
+                                        <label for="">Starting Date</label>
+
                                         <input type="date" class="form-control form-control-sm" name="experience[0][from]">
                                     </div>
                                     <div class="col-md-2">
+                                        Ending Date
                                         <input type="date" class="form-control form-control-sm" name="experience[0][to]">
                                     </div>
                                     <div class="col-md-2">
@@ -933,18 +947,9 @@
                         <div class="col-md-3">
                             <div class="form-group mb-2">
                                 <label class="form-label">Bank Name</label>
-                                <select class="form-control form-control-sm" id="bank_name" name="bank_name">
-                                    <option value="">Select Bank</option>
-                                    <option value="habib" {{ old('bank_name') == 'habib' ? 'selected' : '' }}>Habib Bank (HBL)
-                                    </option>
-                                    <option value="allied" {{ old('bank_name') == 'allied' ? 'selected' : '' }}>Allied Bank
-                                    </option>
-                                    <option value="meezan" {{ old('bank_name') == 'meezan' ? 'selected' : '' }}>Meezan Bank
-                                    </option>
-                                    <option value="ubl" {{ old('bank_name') == 'ubl' ? 'selected' : '' }}>UBL</option>
-                                    <option value="alfalah" {{ old('bank_name') == 'alfalah' ? 'selected' : '' }}>Bank Alfalah
-                                    </option>
-                                </select>
+                                <input class="form-control form-control-sm" id="bank_name" name="bank_name">
+
+                                </input>
                             </div>
                         </div>
 
@@ -1151,7 +1156,7 @@
                         @endif
                     </div>
 
-                   
+
                 </div>
             </div>
 
@@ -1271,6 +1276,37 @@
                 }
             }
 
+            $('#department_id').on('change', function () {
+                let departmentId = $(this).val();
+                let designationSelect = $('#designation_id');
+
+                // Dropdown clear karein aur loading dikhayen
+                designationSelect.html('<option value="">Loading...</option>');
+
+                if (departmentId) {
+                    // URL replacement strategy
+                    let url = "{{ route('admin.getDesignations', ':id') }}";
+                    url = url.replace(':id', departmentId);
+
+                    $.ajax({
+                        url: url,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (data) {
+                            designationSelect.html('<option value="">Select Designation</option>');
+
+                            $.each(data, function (key, value) {
+                                designationSelect.append('<option value="' + value.id + '">' + value.title + '</option>');
+                            });
+                        },
+                        error: function () {
+                            designationSelect.html('<option value="">Error loading data</option>');
+                        }
+                    });
+                } else {
+                    designationSelect.html('<option value="">Select Designation</option>');
+                }
+            });
             $('#first_name, #last_name').on('keyup change', updateFullName);
 
             // Calculate age from birth date
@@ -1344,30 +1380,30 @@
             // Add Education
             $('#add-education').click(function () {
                 let html = `
-                                <div class="education-entry border rounded p-2 mb-2">
-                                    <div class="row">
-                                        <div class="col-md-4">
-                                            <input type="text" class="form-control form-control-sm" name="education[${educationIndex}][course]" placeholder="Course/Degree">
-                                        </div>
-                                        <div class="col-md-4">
-                                            <input type="text" class="form-control form-control-sm" name="education[${educationIndex}][institution]" placeholder="Institution">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <input type="number" class="form-control form-control-sm" name="education[${educationIndex}][marks]" placeholder="Marks %">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="input-group">
-                                                <input type="text" class="form-control form-control-sm" name="education[${educationIndex}][year]" placeholder="Year">
-                                                <div class="input-group-append">
-                                                    <button type="button" class="btn btn-sm btn-danger remove-entry">
-                                                        <i class="fas fa-times"></i>
-                                                    </button>
+                                        <div class="education-entry border rounded p-2 mb-2">
+                                            <div class="row">
+                                                <div class="col-md-4">
+                                                    <input type="text" class="form-control form-control-sm" name="education[${educationIndex}][course]" placeholder="Course/Degree">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <input type="text" class="form-control form-control-sm" name="education[${educationIndex}][institution]" placeholder="Institution">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <input type="number" class="form-control form-control-sm" name="education[${educationIndex}][marks]" placeholder="Marks %">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control form-control-sm" name="education[${educationIndex}][year]" placeholder="Year">
+                                                        <div class="input-group-append">
+                                                            <button type="button" class="btn btn-sm btn-danger remove-entry">
+                                                                <i class="fas fa-times"></i>
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </div>
-                            `;
+                                    `;
                 $('#education-container').append(html);
                 educationIndex++;
             });
@@ -1383,45 +1419,45 @@
 
             function addAssetEntry(index) {
                 let html = `
-            <div class="asset-entry border rounded p-2 mb-2">
-                <div class="row">
-                    <div class="col-md-2">
-                        <select class="form-control form-control-sm" name="assets[${index}][type]">
-                            <option value="">Asset Type</option>
-                            <option value="laptop">Laptop</option>
-                            <option value="mobile">Mobile</option>
-                            <option value="tablet">Tablet</option>
-                            <option value="vehicle">Vehicle</option>
-                            <option value="other">Other</option>
-                        </select>
+                    <div class="asset-entry border rounded p-2 mb-2">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <select class="form-control form-control-sm" name="assets[${index}][type]">
+                                    <option value="">Asset Type</option>
+                                    <option value="laptop">Laptop</option>
+                                    <option value="mobile">Mobile</option>
+                                    <option value="tablet">Tablet</option>
+                                    <option value="vehicle">Vehicle</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control form-control-sm" name="assets[${index}][name]" 
+                                    placeholder="Asset Name">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control form-control-sm" name="assets[${index}][serial_no]" 
+                                    placeholder="Serial #">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-control form-control-sm" name="assets[${index}][status]">
+                                    <option value="assigned">Assigned</option>
+                                    <option value="returned">Returned</option>
+                                    <option value="damaged">Damaged</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" class="form-control form-control-sm" name="assets[${index}][given_on]" 
+                                    value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-sm btn-danger remove-entry w-100">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control form-control-sm" name="assets[${index}][name]" 
-                            placeholder="Asset Name">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" name="assets[${index}][serial_no]" 
-                            placeholder="Serial #">
-                    </div>
-                    <div class="col-md-2">
-                        <select class="form-control form-control-sm" name="assets[${index}][status]">
-                            <option value="assigned">Assigned</option>
-                            <option value="returned">Returned</option>
-                            <option value="damaged">Damaged</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="date" class="form-control form-control-sm" name="assets[${index}][given_on]" 
-                            value="${new Date().toISOString().split('T')[0]}">
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-sm btn-danger remove-entry w-100">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+                `;
                 $('#assets-container').append(html);
             }
 
@@ -1449,45 +1485,45 @@
                 }
 
                 let html = `
-            <div class="asset-entry border rounded p-2 mb-2">
-                <div class="row">
-                    <div class="col-md-2">
-                        <select class="form-control form-control-sm" name="assets[${index}][type]">
-                            <option value="">Asset Type</option>
-                            <option value="laptop" ${type == 'laptop' ? 'selected' : ''}>Laptop</option>
-                            <option value="mobile" ${type == 'mobile' ? 'selected' : ''}>Mobile</option>
-                            <option value="tablet" ${type == 'tablet' ? 'selected' : ''}>Tablet</option>
-                            <option value="vehicle" ${type == 'vehicle' ? 'selected' : ''}>Vehicle</option>
-                            <option value="other" ${type == 'other' ? 'selected' : ''}>Other</option>
-                        </select>
+                    <div class="asset-entry border rounded p-2 mb-2">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <select class="form-control form-control-sm" name="assets[${index}][type]">
+                                    <option value="">Asset Type</option>
+                                    <option value="laptop" ${type == 'laptop' ? 'selected' : ''}>Laptop</option>
+                                    <option value="mobile" ${type == 'mobile' ? 'selected' : ''}>Mobile</option>
+                                    <option value="tablet" ${type == 'tablet' ? 'selected' : ''}>Tablet</option>
+                                    <option value="vehicle" ${type == 'vehicle' ? 'selected' : ''}>Vehicle</option>
+                                    <option value="other" ${type == 'other' ? 'selected' : ''}>Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="text" class="form-control form-control-sm" name="assets[${index}][name]" 
+                                    value="${assetName}" placeholder="Asset Name">
+                            </div>
+                            <div class="col-md-2">
+                                <input type="text" class="form-control form-control-sm" name="assets[${index}][serial_no]" 
+                                    placeholder="${serialPlaceholder}XXXX">
+                            </div>
+                            <div class="col-md-2">
+                                <select class="form-control form-control-sm" name="assets[${index}][status]">
+                                    <option value="assigned" selected>Assigned</option>
+                                    <option value="returned">Returned</option>
+                                    <option value="damaged">Damaged</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <input type="date" class="form-control form-control-sm" name="assets[${index}][given_on]" 
+                                    value="${new Date().toISOString().split('T')[0]}">
+                            </div>
+                            <div class="col-md-1">
+                                <button type="button" class="btn btn-sm btn-danger remove-entry w-100">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-md-3">
-                        <input type="text" class="form-control form-control-sm" name="assets[${index}][name]" 
-                            value="${assetName}" placeholder="Asset Name">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="text" class="form-control form-control-sm" name="assets[${index}][serial_no]" 
-                            placeholder="${serialPlaceholder}XXXX">
-                    </div>
-                    <div class="col-md-2">
-                        <select class="form-control form-control-sm" name="assets[${index}][status]">
-                            <option value="assigned" selected>Assigned</option>
-                            <option value="returned">Returned</option>
-                            <option value="damaged">Damaged</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <input type="date" class="form-control form-control-sm" name="assets[${index}][given_on]" 
-                            value="${new Date().toISOString().split('T')[0]}">
-                    </div>
-                    <div class="col-md-1">
-                        <button type="button" class="btn btn-sm btn-danger remove-entry w-100">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+                `;
                 $('#assets-container').append(html);
             };
 
@@ -1499,28 +1535,28 @@
             // Add Experience
             $('#add-experience').click(function () {
                 let html = `
-                                <div class="experience-entry border rounded p-2 mb-2">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <input type="text" class="form-control form-control-sm" name="experience[${experienceIndex}][company]" placeholder="Company Name">
+                                        <div class="experience-entry border rounded p-2 mb-2">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control form-control-sm" name="experience[${experienceIndex}][company]" placeholder="Company Name">
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" class="form-control form-control-sm" name="experience[${experienceIndex}][designation]" placeholder="Designation">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <input type="date" class="form-control form-control-sm" name="experience[${experienceIndex}][from]">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <input type="date" class="form-control form-control-sm" name="experience[${experienceIndex}][to]">
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <button type="button" class="btn btn-sm btn-danger remove-entry w-100">
+                                                        <i class="fas fa-trash"></i> 
+                                                    </button>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="col-md-3">
-                                            <input type="text" class="form-control form-control-sm" name="experience[${experienceIndex}][designation]" placeholder="Designation">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <input type="date" class="form-control form-control-sm" name="experience[${experienceIndex}][from]">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <input type="date" class="form-control form-control-sm" name="experience[${experienceIndex}][to]">
-                                        </div>
-                                        <div class="col-md-2">
-                                            <button type="button" class="btn btn-sm btn-danger remove-entry w-100">
-                                                <i class="fas fa-trash"></i> 
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
+                                    `;
                 $('#experience-container').append(html);
                 experienceIndex++;
             });

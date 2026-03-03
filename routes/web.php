@@ -108,6 +108,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // Additional employee routes
     Route::get('employees/import/excel', [EmployeeController::class, 'importForm'])
         ->name('employees.import.form');
+
+    Route::delete('employees/delete/{id}', [EmployeeController::class, 'delete'])
+        ->name('employees.delete');
+
+    Route::get('get-designations/{departmentId}', [EmployeeController::class, 'getDesignationsByDepartment'])
+    ->name('getDesignations');
+
     Route::post('employees/import/excel', [EmployeeController::class, 'import'])
         ->name('employees.import');
     Route::get('employees/export/excel', [EmployeeController::class, 'export'])

@@ -117,7 +117,7 @@
                         <div class="form-group mb-2">
                             <label class="small mb-0 ">CNIC <span class="text-danger">*</span></label>
                             <input type="text" class="form-control form-control-sm cnic-mask" name="cnic" 
-                                value="{{ old('cnic', $employee->cnic) }}" placeholder="12345-1234567-1" required>
+                                value="{{ old('cnic', $employee->cnic) }}" placeholder="XXXXX-XXXXXX" required>
                         </div>
                     </div>
                     <div class="col-md-2">

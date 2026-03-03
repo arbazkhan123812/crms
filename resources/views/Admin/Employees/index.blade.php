@@ -347,7 +347,7 @@
                                         <div class="form-group mb-3">
                                             <label class="form-label mb-1">Phone</label>
                                             <input type="text" class="form-control form-control-sm" name="phone" id="phone"
-                                                placeholder="+91 98765 43210">
+                                                placeholder="+92 98765 43210">
                                         </div>
                                     </div>
                                     <div class="col-md-4">
@@ -1156,9 +1156,6 @@
                                 <div class="col-md-4 mb-2"><small>Official Email</small><br>${val(employee.email)}</strong></div>
                                 <div class="col-md-4 mb-2"><small>Personal Email</small><br>${val(employee.personal_email)}</strong></div>
                                 <div class="col-md-4 mb-2"><small>Phone</small><br>${val(employee.phone)}</strong></div>
-                                <div class="col-md-4 mb-2"><small>WhatsApp</small><br>${val(employee.whatsapp_number)}</strong></div>
-                                <div class="col-md-4 mb-2"><small>Alternate Phone</small><br>${val(employee.alternate_phone)}</strong></div>
-                                <div class="col-md-4 mb-2"><small>Emergency</small><br>${val(employee.emergency_phone)}</strong></div>
                                 <div class="col-md-4 mb-2"><small>Emergency Contact</small><br>${val(employee.emergency_contact_name)} (${val(employee.emergency_relation)})</strong></div>
                             </div>
 
@@ -1174,8 +1171,8 @@
                             <p class="border rounded p-2 bg-light">
                                 ${val(employee.permanent_address_line1)}<br>
                                 ${employee.permanent_address_line2 ? employee.permanent_address_line2 + '<br>' : ''}
-                                ${val(employee.permanent_city)}, ${val(employee.permanent_state)}<br>
-                                ${val(employee.permanent_country)} - ${val(employee.permanent_postal_code)}
+                                ${val(employee.ity)}, ${val(employee.permanent_state)}<br>
+                                ${val(employee.country)} - ${val(employee.postal_code)}
                             </p>
                         </div>
                     </div>
@@ -1248,7 +1245,7 @@
         } function deleteEmployee(id) {
             if (confirm('Are you sure you want to delete this employee?')) {
                 $.ajax({
-                    url: '/admin/employees/' + id,
+                    url: "admin/employees/delete/" + id ,
                     type: 'DELETE',
                     data: { _token: '{{ csrf_token() }}' },
                     success: function () {

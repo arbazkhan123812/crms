@@ -92,7 +92,7 @@ class EmployeeController extends Controller
         $designations = Designation::where('is_active', true)
             ->get();
 
-        $managers = Employee::where('status', 'active')
+        $managers = Employee::where('is_reporting_manager', true)
             ->get();
 
 
@@ -178,13 +178,7 @@ class EmployeeController extends Controller
             'experience.*.from' => 'required_with:experience|date',
             'experience.*.to' => 'nullable|date',
 
-            // Assets (dynamic)
-            'assets' => 'nullable|array',
-            'assets.*.type' => 'required_with:assets|string',
-            'assets.*.name' => 'required_with:assets|string',
-            'assets.*.serial_no' => 'required_with:assets|string',
-            'assets.*.status' => 'nullable|string',
-            'assets.*.given_on' => 'nullable|date',
+           
         ]);
 
         DB::beginTransaction();
@@ -371,260 +365,259 @@ class EmployeeController extends Controller
 
 
     public function update(Request $request, Employee $employee)
-{
-    $validated = $request->validate([
-        // Basic Information
-        'first_name' => 'required|string|max:255',
-        'last_name' => 'required|string|max:255',
-        'middle_name' => 'nullable|string|max:255',
-        'personal_email' => 'required|email|unique:employees,personal_email,' . $employee->id,
-        'phone' => 'required|string|max:20',
-        'gender' => 'required|in:male,female',
-        'photo' => 'nullable|image|max:2048',
-
-        // Work Information
-        'email' => 'required|email|unique:employees,email,' . $employee->id,
-        'work_location' => 'nullable|string|max:255',
-        'department_id' => 'required|exists:departments,id',
-        'designation_id' => 'required|exists:designations,id',
-        'reporting_to_id' => 'nullable|exists:employees,id',
-        'is_reporting_manager' => 'nullable|boolean',
-        'employee_type' => 'nullable|string|in:permanent,contract,intern,trainee,consultant',
-        'employee_level' => 'nullable|string|max:50',
-        'joining_date' => 'required|date',
-        'confirmation_date' => 'nullable|date|after_or_equal:joining_date',
-        'probation_period' => 'nullable|integer|min:1|max:24',
-        'notice_period' => 'nullable|integer|min:1|max:180',
-        'ctc' => 'nullable|numeric|min:0',
-        'seat_location' => 'nullable|string|max:255',
-        'extension' => 'nullable|string|max:50',
-        'experience_status' => 'required|in:fresher,experienced',
-
-        // Personal Information
-        'birth_date' => 'required|date',
-        'cnic' => 'nullable|string|max:20',
-        'blood_group' => 'nullable|string|max:10',
-        'marital_status' => 'nullable|in:single,married,divorced,widowed',
-        'religion' => 'nullable|string|max:100',
-        'nationality' => 'nullable|string|max:100',
-        
-        'present_address_line1' => 'nullable|string|max:255',
-        'present_address_line2' => 'nullable|string|max:255',
-        'city' => 'nullable|string|max:100',
-        'state' => 'nullable|string|max:100',
-        'country' => 'nullable|string|max:100',
-        'postal_code' => 'nullable|string|max:20',
-        
-        'permanent_address_line1' => 'nullable|string|max:255',
-        'permanent_address_line2' => 'nullable|string|max:255',
-        'permanent_city' => 'nullable|string|max:100',
-        'permanent_state' => 'nullable|string|max:100',
-        'permanent_country' => 'nullable|string|max:100',
-        'permanent_postal_code' => 'nullable|string|max:20',
-        
-        'father_name' => 'nullable|string|max:255',
-        'mother_name' => 'nullable|string|max:255',
-        'hobbies' => 'nullable|string|max:255',
-        
-        'emergency_contact_name' => 'nullable|string|max:255',
-        'emergency_relation' => 'nullable|string|max:100',
-        'emergency_phone' => 'nullable|string|max:20',
-        'alternate_phone' => 'nullable|string|max:20',
-        'whatsapp_number' => 'nullable|string|max:20',
-
-        // Bank Information
-        'bank_name' => 'nullable|string|max:255',
-        'account_title' => 'nullable|string|max:255',
-        'account_number' => 'nullable|string|max:50',
-        'iban' => 'nullable|string|max:50',
-        'basic_salary' => 'nullable|numeric|min:0',
-        'hra' => 'nullable|numeric|min:0',
-        'da' => 'nullable|numeric|min:0',
-        'conveyance' => 'nullable|numeric|min:0',
-        'medical_allowance' => 'nullable|numeric|min:0',
-        'special_allowance' => 'nullable|numeric|min:0',
-
-        // Status
-        'status' => 'required|in:active,inactive,suspended,terminated',
-
-        // Education (dynamic)
-        'education' => 'nullable|array',
-        'education.*.course' => 'required_with:education|string|max:255',
-        'education.*.institution' => 'required_with:education|string|max:255',
-        'education.*.marks' => 'nullable|numeric|min:0|max:100',
-        'education.*.year' => 'nullable|string|max:10',
-
-        // Experience (dynamic)
-        'experience' => 'nullable|array',
-        'experience.*.company' => 'required_with:experience|string|max:255',
-        'experience.*.designation' => 'required_with:experience|string|max:255',
-        'experience.*.from' => 'required_with:experience|date',
-        'experience.*.to' => 'nullable|date',
-
-        // Assets (dynamic)
-        'assets' => 'nullable|array',
-        'assets.*.type' => 'required_with:assets|string|max:100',
-        'assets.*.name' => 'required_with:assets|string|max:255',
-        'assets.*.serial_no' => 'nullable|string|max:100',
-        'assets.*.status' => 'nullable|in:assigned,returned,damaged',
-        'assets.*.given_on' => 'nullable|date',
-    ]);
-
-    DB::beginTransaction();
-
-    try {
-        // Prepare employee data with ALL fields
-        $employeeData = [
+    {
+        $validated = $request->validate([
             // Basic Information
-            'first_name' => $request->first_name,
-            'last_name' => $request->last_name,
-            'middle_name' => $request->middle_name,
-            'full_name' => trim($request->first_name . ' ' . $request->middle_name . ' ' . $request->last_name),
-            'personal_email' => $request->personal_email,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'alternate_phone' => $request->alternate_phone,
-            'whatsapp_number' => $request->whatsapp_number,
-            'gender' => $request->gender,
-            'cnic' => $request->cnic,
-            
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'middle_name' => 'nullable|string|max:255',
+            'personal_email' => 'required|email|unique:employees,personal_email,' . $employee->id,
+            'phone' => 'required|string|max:20',
+            'gender' => 'required|in:male,female',
+            'photo' => 'nullable|image|max:2048',
+
             // Work Information
-            'work_location' => $request->work_location,
-            'department_id' => $request->department_id,
-            'designation_id' => $request->designation_id,
-            'reporting_to_id' => $request->reporting_to_id,
-            'is_reporting_manager' => $request->is_reporting_manager ? true : false,
-            'employment_type' => $request->employee_type ?? 'permanent',
-            'employee_level' => $request->employee_level,
-            'joining_date' => $request->joining_date,
-            'confirmation_date' => $request->confirmation_date,
-            'probation_period' => $request->probation_period ?? 6,
-            'notice_period' => $request->notice_period ?? 30,
-            'ctc' => $request->ctc,
-            'seat_location' => $request->seat_location,
-            'extension' => $request->extension,
-            'experience_status' => $request->experience_status,
-            
+            'email' => 'required|email|unique:employees,email,' . $employee->id,
+            'work_location' => 'nullable|string|max:255',
+            'department_id' => 'required|exists:departments,id',
+            'designation_id' => 'required|exists:designations,id',
+            'reporting_to_id' => 'nullable|exists:employees,id',
+            'is_reporting_manager' => 'nullable|boolean',
+            'employee_type' => 'nullable|string|in:permanent,contract,intern,trainee,consultant',
+            'employee_level' => 'nullable|string|max:50',
+            'joining_date' => 'required|date',
+            'confirmation_date' => 'nullable|date|after_or_equal:joining_date',
+            'probation_period' => 'nullable|integer|min:1|max:24',
+            'notice_period' => 'nullable|integer|min:1|max:180',
+            'ctc' => 'nullable|numeric|min:0',
+            'seat_location' => 'nullable|string|max:255',
+            'extension' => 'nullable|string|max:50',
+            'experience_status' => 'required|in:fresher,experienced',
+
             // Personal Information
-            'birth_date' => $request->birth_date,
-            'blood_group' => $request->blood_group,
-            'marital_status' => $request->marital_status,
-            'religion' => $request->religion,  // FIXED: was 'riligion'
-            'nationality' => $request->nationality ?? 'Pakistani',
-            
-            // Present Address
-            'present_address_line1' => $request->present_address_line1,
-            'present_address_line2' => $request->present_address_line2,
-            'city' => $request->city,
-            'state' => $request->state,
-            'country' => $request->country ?? 'Pakistan',
-            'postal_code' => $request->postal_code,
-            
-            // Permanent Address
-            'permanent_address_line1' => $request->permanent_address_line1,
-            'permanent_address_line2' => $request->permanent_address_line2,
-            'permanent_city' => $request->permanent_city,
-            'permanent_state' => $request->permanent_state,
-            'permanent_country' => $request->permanent_country ?? 'Pakistan',
-            'permanent_postal_code' => $request->permanent_postal_code,
-            
-            // Family Information
-            'father_name' => $request->father_name,
-            'mother_name' => $request->mother_name,
-            'hobbies' => $request->hobbies,
-            
-            // Emergency Contact
-            'emergency_contact_name' => $request->emergency_contact_name,
-            'emergency_relation' => $request->emergency_relation,
-            'emergency_phone' => $request->emergency_phone,
+            'birth_date' => 'required|date',
+            'cnic' => 'nullable|string|max:20',
+            'blood_group' => 'nullable|string|max:10',
+            'marital_status' => 'nullable|in:single,married,divorced,widowed',
+            'religion' => 'nullable|string|max:100',
+            'nationality' => 'nullable|string|max:100',
+
+            'present_address_line1' => 'nullable|string|max:255',
+            'present_address_line2' => 'nullable|string|max:255',
+            'city' => 'nullable|string|max:100',
+            'state' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'postal_code' => 'nullable|string|max:20',
+
+            'permanent_address_line1' => 'nullable|string|max:255',
+            'permanent_address_line2' => 'nullable|string|max:255',
+            'permanent_city' => 'nullable|string|max:100',
+            'permanent_state' => 'nullable|string|max:100',
+            'permanent_country' => 'nullable|string|max:100',
+            'permanent_postal_code' => 'nullable|string|max:20',
+
+            'father_name' => 'nullable|string|max:255',
+            'mother_name' => 'nullable|string|max:255',
+            'hobbies' => 'nullable|string|max:255',
+
+            'emergency_contact_name' => 'nullable|string|max:255',
+            'emergency_relation' => 'nullable|string|max:100',
+            'emergency_phone' => 'nullable|string|max:20',
+            'alternate_phone' => 'nullable|string|max:20',
+            'whatsapp_number' => 'nullable|string|max:20',
 
             // Bank Information
-            'bank_name' => $request->bank_name,
-            'account_holder_name' => $request->account_title,
-            'account_number' => $request->account_number,
-            'iban' => $request->iban,
-            
-            // Salary Components
-            'basic_salary' => $request->basic_salary,
-            'hra' => $request->hra,
-            'da' => $request->da,
-            'conveyance' => $request->conveyance,
-            'medical_allowance' => $request->medical_allowance,
-            'special_allowance' => $request->special_allowance,
-            
+            'bank_name' => 'nullable|string|max:255',
+            'account_title' => 'nullable|string|max:255',
+            'account_number' => 'nullable|string|max:50',
+            'iban' => 'nullable|string|max:50',
+            'basic_salary' => 'nullable|numeric|min:0',
+            'hra' => 'nullable|numeric|min:0',
+            'da' => 'nullable|numeric|min:0',
+            'conveyance' => 'nullable|numeric|min:0',
+            'medical_allowance' => 'nullable|numeric|min:0',
+            'special_allowance' => 'nullable|numeric|min:0',
+
             // Status
-            'status' => $request->status,
-        ];
+            'status' => 'required|in:active,inactive,suspended,terminated',
 
-        // Handle photo upload
-        if ($request->hasFile('photo')) {
-            // Delete old photo if exists
-            
-            $path = $request->file('photo')->store('uploads', 'public');
-            $employeeData['profile_image'] = $path;
-        }
+            // Education (dynamic)
+            'education' => 'nullable|array',
+            'education.*.course' => 'required_with:education|string|max:255',
+            'education.*.institution' => 'required_with:education|string|max:255',
+            'education.*.marks' => 'nullable|numeric|min:0|max:100',
+            'education.*.year' => 'nullable|string|max:10',
 
-        // Update employee
-        $employee->update($employeeData);
+            // Experience (dynamic)
+            'experience' => 'nullable|array',
+            'experience.*.company' => 'required_with:experience|string|max:255',
+            'experience.*.designation' => 'required_with:experience|string|max:255',
+            'experience.*.from' => 'required_with:experience|date',
+            'experience.*.to' => 'nullable|date',
 
-        // Update Education (delete old and add new)
-        $employee->education()->delete();
-        if ($request->has('education')) {
-            foreach ($request->education as $edu) {
-                if (!empty($edu['course']) && !empty($edu['institution'])) {
-                    $employee->education()->create([
-                        'course' => $edu['course'],
-                        'institution' => $edu['institution'],
-                        'marks' => $edu['marks'],
-                        'year' => $edu['year']
-                    ]);
+            // Assets (dynamic)
+            'assets' => 'nullable|array',
+            'assets.*.type' => 'required_with:assets|string|max:100',
+            'assets.*.name' => 'required_with:assets|string|max:255',
+            'assets.*.serial_no' => 'nullable|string|max:100',
+            'assets.*.status' => 'nullable|in:assigned,returned,damaged',
+            'assets.*.given_on' => 'nullable|date',
+        ]);
+
+        DB::beginTransaction();
+
+        try {
+            // Prepare employee data with ALL fields
+            $employeeData = [
+                // Basic Information
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'middle_name' => $request->middle_name,
+                'full_name' => trim($request->first_name . ' ' . $request->middle_name . ' ' . $request->last_name),
+                'personal_email' => $request->personal_email,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'alternate_phone' => $request->alternate_phone,
+                'whatsapp_number' => $request->whatsapp_number,
+                'gender' => $request->gender,
+                'cnic' => $request->cnic,
+
+                // Work Information
+                'work_location' => $request->work_location,
+                'department_id' => $request->department_id,
+                'designation_id' => $request->designation_id,
+                'reporting_to_id' => $request->reporting_to_id,
+                'is_reporting_manager' => $request->is_reporting_manager ? true : false,
+                'employment_type' => $request->employee_type ?? 'permanent',
+                'employee_level' => $request->employee_level,
+                'joining_date' => $request->joining_date,
+                'confirmation_date' => $request->confirmation_date,
+                'probation_period' => $request->probation_period ?? 6,
+                'notice_period' => $request->notice_period ?? 30,
+                'ctc' => $request->ctc,
+                'seat_location' => $request->seat_location,
+                'extension' => $request->extension,
+                'experience_status' => $request->experience_status,
+
+                // Personal Information
+                'birth_date' => $request->birth_date,
+                'blood_group' => $request->blood_group,
+                'marital_status' => $request->marital_status,
+                'religion' => $request->religion,  // FIXED: was 'riligion'
+                'nationality' => $request->nationality ?? 'Pakistani',
+
+                // Present Address
+                'present_address_line1' => $request->present_address_line1,
+                'present_address_line2' => $request->present_address_line2,
+                'city' => $request->city,
+                'state' => $request->state,
+                'country' => $request->country ?? 'Pakistan',
+                'postal_code' => $request->postal_code,
+
+                // Permanent Address
+                'permanent_address_line1' => $request->permanent_address_line1,
+                'permanent_address_line2' => $request->permanent_address_line2,
+                'permanent_city' => $request->permanent_city,
+                'permanent_state' => $request->permanent_state,
+                'permanent_country' => $request->permanent_country ?? 'Pakistan',
+                'permanent_postal_code' => $request->permanent_postal_code,
+
+                // Family Information
+                'father_name' => $request->father_name,
+                'mother_name' => $request->mother_name,
+                'hobbies' => $request->hobbies,
+
+                // Emergency Contact
+                'emergency_contact_name' => $request->emergency_contact_name,
+                'emergency_relation' => $request->emergency_relation,
+                'emergency_phone' => $request->emergency_phone,
+
+                // Bank Information
+                'bank_name' => $request->bank_name,
+                'account_holder_name' => $request->account_title,
+                'account_number' => $request->account_number,
+                'iban' => $request->iban,
+
+                // Salary Components
+                'basic_salary' => $request->basic_salary,
+                'hra' => $request->hra,
+                'da' => $request->da,
+                'conveyance' => $request->conveyance,
+                'medical_allowance' => $request->medical_allowance,
+                'special_allowance' => $request->special_allowance,
+
+                // Status
+                'status' => $request->status,
+            ];
+
+            // Handle photo upload
+            if ($request->hasFile('photo')) {
+                // Delete old photo if exists
+
+                $path = $request->file('photo')->store('uploads', 'public');
+                $employeeData['profile_image'] = $path;
+            }
+
+            // Update employee
+            $employee->update($employeeData);
+
+            // Update Education (delete old and add new)
+            $employee->education()->delete();
+            if ($request->has('education')) {
+                foreach ($request->education as $edu) {
+                    if (!empty($edu['course']) && !empty($edu['institution'])) {
+                        $employee->education()->create([
+                            'course' => $edu['course'],
+                            'institution' => $edu['institution'],
+                            'marks' => $edu['marks'],
+                            'year' => $edu['year']
+                        ]);
+                    }
                 }
             }
-        }
 
-        // Update Experience
-        $employee->experience()->delete();
-        if ($request->has('experience')) {
-            foreach ($request->experience as $exp) {
-                if (!empty($exp['company']) && !empty($exp['designation'])) {
-                    $employee->experience()->create([
-                        'company' => $exp['company'],
-                        'designation' => $exp['designation'],
-                        'from_date' => $exp['from'],
-                        'to_date' => $exp['to'] ?? null,
-                        'is_current' => empty($exp['to']) ? true : false
-                    ]);
+            // Update Experience
+            $employee->experience()->delete();
+            if ($request->has('experience')) {
+                foreach ($request->experience as $exp) {
+                    if (!empty($exp['company']) && !empty($exp['designation'])) {
+                        $employee->experience()->create([
+                            'company' => $exp['company'],
+                            'designation' => $exp['designation'],
+                            'from_date' => $exp['from'],
+                            'to_date' => $exp['to'] ?? null,
+                            'is_current' => empty($exp['to']) ? true : false
+                        ]);
+                    }
                 }
             }
-        }
 
-        // Update Assets
-        $employee->assets()->delete();
-        if ($request->has('assets')) {
-            foreach ($request->assets as $asset) {
-                if (!empty($asset['name'])) {
-                    $employee->assets()->create([
-                        'asset_type' => $asset['type'],
-                        'asset_name' => $asset['name'],
-                        'serial_no' => $asset['serial_no'],
-                        'status' => $asset['status'] ?? 'assigned',
-                        'given_on' => $asset['given_on'] ?? now()
-                    ]);
+            // Update Assets
+            $employee->assets()->delete();
+            if ($request->has('assets')) {
+                foreach ($request->assets as $asset) {
+                    if (!empty($asset['name'])) {
+                        $employee->assets()->create([
+                            'asset_type' => $asset['type'],
+                            'asset_name' => $asset['name'],
+                            'serial_no' => $asset['serial_no'],
+                            'status' => $asset['status'] ?? 'assigned',
+                            'given_on' => $asset['given_on'] ?? now()
+                        ]);
+                    }
                 }
             }
+
+            DB::commit();
+
+            return redirect()->route('admin.employees.index')
+                ->with('success', 'Employee updated successfully. Code: ' . $employee->employee_code);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Employee update failed: ' . $e->getMessage());
+            return back()->with('error', 'Error updating employee: ' . $e->getMessage())->withInput();
         }
-
-        DB::commit();
-
-        return redirect()->route('admin.employees.index')
-            ->with('success', 'Employee updated successfully. Code: ' . $employee->employee_code);
-            
-    } catch (\Exception $e) {
-        DB::rollBack();
-        Log::error('Employee update failed: ' . $e->getMessage());
-        return back()->with('error', 'Error updating employee: ' . $e->getMessage())->withInput();
     }
-}
 
 
 
@@ -865,6 +858,26 @@ class EmployeeController extends Controller
             'success' => true,
             'message' => 'Employees deleted successfully'
         ]);
+    }
+    public function delete($id)
+    {
+
+
+        Employee::where('id', $id)->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Employee deleted successfully'
+        ]);
+    }
+
+    public function getDesignationsByDepartment($departmentId)
+    {
+        $designations = Designation::where('department_id', $departmentId)
+            ->where('is_active', true)
+            ->get(['id', 'title']);
+
+        return response()->json($designations);
     }
 
     public function bulkStatusUpdate(Request $request)
