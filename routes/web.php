@@ -5,6 +5,9 @@ use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\HolidayController;
+use App\Http\Controllers\Admin\LeaveController;
+use App\Http\Controllers\Admin\LeaveTypeController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RecruitmentController;
 use App\Http\Controllers\Admin\RoleController;
@@ -169,6 +172,33 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('attendance/check-in', [AttendanceController::class, 'checkIn'])->name('attendance.checkin');
     Route::post('attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
     Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
+    Route::resource('leave-types', LeaveTypeController::class);
+    
+    Route::get('leaves', [LeaveController::class, 'index'])->name('leaves.index');
+    Route::get('leaves/create', [LeaveController::class, 'create'])->name('leaves.create');
+    Route::post('leaves', [LeaveController::class, 'store'])->name('leaves.store');
+    Route::get('leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
+    Route::post('leaves/{id}/status', [LeaveController::class, 'updateStatus'])->name('leaves.status');
+    
+    Route::get('leave-balances', [LeaveController::class, 'balances'])->name('leaves.balances');
+    Route::post('leave-balances/init', [LeaveController::class, 'initializeBalance'])->name('leaves.balances.init');
+    
+    Route::get('leave-calendar', [LeaveController::class, 'calendar'])->name('leaves.calendar');
+    
+    Route::resource('holidays', HolidayController::class);
+    Route::resource('leave-types', LeaveTypeController::class);
+    Route::post('leave-types/{id}/toggle-status', [LeaveTypeController::class, 'toggleStatus'])
+        ->name('leave-types.toggle-status');
+
+    Route::resource('holidays', HolidayController::class);
+    Route::post('holidays/bulk-delete', [HolidayController::class, 'bulkDelete'])
+        ->name('holidays.bulk-delete');
+    Route::get('holidays/yearly/{year}', [HolidayController::class, 'getYearlyHolidays'])
+        ->name('holidays.yearly');
+    Route::post('holidays/import', [HolidayController::class, 'import'])
+        ->name('holidays.import');
+    Route::get('holidays/{id}/duplicate', [HolidayController::class, 'duplicate'])
+        ->name('holidays.duplicate');
 });
 Route::get('/', [AuthController::class, 'index']);
 Route::post('/Auth/login', [AuthController::class, 'process_login'])->name('auth.login.process');

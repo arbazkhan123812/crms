@@ -20,12 +20,13 @@ return new class extends Migration
             $table->integer('year');
             $table->enum('type', ['national', 'religious', 'company'])->default('company');
             $table->boolean('is_recurring')->default(false);
+            $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             
             $table->unique(['date', 'year']);
         });
     }
-
 
     /**
      * Reverse the migrations.

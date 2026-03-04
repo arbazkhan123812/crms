@@ -39,61 +39,80 @@
             <button type="button" class="close" data-dismiss="alert">&times;</button>
         </div>
     @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-4">
+            <i class="fas fa-cross-circle mr-2"></i> {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    @endif
 
     <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">Present</h6>
-                            <h3 class="mb-0">{{ $stats['present'] }}</h3>
-                        </div>
-                        <i class="fas fa-check-circle fa-2x opacity-50"></i>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Present</h6>
+                        <h3 class="mb-0">{{ $stats['present'] }}</h3>
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">Absent</h6>
-                            <h3 class="mb-0">{{ $stats['absent'] }}</h3>
-                        </div>
-                        <i class="fas fa-times-circle fa-2x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">Late Arrivals</h6>
-                            <h3 class="mb-0">{{ $stats['late'] }}</h3>
-                        </div>
-                        <i class="fas fa-clock fa-2x opacity-50"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body py-3">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-white-50">Work From Home</h6>
-                            <h3 class="mb-0">{{ $stats['wfh'] }}</h3>
-                        </div>
-                        <i class="fas fa-home fa-2x opacity-50"></i>
-                    </div>
+                    <i class="fas fa-check-circle fa-2x opacity-50"></i>
                 </div>
             </div>
         </div>
     </div>
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Absent</h6>
+                        <h3 class="mb-0">{{ $stats['absent'] }}</h3>
+                    </div>
+                    <i class="fas fa-times-circle fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">Late</h6>
+                        <h3 class="mb-0">{{ $stats['late'] }}</h3>
+                    </div>
+                    <i class="fas fa-clock fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">WFH</h6>
+                        <h3 class="mb-0">{{ $stats['wfh'] }}</h3>
+                    </div>
+                    <i class="fas fa-home fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card bg-primary text-white">
+            <div class="card-body py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50">On Leave</h6>
+                        <h3 class="mb-0">{{ $stats['leave'] ?? 0 }}</h3>
+                    </div>
+                    <i class="fas fa-umbrella-beach fa-2x opacity-50"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
     <div class="card">
         

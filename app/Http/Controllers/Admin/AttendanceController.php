@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Employee;
 use App\Models\Holiday;
+use App\Models\Leave;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Log;
 
 class AttendanceController extends Controller
 {
@@ -27,11 +29,36 @@ class AttendanceController extends Controller
         }
 
         $attendances = $query->paginate(20);
+
+        // Get employees who are on leave but not yet marked in attendance
+        $approvedLeaves = Leave::with('employee')
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->get();
+
+        foreach ($approvedLeaves as $leave) {
+            $attendanceExists = Attendance::where('employee_id', $leave->employee_id)
+                ->whereDate('date', $date)
+                ->exists();
+
+            if (!$attendanceExists) {
+                Attendance::create([
+                    'employee_id' => $leave->employee_id,
+                    'date' => $date,
+                    'status' => 'leave',
+                    'remarks' => 'Approved ' . $leave->leaveType->name,
+                    'marked_by' => auth()->id()
+                ]);
+            }
+        }
+
         $stats = [
             'present' => Attendance::whereDate('date', $date)->where('status', 'present')->count(),
             'absent' => Attendance::whereDate('date', $date)->where('status', 'absent')->count(),
             'late' => Attendance::whereDate('date', $date)->where('is_late', true)->count(),
-            'wfh' => Attendance::whereDate('date', $date)->where('status', 'wfh')->count()
+            'wfh' => Attendance::whereDate('date', $date)->where('status', 'wfh')->count(),
+            'leave' => Attendance::whereDate('date', $date)->where('status', 'leave')->count()
         ];
 
         return view('admin.attendance.index', compact('attendances', 'date', 'stats'));
@@ -48,6 +75,24 @@ class AttendanceController extends Controller
         ]);
 
         $employee = Employee::with('designation')->find($request->employee_id);
+
+        $isattendance_available = Attendance::where('employee_id',$request->employee_id)
+                                  ->exists();
+
+
+         if ($isattendance_available) {
+            return redirect()->back()->with('error', 'Attendance already marked.');
+        }
+
+        $isOnLeave =Leave::where('employee_id', $request->employee_id)
+            ->where('status', 'approved')
+            ->whereDate('start_date', '<=', $request->date)
+            ->whereDate('end_date', '>=', $request->date)
+            ->exists();
+
+        if ($isOnLeave) {
+            return redirect()->back()->with('error', 'Attendance cannot be marked because the employee is on approved leave.');
+        }
 
         // Get designation shift timings
         $designation = $employee->designation;
@@ -155,30 +200,56 @@ class AttendanceController extends Controller
         $month = $request->get('month', Carbon::now()->month);
         $year = $request->get('year', Carbon::now()->year);
 
-        $startDate = Carbon::createFromDate($year, $month, 1);
-        $endDate = $startDate->copy()->endOfMonth();
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
+        $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
-        $employees = Employee::with(['designation', 'attendance' => function ($q) use ($startDate, $endDate) {
-            $q->whereBetween('date', [$startDate, $endDate]);
-        }])->get();
+        $employees = Employee::with(['designation', 'attendance' => function ($query) use ($startDate, $endDate) {
+            $query->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
+                ->orderBy('date', 'asc');
+        }])->where('status', 'active')->get();
 
         foreach ($employees as $employee) {
             $requiredMinutes = 0;
             $workingDays = 0;
 
             if ($employee->designation) {
-                for ($date = $startDate->copy(); $date <= $endDate; $date->addDay()) {
-                    if ($employee->designation->isWorkingDay($date)) {
+                for ($d = 1; $d <= $startDate->daysInMonth; $d++) {
+                    $currentDate = Carbon::createFromDate($year, $month, $d);
+                    if ($employee->designation->isWorkingDay($currentDate)) {
                         $requiredMinutes += $employee->designation->working_minutes;
                         $workingDays++;
                     }
                 }
             }
 
+            $attendedMinutes = 0;
+            $attendedDays = 0;
+            $lateDays = 0;
+            $overtimeMinutes = 0;
+            $leaveDays = 0;
+
+            foreach ($employee->attendance as $att) {
+                if ($att->status == 'present' || $att->status == 'wfh') {
+                    $attendedMinutes += $att->total_hours;
+                    $attendedDays++;
+
+                    if ($att->is_late) {
+                        $lateDays++;
+                    }
+
+                    $overtimeMinutes += $att->overtime_minutes;
+                } elseif ($att->status == 'leave' || $att->status == 'half_day') {
+                    $leaveDays++;
+                }
+            }
+
             $employee->required_hours = $requiredMinutes;
             $employee->required_days = $workingDays;
-            $employee->attended_minutes = $employee->attendance->where('status', 'present')->sum('total_hours');
-            $employee->attended_days = $employee->attendance->where('status', 'present')->count();
+            $employee->attended_minutes = $attendedMinutes;
+            $employee->attended_days = $attendedDays;
+            $employee->late_days = $lateDays;
+            $employee->total_overtime = $overtimeMinutes;
+            $employee->leave_days = $leaveDays;
         }
 
         $holidays = Holiday::whereYear('date', $year)
@@ -187,7 +258,6 @@ class AttendanceController extends Controller
 
         return view('admin.attendance.monthly', compact('employees', 'month', 'year', 'holidays'));
     }
-
 
     public function checkIn(Request $request)
     {

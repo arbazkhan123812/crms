@@ -110,12 +110,17 @@ class Employee extends Model
 
     public function department()
     {
-        return $this->belongsTo(Department::class,'department_id','id');
+        return $this->belongsTo(Department::class, 'department_id', 'id');
     }
 
     public function designation()
     {
         return $this->belongsTo(Designation::class);
+    }
+
+    public function leave()
+    {
+        return $this->hasOne(Leave::class, 'employee_id');
     }
 
     public function reportingTo()
@@ -148,8 +153,9 @@ class Employee extends Model
         return trim($this->first_name . ' ' . $this->middle_name . ' ' . $this->last_name);
     }
 
-    public function attendance(){
-        return $this->HasMany(Attendance::class,'employee_id');
+    public function attendance()
+    {
+        return $this->HasMany(Attendance::class, 'employee_id');
     }
     public function getAgeAttribute()
     {
@@ -167,10 +173,10 @@ class Employee extends Model
         return floor($totalDays / 365) . ' years ' . floor(($totalDays % 365) / 30) . ' months';
     }
     public function getShiftAttribute()
-{
-    if ($this->designation) {
-        return $this->designation;
+    {
+        if ($this->designation) {
+            return $this->designation;
+        }
+        return null;
     }
-    return null;
-}
 }

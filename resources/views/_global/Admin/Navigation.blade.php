@@ -245,6 +245,46 @@
 
                 </ul>
             </li>
+            <li class="{{ request()->is('admin/leaves*') || request()->is('admin/leave-types*') || request()->is('admin/holidays*') ? 'open' : '' }}">
+    <a href="#">
+        <span class="nav-link-icon">
+            <i data-feather="calendar"></i>
+        </span>
+        <span>Leave Management</span>
+    </a>
+    <ul>
+        <li>
+            <a href="{{ route('admin.leaves.index') }}" 
+               class="{{ request()->is('admin/leaves') ? 'active' : '' }}">
+                <span>Leave Applications</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('admin.leave-types.index') }}" 
+               class="{{ request()->is('admin/leave-types*') ? 'active' : '' }}">
+                <span>Leave Types</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('admin.leaves.balances') }}" 
+               class="{{ request()->is('admin/leaves/balances') ? 'active' : '' }}">
+                <span>Leave Balances</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('admin.holidays.index') }}" 
+               class="{{ request()->is('admin/holidays*') ? 'active' : '' }}">
+                <span>Holidays</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('admin.leaves.calendar') }}" 
+               class="{{ request()->is('admin/leaves/calendar') ? 'active' : '' }}">
+                <span>Calendar</span>
+            </a>
+        </li>
+    </ul>
+</li>
             
 
             
