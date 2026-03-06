@@ -77,6 +77,7 @@ class AttendanceController extends Controller
         $employee = Employee::with('designation')->find($request->employee_id);
 
         $isattendance_available = Attendance::where('employee_id',$request->employee_id)
+                                  ->whereDate('created_at', '=', $request->date)
                                   ->exists();
 
 
@@ -84,7 +85,7 @@ class AttendanceController extends Controller
             return redirect()->back()->with('error', 'Attendance already marked.');
         }
 
-        $isOnLeave =Leave::where('employee_id', $request->employee_id)
+        $isOnLeave = Leave::where('employee_id', $request->employee_id)
             ->where('status', 'approved')
             ->whereDate('start_date', '<=', $request->date)
             ->whereDate('end_date', '>=', $request->date)
@@ -203,10 +204,12 @@ class AttendanceController extends Controller
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
         $endDate = $startDate->copy()->endOfMonth()->endOfDay();
 
-        $employees = Employee::with(['designation', 'attendance' => function ($query) use ($startDate, $endDate) {
+        $employees = Employee::with(['designation', 'leave', 'attendance' => function ($query) use ($startDate, $endDate) {
             $query->whereBetween('date', [$startDate->format('Y-m-d'), $endDate->format('Y-m-d')])
                 ->orderBy('date', 'asc');
         }])->where('status', 'active')->get();
+
+        
 
         foreach ($employees as $employee) {
             $requiredMinutes = 0;
@@ -228,19 +231,10 @@ class AttendanceController extends Controller
             $overtimeMinutes = 0;
             $leaveDays = 0;
 
-            foreach ($employee->attendance as $att) {
-                if ($att->status == 'present' || $att->status == 'wfh') {
-                    $attendedMinutes += $att->total_hours;
-                    $attendedDays++;
-
-                    if ($att->is_late) {
-                        $lateDays++;
-                    }
-
-                    $overtimeMinutes += $att->overtime_minutes;
-                } elseif ($att->status == 'leave' || $att->status == 'half_day') {
+            foreach ($employee->leave as $att) {
+                
                     $leaveDays++;
-                }
+                
             }
 
             $employee->required_hours = $requiredMinutes;
@@ -259,6 +253,10 @@ class AttendanceController extends Controller
         return view('admin.attendance.monthly', compact('employees', 'month', 'year', 'holidays'));
     }
 
+    public function delete_attendance($id){
+        $delete = Attendance::where('id',$id)->delete();
+        return redirect()->back()->with('success', 'Attendance deleted successfully');
+    }
     public function checkIn(Request $request)
     {
         $user = auth()->user();

@@ -1,4 +1,4 @@
-@extends('layout.app')
+@extends('layout.admin')
 
 @section('content')
 <div class="content">
@@ -86,7 +86,7 @@
                                 <div>
                                     <strong>Applied</strong>
                                     <div class="small text-muted">{{ $leave->created_at->format('d M Y h:i A') }}</div>
-                                    <div class="small">by {{ $leave->createdBy->name }}</div>
+                                    <div class="small">by {{ $leave->createdBy->full_name }}</div>
                                 </div>
                             </div>
                         </div>
@@ -100,7 +100,7 @@
                                 <div>
                                     <strong>{{ ucfirst($leave->status) }}</strong>
                                     <div class="small text-muted">{{ $leave->approved_at->format('d M Y h:i A') }}</div>
-                                    <div class="small">by {{ $leave->approvedBy->name }}</div>
+                                    <div class="small">by {{ $leave->approvedBy->full_name }}</div>
                                     @if($leave->rejection_reason)
                                         <div class="small text-danger mt-1">Reason: {{ $leave->rejection_reason }}</div>
                                     @endif

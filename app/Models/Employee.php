@@ -120,7 +120,7 @@ class Employee extends Model
 
     public function leave()
     {
-        return $this->hasOne(Leave::class, 'employee_id');
+        return $this->hasMany(Leave::class, 'employee_id');
     }
 
     public function reportingTo()

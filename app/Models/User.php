@@ -47,4 +47,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
   
+    public function leave(){
+        return $this->hasMany(Leave::class,"approved_by",'id');
+    }
 }

@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\RecruitmentController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Employee\DashboardController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -160,6 +161,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('attendance/{id}', [AttendanceController::class, 'destroy'])->name('attendance.destroy');
     // Attendance Routes
     Route::get('attendance', [AttendanceController::class, 'index'])->name('attendance.index');
+    Route::get('attendance/delete/{id}', [AttendanceController::class, 'delete_attendance'])->name('attendance.delete');
     Route::post('attendance/mark', [AttendanceController::class, 'markAttendance'])->name('attendance.mark');
     Route::post('attendance/bulk', [AttendanceController::class, 'markBulkAttendance'])->name('attendance.bulk');
     Route::get('attendance/monthly', [AttendanceController::class, 'monthlyReport'])->name('attendance.monthly');
@@ -200,6 +202,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('holidays/{id}/duplicate', [HolidayController::class, 'duplicate'])
         ->name('holidays.duplicate');
 });
+
+
+Route::prefix('employee')->name('employee.')->middleware(['auth'])->group(function () {
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('profile', [DashboardController::class, 'profile'])->name('profile');
+    Route::get('attendance', [DashboardController::class, 'attendance'])->name('attendance');
+    Route::get('leaves', [DashboardController::class, 'leaves'])->name('leaves');
+    Route::post('leaves/apply', [DashboardController::class, 'applyLeave'])->name('leaves.apply');
+    Route::post('leaves/{id}/cancel', [DashboardController::class, 'cancelLeave'])->name('leaves.cancel');
+});
+
 Route::get('/', [AuthController::class, 'index']);
 Route::post('/Auth/login', [AuthController::class, 'process_login'])->name('auth.login.process');
 Route::get('/Auth/logout', [AuthController::class, 'logout'])->name('auth.logout');

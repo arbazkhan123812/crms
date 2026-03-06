@@ -27,10 +27,9 @@ class EmployeeService
         return $prefix . '-' . $year . '-' . str_pad($number, 4, '0', STR_PAD_LEFT);
     }
 
-    public function createUserAccount(Employee $employee, $password = null)
+    public function createUserAccount($employee, $password = null)
     {
         $user = User::create([
-            'company_id' => $employee->company_id,
             'employee_id' => $employee->id,
             'username' => $employee->first_name,
             'full_name' => $employee->full_name,

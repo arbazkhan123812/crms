@@ -1,4 +1,4 @@
-@extends('layout.app')
+@extends('layout.admin')
 
 @section('content')
 <div class="content">
@@ -67,7 +67,7 @@
                         <label class="form-label">End Date <span class="text-danger">*</span></label>
                         <input type="date" class="form-control form-control-sm" name="end_date" required>
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-4 mb-3 d-none">
                         <label class="form-label">Half Day</label>
                         <select class="form-control form-control-sm" name="half_day">
                             <option value="none">Full Day</option>

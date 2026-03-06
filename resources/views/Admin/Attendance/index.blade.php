@@ -1,4 +1,4 @@
-@extends('layout.app')
+@extends('layout.admin')
 
 @section('content')
 <div class="content">
@@ -182,9 +182,12 @@
                                 @endif
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-link text-primary" onclick="editAttendance({{ $att }})">
+                                <button class="btn btn-sm btn-primary " onclick="editAttendance({{ $att }})">
                                     <i class="fas fa-edit"></i>
                                 </button>
+                                <a href="{{ url('admin/attendance/delete/' . $att->id) }}" class="btn btn-sm btn-primary ">
+                                    <i class="fa fa-close"></i>
+                                </a>
                             </td>
                         </tr>
                         @empty
@@ -260,10 +263,6 @@
                         <select class="form-control form-control-sm" name="status" id="edit_status" required>
                             <option value="present">Present</option>
                             <option value="absent">Absent</option>
-                            <option value="half_day">Half Day</option>
-                            <option value="wfh">Work From Home</option>
-                            <option value="leave">On Leave</option>
-                            <option value="holiday">Holiday</option>
                         </select>
                     </div>
                     

@@ -165,18 +165,18 @@ class EmployeeController extends Controller
             'notice_period' => 'nullable|integer',
 
             // Education (dynamic)
-            'education' => 'nullable|array',
-            'education.*.course' => 'required_with:education|string',
-            'education.*.institution' => 'required_with:education|string',
-            'education.*.marks' => 'required_with:education|numeric',
-            'education.*.year' => 'required_with:education|string',
+            // 'education' => 'nullable|array',
+            // 'education.*.course' => 'required_with:education|string',
+            // 'education.*.institution' => 'required_with:education|string',
+            // 'education.*.marks' => 'required_with:education|numeric',
+            // 'education.*.year' => 'required_with:education|string',
 
             // Experience (dynamic)
-            'experience' => 'nullable|array',
-            'experience.*.company' => 'required_with:experience|string',
-            'experience.*.designation' => 'required_with:experience|string',
-            'experience.*.from' => 'required_with:experience|date',
-            'experience.*.to' => 'nullable|date',
+            // 'experience' => 'nullable|array',
+            // 'experience.*.company' => 'required_with:experience|string',
+            // 'experience.*.designation' => 'required_with:experience|string',
+            // 'experience.*.from' => 'required_with:experience|date',
+            // 'experience.*.to' => 'nullable|date',
 
            
         ]);
@@ -258,6 +258,8 @@ class EmployeeController extends Controller
 
             // Create employee
             $employee = Employee::create($employeeData);
+
+            
 
             // Save Education
             if ($request->has('education')) {

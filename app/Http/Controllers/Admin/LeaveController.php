@@ -69,7 +69,6 @@ class LeaveController extends Controller
         'leave_type_id' => 'required|exists:leave_types,id',
         'start_date' => 'required|date',
         'end_date' => 'required|date|after_or_equal:start_date',
-        'half_day' => 'required|in:none,first_half,second_half',
         'reason' => 'required|string|max:500',
         'document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:2048'
     ]);
@@ -100,7 +99,7 @@ class LeaveController extends Controller
             'start_date' => $validated['start_date'],
             'end_date' => $validated['end_date'],
             'total_days' => $totalDays,
-            'half_day' => $validated['half_day'],
+            'half_day' => 'none',
             'reason' => $validated['reason'],
             'status' => 'pending',
             'created_by' => auth()->id()
