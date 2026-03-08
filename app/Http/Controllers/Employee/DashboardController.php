@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Employee;
 
 use App\Http\Controllers\Controller;
+use App\Models\Announcement;
 use App\Models\Attendance;
 use App\Models\Leave;
-use App\Models\Announcement;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
+        $user = Auth::user();
         
-        $employee = $user->employee;
+        $employee = $user;
 
         $todayAttendance = Attendance::where('employee_id', $employee->id)
             ->whereDate('date', Carbon::today())
@@ -46,7 +47,7 @@ class DashboardController extends Controller
         //     ->limit(5)
         //     ->get();
 
-        return view('employee.dashboard', compact(
+        return view('employees.dashboard', compact(
             'employee',
             'todayAttendance',
             'presentCount',
@@ -55,7 +56,7 @@ class DashboardController extends Controller
             'lateCount',
             'pendingLeaves',
             'approvedLeaves',
-            'recentAnnouncements'
+         
         ));
     }
 

@@ -29,16 +29,14 @@ class EmployeeService
 
     public function createUserAccount($employee, $password = null)
     {
-        $user = User::create([
+        $user = User::forceCreate([
             'employee_id' => $employee->id,
             'username' => $employee->first_name,
             'full_name' => $employee->full_name,
             'email' => $employee->email,
             'password' => Hash::make($password ?? 'password'),
-            'is_active' => true
         ]);
 
-        // Assign default role
         $user->assignRole('employee');
 
         return $user;

@@ -82,13 +82,8 @@
                                 name="first_name" value="{{ old('first_name', $employee->first_name) }}" required>
                         </div>
                     </div>
-                    <div class="col-md-2">
-                        <div class="form-group mb-2">
-                            <label class="small mb-0 ">Middle Name</label>
-                            <input type="text" class="form-control form-control-sm" name="middle_name" 
-                                value="{{ old('middle_name', $employee->middle_name) }}">
-                        </div>
-                    </div>
+                    
+                    
                     <div class="col-md-2">
                         <div class="form-group mb-2">
                             <label class="small mb-0 ">Last Name <span class="text-danger">*</span></label>
@@ -142,6 +137,7 @@
                             </select>
                         </div>
                     </div>
+
                     <div class="col-md-2">
                         <div class="form-group mb-2">
                             <label class="small mb-0 ">Religion</label>
@@ -158,6 +154,13 @@
                             <label class="small mb-0 ">Nationality</label>
                             <input type="text" class="form-control form-control-sm" name="nationality" 
                                 value="{{ old('nationality', $employee->nationality ?? 'Pakistani') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <div class="form-group mb-2">
+                            <label class="small mb-0 ">Password</label>
+                            <input type="text" class="form-control form-control-sm" name="password" 
+                                value="{{ old('Password', $employee->password ?? 'Password') }}">
                         </div>
                     </div>
                 </div>
@@ -223,27 +226,9 @@
                                 value="{{ old('phone', $employee->phone) }}" required>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="form-group mb-2">
-                            <label class="small mb-0 ">Alternate Phone</label>
-                            <input type="text" class="form-control form-control-sm phone-mask" name="alternate_phone" 
-                                value="{{ old('alternate_phone', $employee->alternate_phone) }}">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group mb-2">
-                            <label class="small mb-0 ">WhatsApp</label>
-                            <input type="text" class="form-control form-control-sm phone-mask" name="whatsapp_number" 
-                                value="{{ old('whatsapp_number', $employee->whatsapp_number) }}">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="form-group mb-2">
-                            <label class="small mb-0 ">Emergency Phone</label>
-                            <input type="text" class="form-control form-control-sm phone-mask" name="emergency_phone" 
-                                value="{{ old('emergency_phone', $employee->emergency_phone) }}">
-                        </div>
-                    </div>
+                  
+                    
+                   
                     <div class="col-md-3">
                         <div class="form-group mb-2">
                             <label class="small mb-0 ">Emergency Contact</label>
@@ -400,17 +385,7 @@
                         </div>
                     </div>
                    
-                    <div class="col-md-2">
-                        <div class="form-group mb-2">
-                            <label class="small mb-0 ">Level</label>
-                            <select class="form-control form-control-sm" name="employee_level">
-                                <option value="">Select</option>
-                                @for($i=1; $i<=5; $i++)
-                                <option value="{{ $i }}" {{ old('employee_level', $employee->employee_level) == $i ? 'selected' : '' }}>Level {{ $i }}</option>
-                                @endfor
-                            </select>
-                        </div>
-                    </div>
+                   
                     <div class="col-md-2">
                         <div class="form-group mb-2">
                             <label class="small mb-0 ">CTC (PKR)</label>

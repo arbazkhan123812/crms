@@ -40,6 +40,7 @@ class AuthController extends Controller
             ]);
         }
 
+
         if (Auth::attempt([
             'email' => $request->identity,
             'password' => $request->password
@@ -48,9 +49,11 @@ class AuthController extends Controller
             'password' => $request->password
         ])) {
 
+            $redirect = Auth::user()->employee_id ? '/employee/dashboard' : '/admin/users/index';
+
             return response()->json([
                 'success' => true,
-                'redirect' => url('/admin/users/index')
+                'redirect' => url($redirect)
             ]);
         }
 

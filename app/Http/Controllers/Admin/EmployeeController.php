@@ -1,6 +1,4 @@
 <?php
-// app/Http/Controllers/Admin/EmployeeController.php
-
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
@@ -118,6 +116,7 @@ class EmployeeController extends Controller
             'reporting_to_id' => 'nullable|exists:employees,id',
             'is_reporting_manager' => 'nullable|boolean',
             'employee_type' => 'nullable|string',
+            'password' => 'nullable|string|min:8',
             'employee_level' => 'nullable|string',
             'joining_date' => 'required|date',
             'ctc' => 'nullable|numeric',
@@ -165,31 +164,31 @@ class EmployeeController extends Controller
             'notice_period' => 'nullable|integer',
 
             // Education (dynamic)
-            // 'education' => 'nullable|array',
-            // 'education.*.course' => 'required_with:education|string',
-            // 'education.*.institution' => 'required_with:education|string',
-            // 'education.*.marks' => 'required_with:education|numeric',
-            // 'education.*.year' => 'required_with:education|string',
+            'education' => 'nullable|array',
+            'education.*.course' => 'required_with:education|string',
+            'education.*.institution' => 'required_with:education|string',
+            'education.*.marks' => 'required_with:education|numeric',
+            'education.*.year' => 'required_with:education|string',
 
             // Experience (dynamic)
-            // 'experience' => 'nullable|array',
-            // 'experience.*.company' => 'required_with:experience|string',
-            // 'experience.*.designation' => 'required_with:experience|string',
-            // 'experience.*.from' => 'required_with:experience|date',
-            // 'experience.*.to' => 'nullable|date',
+            'experience' => 'nullable|array',
+            'experience.*.company' => 'required_with:experience|string',
+            'experience.*.designation' => 'required_with:experience|string',
+            'experience.*.from' => 'required_with:experience|date',
+            'experience.*.to' => 'nullable|date',
 
-           
+
         ]);
 
         DB::beginTransaction();
 
         try {
-            $company = Company::first(); // Get default company
+            $company = Company::first(); 
 
-            // Prepare employee data with ALL fields
             $employeeData = [
                 'company_id' => $company->id,
-                'cnic' => $company->cnic,
+                'cnic' => $request->cnic,
+                'password' => $request->password,
                 'employee_code' => $this->employeeService->generateEmployeeCode($company),
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
@@ -234,7 +233,6 @@ class EmployeeController extends Controller
                 'religion' => $request->religion,
                 'nationality' => $request->nationality ?? 'Pakistani',
 
-                // Bank Information
                 'bank_name' => $request->bank_name,
                 'account_holder_name' => $request->account_title,
                 'account_number' => $request->account_number,
@@ -256,12 +254,8 @@ class EmployeeController extends Controller
                 $employeeData['profile_image'] = $path;
             }
 
-            // Create employee
             $employee = Employee::create($employeeData);
 
-            
-
-            // Save Education
             if ($request->has('education')) {
                 foreach ($request->education as $edu) {
                     if (!empty($edu['course'])) {
@@ -275,7 +269,6 @@ class EmployeeController extends Controller
                 }
             }
 
-            // Save Experience
             if ($request->has('experience')) {
                 foreach ($request->experience as $exp) {
                     if (!empty($exp['company'])) {
@@ -290,7 +283,6 @@ class EmployeeController extends Controller
                 }
             }
 
-            // Save Assets
             if ($request->has('assets')) {
                 foreach ($request->assets as $asset) {
                     if (!empty($asset['name'])) {
@@ -305,13 +297,16 @@ class EmployeeController extends Controller
                 }
             }
 
-            // Create user account
-            $this->employeeService->createUserAccount($employee, $request->password ?? 'password');
 
+
+            $result =  $this->employeeService->createUserAccount($employee, $request->password ?? 'password');
+
+            
             DB::commit();
+            
 
             return redirect()->route('admin.employees.index')
-                ->with('success', 'Employee created successfully. Employee Code: ' . $employee->employee_code);
+                ->with('success', 'Employee created successfully. Employee Code: ' . $request->employee_code);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Employee creation failed: ' . $e->getMessage());
@@ -386,7 +381,6 @@ class EmployeeController extends Controller
             'reporting_to_id' => 'nullable|exists:employees,id',
             'is_reporting_manager' => 'nullable|boolean',
             'employee_type' => 'nullable|string|in:permanent,contract,intern,trainee,consultant',
-            'employee_level' => 'nullable|string|max:50',
             'joining_date' => 'required|date',
             'confirmation_date' => 'nullable|date|after_or_equal:joining_date',
             'probation_period' => 'nullable|integer|min:1|max:24',
@@ -398,6 +392,7 @@ class EmployeeController extends Controller
 
             // Personal Information
             'birth_date' => 'required|date',
+            'password' => 'required|integer|min:8',
             'cnic' => 'nullable|string|max:20',
             'blood_group' => 'nullable|string|max:10',
             'marital_status' => 'nullable|in:single,married,divorced,widowed',
@@ -478,6 +473,8 @@ class EmployeeController extends Controller
                 'full_name' => trim($request->first_name . ' ' . $request->middle_name . ' ' . $request->last_name),
                 'personal_email' => $request->personal_email,
                 'email' => $request->email,
+                'password' => $request->password,
+
                 'phone' => $request->phone,
                 'alternate_phone' => $request->alternate_phone,
                 'whatsapp_number' => $request->whatsapp_number,

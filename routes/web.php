@@ -216,3 +216,4 @@ Route::prefix('employee')->name('employee.')->middleware(['auth'])->group(functi
 Route::get('/', [AuthController::class, 'index']);
 Route::post('/Auth/login', [AuthController::class, 'process_login'])->name('auth.login.process');
 Route::get('/Auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
+// Route::get('/Auth/testy', [AuthController::class, 'testy']);

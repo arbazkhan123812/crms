@@ -199,6 +199,7 @@
                                 @enderror
                             </div>
                         </div>
+                       
 
                         <!-- Blood Group -->
                         <div class="col-md-2">
@@ -243,7 +244,15 @@
                                 @enderror
                             </div>
                         </div>
+                         <div class="col-md-2">
+                            <div class="form-group mb-2">
+                                <label class="form-label">Password</label>
+                                <input type="number" name="password" class="form-control form-control-sm" id="password" >
+                            </div>
+                            
                     </div>
+                    </div>
+                   
 
                     <!-- Photo Upload -->
                     <div class="row mt-2">
@@ -642,20 +651,6 @@
                             </div>
                         </div>
 
-                        <!-- Employee Level -->
-                        <div class="col-md-2">
-                            <div class="form-group mb-2">
-                                <label class="form-label">Level</label>
-                                <select class="form-control form-control-sm" id="employee_level" name="employee_level">
-                                    <option value="">Select</option>
-                                    <option value="1" {{ old('employee_level') == '1' ? 'selected' : '' }}>Level 1</option>
-                                    <option value="2" {{ old('employee_level') == '2' ? 'selected' : '' }}>Level 2</option>
-                                    <option value="3" {{ old('employee_level') == '3' ? 'selected' : '' }}>Level 3</option>
-                                    <option value="4" {{ old('employee_level') == '4' ? 'selected' : '' }}>Level 4</option>
-                                    <option value="5" {{ old('employee_level') == '5' ? 'selected' : '' }}>Level 5</option>
-                                </select>
-                            </div>
-                        </div>
 
                         <!-- CTC -->
                         <div class="col-md-2">
