@@ -67,7 +67,7 @@ class EmployeeController extends Controller
         $employmentTypes = Employee::distinct('employment_type')->pluck('employment_type');
         $statuses = ['active', 'inactive', 'suspended', 'terminated'];
 
-        return view('admin.employees.index', compact(
+        return view('employees.index', compact(
             'employees',
             'companies',
             'departments',
@@ -94,7 +94,7 @@ class EmployeeController extends Controller
             ->get();
 
 
-        return view('admin.employees.create', compact('companies', 'departments', 'designations', 'managers'));
+        return view('employees.create', compact('companies', 'departments', 'designations', 'managers'));
     }
 
 
@@ -120,8 +120,6 @@ class EmployeeController extends Controller
             'employee_level' => 'nullable|string',
             'joining_date' => 'required|date',
             'ctc' => 'nullable|numeric',
-            'seat_location' => 'nullable|string',
-            'extension' => 'nullable|string',
             'experience_status' => 'required|in:fresher,experienced',
 
             // Personal Information
@@ -205,8 +203,6 @@ class EmployeeController extends Controller
                 'employee_level' => $request->employee_level,
                 'joining_date' => $request->joining_date,
                 'ctc' => $request->ctc,
-                'seat_location' => $request->seat_location,
-                'extension' => $request->extension,
                 'experience_status' => $request->experience_status,
                 'birth_date' => $request->birth_date,
                 'present_address_line1' => $request->present_address_line1,
@@ -357,7 +353,7 @@ class EmployeeController extends Controller
             ->where('id', '!=', $employee->id)
             ->get();
 
-        return view('admin.employees.edit', compact('employee', 'companies', 'departments', 'designations', 'managers'));
+        return view('employees.edit', compact('employee', 'companies', 'departments', 'designations', 'managers'));
     }
 
 
@@ -386,8 +382,6 @@ class EmployeeController extends Controller
             'probation_period' => 'nullable|integer|min:1|max:24',
             'notice_period' => 'nullable|integer|min:1|max:180',
             'ctc' => 'nullable|numeric|min:0',
-            'seat_location' => 'nullable|string|max:255',
-            'extension' => 'nullable|string|max:50',
             'experience_status' => 'required|in:fresher,experienced',
 
             // Personal Information
@@ -494,15 +488,13 @@ class EmployeeController extends Controller
                 'probation_period' => $request->probation_period ?? 6,
                 'notice_period' => $request->notice_period ?? 30,
                 'ctc' => $request->ctc,
-                'seat_location' => $request->seat_location,
-                'extension' => $request->extension,
                 'experience_status' => $request->experience_status,
 
                 // Personal Information
                 'birth_date' => $request->birth_date,
                 'blood_group' => $request->blood_group,
                 'marital_status' => $request->marital_status,
-                'religion' => $request->religion,  // FIXED: was 'riligion'
+                'religion' => $request->religion, 
                 'nationality' => $request->nationality ?? 'Pakistani',
 
                 // Present Address
@@ -735,14 +727,14 @@ class EmployeeController extends Controller
     {
         $team = $this->employeeService->getTeamMembers($employee);
 
-        return view('admin.employees.team', compact('employee', 'team'));
+        return view('employees.team', compact('employee', 'team'));
     }
 
     public function reportingChain(Employee $employee)
     {
         $chain = $this->employeeService->getReportingHierarchy($employee);
 
-        return view('admin.employees.reporting-chain', compact('employee', 'chain'));
+        return view('employees.reporting-chain', compact('employee', 'chain'));
     }
 
 
@@ -815,7 +807,7 @@ class EmployeeController extends Controller
      */
     public function importForm()
     {
-        return view('admin.employees.import');
+        return view('employees.import');
     }
 
     /**

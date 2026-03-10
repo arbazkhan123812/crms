@@ -661,25 +661,6 @@
                             </div>
                         </div>
 
-                        <!-- Seat Location (NEW) -->
-                        <div class="col-md-2">
-                            <div class="form-group mb-2">
-                                <label class="form-label">Seat Location</label>
-                                <input type="text" class="form-control form-control-sm" id="seat_location"
-                                    name="seat_location" value="{{ old('seat_location') }}"
-                                    placeholder="Floor 2, Section A">
-                            </div>
-                        </div>
-
-                        <!-- Extension (NEW) -->
-                        <div class="col-md-2">
-                            <div class="form-group mb-2">
-                                <label class="form-label">Extension</label>
-                                <input type="text" class="form-control form-control-sm" id="extension" name="extension"
-                                    value="{{ old('extension') }}" placeholder="123">
-                            </div>
-                        </div>
-
                         <!-- Status -->
                         <div class="col-md-2">
                             <div class="form-group mb-2">

@@ -260,7 +260,7 @@ class AttendanceController extends Controller
     public function checkIn(Request $request)
     {
         $user = auth()->user();
-        $employee = $user->employee;
+        $employee = Employee::find($user->employee_id);
 
         if (!$employee) {
             return response()->json(['error' => 'No employee record found'], 404);
@@ -403,91 +403,128 @@ class AttendanceController extends Controller
         return response()->json(['success' => true, 'message' => $message]);
     }
 
-    public function update(Request $request)
-    {
-        $request->validate([
-            'attendance_id' => 'required|exists:attendance,id',
-            'check_in' => 'required',
-            'check_out' => 'required',
-            'status' => 'required|in:present,absent,half_day,wfh,leave,holiday',
-            'is_late' => 'nullable|boolean',
-            'is_overtime' => 'nullable|boolean',
-            'remarks' => 'nullable|string'
+public function update(Request $request)
+{
+    $request->validate([
+        'attendance_id' => 'required|exists:attendance,id',
+        'check_in' => 'required',
+        'check_out' => 'required',
+        'status' => 'required|in:present,absent,half_day,wfh,leave,holiday',
+        'is_late' => 'nullable|boolean',
+        'is_overtime' => 'nullable|boolean',
+        'remarks' => 'nullable|string'
+    ]);
+
+    try {
+        DB::beginTransaction();
+
+        $attendance = Attendance::with('employee.designation')->findOrFail($request->attendance_id);
+
+        $date = Carbon::parse($attendance->date)->format('Y-m-d');
+        $checkIn = Carbon::parse($date . ' ' . $request->check_in);
+        $checkOut = Carbon::parse($date . ' ' . $request->check_out);
+        $totalHours = $checkIn->diffInMinutes($checkOut);
+
+        // Get employee's designation shift timings
+        $employee = $attendance->employee;
+        $designation = $employee->designation;
+
+        $lateMinutes = 0;
+        $earlyExitMinutes = 0;
+        $overtimeMinutes = 0;
+        $isLate = false;
+        $isEarlyExit = false;
+        $isOvertime = false;
+
+        // ALWAYS calculate based on designation rules if status is present/wfh
+        if ($designation && in_array($request->status, ['present', 'wfh'])) {
+            // Calculate late minutes
+            $lateMinutes = $designation->calculateLateMinutes($checkIn);
+            $earlyExitMinutes = $designation->calculateEarlyExitMinutes($checkOut);
+            $overtimeMinutes = $designation->calculateOvertimeMinutes($checkOut);
+
+            // Set flags based on thresholds
+            $isLate = $designation->isLate($checkIn);
+            $isEarlyExit = $earlyExitMinutes > $designation->early_exit_threshold;
+            $isOvertime = $overtimeMinutes > 0;
+
+            // Log for debugging (optional)
+        }
+
+        // Update attendance - use calculated values, checkboxes are ignored for auto-calculation
+        $attendance->update([
+            'check_in' => $checkIn,
+            'check_out' => $checkOut,
+            'total_hours' => $totalHours,
+            'late_minutes' => $lateMinutes,
+            'early_exit_minutes' => $earlyExitMinutes,
+            'overtime_minutes' => $overtimeMinutes,
+            'is_late' => $isLate,  // Auto-calculated, checkbox ignored
+            'is_early_exit' => $isEarlyExit,
+            'is_overtime' => $isOvertime,  // Auto-calculated, checkbox ignored
+            'status' => $request->status,
+            'remarks' => $request->remarks,
+            'marked_by' => auth()->id()
         ]);
 
-        try {
-            DB::beginTransaction();
+        DB::commit();
 
-            $attendance = Attendance::with('employee.designation')->findOrFail($request->attendance_id);
-
-            $date = Carbon::parse($attendance->date)->format('Y-m-d');
-            $checkIn = Carbon::parse($date . ' ' . $request->check_in);
-            $checkOut = Carbon::parse($date . ' ' . $request->check_out);
-            $totalHours = $checkIn->diffInMinutes($checkOut);
-
-            // Get employee's designation shift timings
-            $employee = $attendance->employee;
-            $designation = $employee->designation;
-
-            $lateMinutes = 0;
-            $earlyExitMinutes = 0;
-            $overtimeMinutes = 0;
-            $isLate = false;
-            $isEarlyExit = false;
-            $isOvertime = false;
-
-            if ($designation && $request->status == 'present') {
-                // Recalculate based on designation rules
-                $lateMinutes = $designation->calculateLateMinutes($checkIn);
-                $earlyExitMinutes = $designation->calculateEarlyExitMinutes($checkOut);
-                $overtimeMinutes = $designation->calculateOvertimeMinutes($checkOut);
-
-                $isLate = $designation->isLate($checkIn);
-                $isEarlyExit = $earlyExitMinutes > $designation->early_exit_threshold;
-                $isOvertime = $overtimeMinutes > 0;
-            }
-
-            $attendance->update([
-                'check_in' => $checkIn,
-                'check_out' => $checkOut,
-                'total_hours' => $totalHours,
-                'late_minutes' => $lateMinutes,
-                'early_exit_minutes' => $earlyExitMinutes,
-                'overtime_minutes' => $overtimeMinutes,
-                'is_late' => $request->has('is_late') ? true : $isLate,
-                'is_early_exit' => $request->has('is_early_exit') ? true : $isEarlyExit,
-                'is_overtime' => $request->has('is_overtime') ? true : $isOvertime,
-                'status' => $request->status,
-                'remarks' => $request->remarks,
-                'marked_by' => auth()->id()
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Attendance updated successfully',
+                'attendance' => $attendance
             ]);
-
-            DB::commit();
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Attendance updated successfully',
-                    'attendance' => $attendance
-                ]);
-            }
-
-            return redirect()->back()->with('success', 'Attendance updated successfully');
-        } catch (\Exception $e) {
-            DB::rollBack();
-
-            if ($request->ajax()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error updating attendance',
-                    'error' => $e->getMessage()
-                ], 500);
-            }
-
-            return redirect()->back()->with('error', 'Error updating attendance: ' . $e->getMessage());
         }
+
+        return redirect()->back()->with('success', 'Attendance updated successfully');
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        if ($request->ajax()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating attendance',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+
+        return redirect()->back()->with('error', 'Error updating attendance: ' . $e->getMessage());
+    }
+}
+
+public function calculateAttendance(Request $request)
+{
+    $request->validate([
+        'employee_id' => 'required|exists:employees,id',
+        'date' => 'required|date',
+        'check_in' => 'required',
+        'check_out' => 'required',
+    ]);
+
+    $employee = Employee::with('designation')->find($request->employee_id);
+    $designation = $employee->designation;
+
+    if (!$designation) {
+        return response()->json(['error' => 'No designation found'], 404);
     }
 
+    $checkIn = Carbon::parse($request->date . ' ' . $request->check_in);
+    $checkOut = Carbon::parse($request->date . ' ' . $request->check_out);
+
+    $lateMinutes = $designation->calculateLateMinutes($checkIn);
+    $overtimeMinutes = $designation->calculateOvertimeMinutes($checkOut);
+    $isLate = $designation->isLate($checkIn);
+    $isOvertime = $overtimeMinutes > 0;
+
+    return response()->json([
+        'success' => true,
+        'late_minutes' => $lateMinutes,
+        'overtime_minutes' => $overtimeMinutes,
+        'is_late' => $isLate,
+        'is_overtime' => $isOvertime
+    ]);
+}
     public function getEmployeeShift($id)
     {
         $employee = Employee::with('designation')->findOrFail($id);

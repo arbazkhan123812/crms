@@ -18,6 +18,7 @@
         <div class="content-wrapper">
             @include('_global.Admin.Navigation') <!-- Content body -->
             <div class="content-body">
+               
                 @yield('content')
                 <div class="modal fade" id="rejected-modal" tabindex="-1" role="dialog"
                     aria-labelledby="exampleModalCenter" aria-hidden="true">
@@ -101,9 +102,9 @@
 <script>
     $(document).ready(function () {
 
-        $(document).ready(function() {
-    $('#myTable').DataTable();
-});
+        $(document).ready(function () {
+            $('#myTable').DataTable();
+        });
 
         // Function to initialize or update NiceScroll
         function initializeNiceScroll() {

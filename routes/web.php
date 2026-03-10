@@ -175,18 +175,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('attendance/check-out', [AttendanceController::class, 'checkOut'])->name('attendance.checkout');
     Route::get('attendance/export', [AttendanceController::class, 'export'])->name('attendance.export');
     Route::resource('leave-types', LeaveTypeController::class);
-    
+
     Route::get('leaves', [LeaveController::class, 'index'])->name('leaves.index');
     Route::get('leaves/create', [LeaveController::class, 'create'])->name('leaves.create');
     Route::post('leaves', [LeaveController::class, 'store'])->name('leaves.store');
     Route::get('leaves/{id}', [LeaveController::class, 'show'])->name('leaves.show');
     Route::post('leaves/{id}/status', [LeaveController::class, 'updateStatus'])->name('leaves.status');
-    
+
     Route::get('leave-balances', [LeaveController::class, 'balances'])->name('leaves.balances');
     Route::post('leave-balances/init', [LeaveController::class, 'initializeBalance'])->name('leaves.balances.init');
-    
+
     Route::get('leave-calendar', [LeaveController::class, 'calendar'])->name('leaves.calendar');
-    
+
     Route::resource('holidays', HolidayController::class);
     Route::resource('leave-types', LeaveTypeController::class);
     Route::post('leave-types/{id}/toggle-status', [LeaveTypeController::class, 'toggleStatus'])
@@ -210,7 +210,12 @@ Route::prefix('employee')->name('employee.')->middleware(['auth'])->group(functi
     Route::get('attendance', [DashboardController::class, 'attendance'])->name('attendance');
     Route::get('leaves', [DashboardController::class, 'leaves'])->name('leaves');
     Route::post('leaves/apply', [DashboardController::class, 'applyLeave'])->name('leaves.apply');
+    Route::post('attendance/check-in', [DashboardController::class, 'checkIn'])->name('attendance.checkin');
+    Route::get('dashboard', [App\Http\Controllers\Employee\DashboardController::class, 'index'])->name('dashboard');
+    Route::post('attendance/checkin', [App\Http\Controllers\Employee\DashboardController::class, 'checkIn'])->name('attendance.checkin');
+    Route::post('attendance/checkout', [App\Http\Controllers\Employee\DashboardController::class, 'checkOut'])->name('attendance.checkout');
     Route::post('leaves/{id}/cancel', [DashboardController::class, 'cancelLeave'])->name('leaves.cancel');
+    Route::post('attendance/calculate', [AttendanceController::class, 'calculateAttendance'])->name('attendance.calculate');
 });
 
 Route::get('/', [AuthController::class, 'index']);

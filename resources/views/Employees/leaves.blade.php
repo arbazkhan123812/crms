@@ -22,28 +22,57 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show mb-4">
+            <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show mb-4">
+            <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+    @endif
+
+    <!-- Leave Balances Cards -->
     <div class="row mb-4">
-        @foreach($balances as $balance)
-        <div class="col-md-3">
-            <div class="card">
+        @forelse($balances as $balance)
+        <div class="col-md-3 mb-3">
+            <div class="card h-100">
                 <div class="card-body">
-                    <h6 class="text-muted">{{ $balance->leaveType->name }}</h6>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h3 class="mb-0">{{ $balance->remaining_days }}</h3>
-                        <small class="text-muted">/ {{ $balance->total_days }}</small>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0">{{ $balance->leaveType->name }}</h6>
+                        <span class="badge badge-primary">{{ $balance->remaining_days }}/{{ $balance->total_days }}</span>
                     </div>
-                    <div class="progress mt-2" style="height: 5px;">
-                        <div class="progress-bar bg-success" style="width: {{ $balance->utilization_percentage }}%"></div>
+                    <div class="progress mb-2" style="height: 8px;">
+                        @php
+                            $percentage = $balance->total_days > 0 ? ($balance->used_days / $balance->total_days) * 100 : 0;
+                        @endphp
+                        <div class="progress-bar bg-success" style="width: {{ $percentage }}%"></div>
+                    </div>
+                    <div class="small text-muted">
+                        <span>Used: {{ $balance->used_days }}</span>
+                        <span class="mx-2">|</span>
+                        <span>Pending: {{ $balance->pending_days }}</span>
                     </div>
                 </div>
             </div>
         </div>
-        @endforeach
+        @empty
+        <div class="col-12">
+            <div class="alert alert-info">
+                No leave balances found for {{ Carbon\Carbon::now()->year }}
+            </div>
+        </div>
+        @endforelse
     </div>
 
+    <!-- Leave History Table -->
     <div class="card">
         <div class="card-header bg-light py-3">
-            <h6 class="mb-0">Leave History</h6>
+            <h6 class="mb-0"><i class="fas fa-history mr-2"></i>Leave History</h6>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -62,16 +91,24 @@
                         @forelse($leaves as $leave)
                         <tr>
                             <td>{{ $leave->leaveType->name }}</td>
-                            <td>{{ $leave->start_date->format('d M') }} - {{ $leave->end_date->format('d M') }}</td>
+                            <td>{{ Carbon\Carbon::parse($leave->start_date)->format('d M') }} - {{ Carbon\Carbon::parse($leave->end_date)->format('d M') }}</td>
                             <td>{{ $leave->total_days }}</td>
                             <td>{{ $leave->created_at->format('d M Y') }}</td>
                             <td>
-                                <span class="badge badge-{{ $leave->status_badge }}">{{ ucfirst($leave->status) }}</span>
+                                @php
+                                    $statusClass = [
+                                        'pending' => 'warning',
+                                        'approved' => 'success',
+                                        'rejected' => 'danger',
+                                        'cancelled' => 'secondary'
+                                    ][$leave->status] ?? 'secondary';
+                                @endphp
+                                <span class="badge badge-{{ $statusClass }}">{{ ucfirst($leave->status) }}</span>
                             </td>
                             <td>
                                 @if($leave->status == 'pending')
                                 <button class="btn btn-sm btn-danger" onclick="cancelLeave({{ $leave->id }})">
-                                    <i class="fas fa-times"></i>
+                                    <i class="fas fa-times mr-2"></i> Cancel
                                 </button>
                                 @endif
                             </td>
@@ -81,6 +118,7 @@
                             <td colspan="6" class="text-center py-5">
                                 <i class="fas fa-umbrella-beach fa-3x text-muted mb-3"></i>
                                 <h5>No Leave Applications</h5>
+                                <p class="text-muted">You haven't applied for any leave yet</p>
                             </td>
                         </tr>
                         @endforelse
@@ -107,35 +145,49 @@
                 <div class="modal-body">
                     <div class="form-group mb-3">
                         <label class="form-label">Leave Type</label>
-                        <select class="form-control form-control-sm" name="leave_type_id" required>
-                            <option value="">Select</option>
-                            @foreach($balances as $balance)
-                                <option value="{{ $balance->leaveType->id }}">{{ $balance->leaveType->name }} ({{ $balance->remaining_days }} days left)</option>
+                        <select class="form-control form-control-sm" name="leave_type_id" id="leave_type_id" required>
+                            <option value="">Select Leave Type</option>
+                            @foreach($leavetypes as $type)
+                                @php
+                                    $balance = $balances->firstWhere('leave_type_id', $type->id);
+                                    $available = $balance ? $balance->remaining_days : $type->days_per_year;
+                                @endphp
+                                <option value="{{ $type->id }}" data-available="{{ $available }}">
+                                    {{ $type->name }} ({{ $available }} days available)
+                                </option>
                             @endforeach
                         </select>
                     </div>
+                    
                     <div class="row">
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label class="form-label">Start Date</label>
-                                <input type="date" class="form-control form-control-sm" name="start_date" required>
+                                <input type="date" class="form-control form-control-sm" name="start_date" id="start_date" required>
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="form-group mb-3">
                                 <label class="form-label">End Date</label>
-                                <input type="date" class="form-control form-control-sm" name="end_date" required>
+                                <input type="date" class="form-control form-control-sm" name="end_date" id="end_date" required>
                             </div>
                         </div>
                     </div>
+                    
                     <div class="form-group mb-3">
                         <label class="form-label">Reason</label>
                         <textarea class="form-control form-control-sm" name="reason" rows="3" required></textarea>
                     </div>
+                    
+                    <!-- Live calculation display -->
+                    <div class="alert alert-info" id="liveCalculation" style="display: none;">
+                        <i class="fas fa-calculator mr-2"></i>
+                        <span id="calculationMessage"></span>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary btn-sm">Submit</button>
+                    <button type="submit" class="btn btn-primary btn-sm" id="submitBtn">Submit Application</button>
                 </div>
             </form>
         </div>
@@ -150,11 +202,53 @@ function cancelLeave(id) {
             type: 'POST',
             data: { _token: '{{ csrf_token() }}' },
             success: function() {
-                toastr.success('Leave cancelled');
+                toastr.success('Leave cancelled successfully');
                 setTimeout(() => location.reload(), 1500);
+            },
+            error: function() {
+                toastr.error('Error cancelling leave');
             }
         });
     }
 }
+
+// Live calculation of leave days
+$('#start_date, #end_date, #leave_type_id').on('change', function() {
+    let startDate = $('#start_date').val();
+    let endDate = $('#end_date').val();
+    let leaveTypeId = $('#leave_type_id').val();
+    
+    if (startDate && endDate && leaveTypeId) {
+        let start = new Date(startDate);
+        let end = new Date(endDate);
+        let diffTime = Math.abs(end - start);
+        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+        
+        let selectedOption = $('#leave_type_id option:selected');
+        let availableDays = parseInt(selectedOption.data('available'));
+        
+        $('#liveCalculation').show();
+        
+        if (diffDays > availableDays) {
+            $('#calculationMessage').html(`
+                <span class="text-danger">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    You are requesting ${diffDays} days but only ${availableDays} days are available!
+                </span>
+            `);
+            $('#submitBtn').prop('disabled', true);
+        } else {
+            $('#calculationMessage').html(`
+                <span class="text-primary">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    Requesting ${diffDays} days. ${availableDays} days available.
+                </span>
+            `);
+            $('#submitBtn').prop('disabled', false);
+        }
+    } else {
+        $('#liveCalculation').hide();
+    }
+});
 </script>
 @endsection
