@@ -85,6 +85,11 @@ class AttendanceController extends Controller
             return redirect()->back()->with('error', 'Attendance already marked.');
         }
 
+        $is_holiday = Holiday::whereDate('date',$request->date)->exists();
+        if($is_holiday){
+            return redirect()->back()->with('error', 'Attendance cannot be marked because today is holiday.');
+        }
+
         $isOnLeave = Leave::where('employee_id', $request->employee_id)
             ->where('status', 'approved')
             ->whereDate('start_date', '<=', $request->date)
@@ -198,8 +203,8 @@ class AttendanceController extends Controller
 
     public function monthlyReport(Request $request)
     {
-        $month = $request->get('month', Carbon::now()->month);
-        $year = $request->get('year', Carbon::now()->year);
+        $month = $request->get('month', Carbon::now('Asia/Karachi')->month);
+        $year = $request->get('year', Carbon::now('Asia/Karachi')->year);
 
         $startDate = Carbon::createFromDate($year, $month, 1)->startOfDay();
         $endDate = $startDate->copy()->endOfMonth()->endOfDay();
@@ -288,7 +293,7 @@ class AttendanceController extends Controller
             return response()->json(['error' => 'Already checked in today'], 400);
         }
 
-        $checkInTime = Carbon::now();
+        $checkInTime = Carbon::now('Asia/Karachi');
 
         // Check if flexible timing is enabled
         if ($designation->has_flexible_timing) {
@@ -356,7 +361,7 @@ class AttendanceController extends Controller
             return response()->json(['error' => 'Already checked out today'], 400);
         }
 
-        $checkOutTime = Carbon::now();
+        $checkOutTime = Carbon::now('Asia/Karachi');
 
         // Check if flexible timing is enabled
         if ($designation->has_flexible_timing) {

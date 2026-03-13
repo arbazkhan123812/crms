@@ -5,12 +5,16 @@ use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\EmployeeSalaryController;
 use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\LeaveController;
 use App\Http\Controllers\Admin\LeaveTypeController;
+use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RecruitmentController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SalaryComponentController;
+use App\Http\Controllers\Admin\SalaryTemplateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Employee\DashboardController;
@@ -201,6 +205,37 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         ->name('holidays.import');
     Route::get('holidays/{id}/duplicate', [HolidayController::class, 'duplicate'])
         ->name('holidays.duplicate');
+    Route::prefix('payroll')->name('payroll.')->group(function () {
+        
+        // Salary Components
+        Route::resource('salary-components', SalaryComponentController::class);
+        Route::post('salary-components/{id}/toggle-status', [SalaryComponentController::class, 'toggleStatus'])
+            ->name('salary-components.toggle-status');
+        
+        // Salary Templates
+        Route::resource('salary-templates', SalaryTemplateController::class);
+        Route::get('salary-templates/by-designation/{designationId}', [SalaryTemplateController::class, 'getByDesignation'])
+            ->name('salary-templates.by-designation');
+        
+        // Employee Salaries
+        Route::resource('employee-salaries', EmployeeSalaryController::class);
+        Route::get('employee-salaries/{employeeId}/history', [EmployeeSalaryController::class, 'history'])
+            ->name('employee-salaries.history');
+        
+        // Payroll Processing
+        Route::get('payrolls', [PayrollController::class, 'index'])->name('payrolls.index');
+        Route::get('payrolls/create', [PayrollController::class, 'create'])->name('payrolls.create');
+        Route::post('payrolls/process', [PayrollController::class, 'process'])->name('payrolls.process');
+        Route::get('payrolls/{id}', [PayrollController::class, 'show'])->name('payrolls.show');
+        Route::post('payrolls/{id}/status', [PayrollController::class, 'updateStatus'])->name('payrolls.status');
+        Route::post('payrolls/bulk-status', [PayrollController::class, 'bulkUpdateStatus'])->name('payrolls.bulk-status');
+        Route::delete('payrolls/{id}', [PayrollController::class, 'destroy'])->name('payrolls.destroy');
+        Route::get('payrolls/{id}/payslip', [PayrollController::class, 'generatePayslip'])->name('payrolls.payslip');
+        
+        // Reports
+        Route::get('reports', [PayrollController::class, 'report'])->name('reports.index');
+    });
+
 });
 
 

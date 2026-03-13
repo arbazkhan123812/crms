@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Announcement;
 use App\Models\Attendance;
 use App\Models\Employee;
+use App\Models\Holiday;
 use App\Models\Leave;
 use App\Models\LeaveType;
 use Carbon\Carbon;
@@ -26,8 +27,8 @@ class DashboardController extends Controller
             ->first();
 
         $monthlyAttendance = Attendance::where('employee_id', $employee_id)
-            ->whereMonth('date', Carbon::now()->month)
-            ->whereYear('date', Carbon::now()->year)
+            ->whereMonth('date', Carbon::now('Asia/Karachi')->month)
+            ->whereYear('date', Carbon::now('Asia/Karachi')->year)
             ->get();
 
         $presentCount = $monthlyAttendance->where('status', 'present')->count();
@@ -41,13 +42,13 @@ class DashboardController extends Controller
 
         $approvedLeaves = Leave::where('employee_id', $employee_id)
             ->where('status', 'approved')
-            ->whereMonth('start_date', Carbon::now()->month)
+            ->whereMonth('start_date', Carbon::now('Asia/Karachi')->month)
             ->sum('total_days');
 
         // Add these two lines
         $balances = \App\Models\LeaveBalance::where('employee_id', $employee_id)
             ->with('leaveType')
-            ->where('year', Carbon::now()->year)
+            ->where('year', Carbon::now('Asia/Karachi')->year)
             ->get();
 
         $leaves = Leave::where('employee_id', $employee_id)
@@ -97,6 +98,11 @@ class DashboardController extends Controller
             return response()->json(['error' => 'Today is not a working day for your designation'], 400);
         }
 
+         $is_holiday = Holiday::whereDate('date',Carbon::now()->toDate())->exists();
+        if($is_holiday){
+            return response()->json(['error' => 'Today is holiday'], 400);
+        }
+
         $attendance = Attendance::firstOrNew([
             'employee_id' => $employee->id,
             'date' => $today
@@ -106,7 +112,7 @@ class DashboardController extends Controller
             return response()->json(['error' => 'Already checked in today'], 400);
         }
 
-        $checkInTime = Carbon::now();
+        $checkInTime = Carbon::now('Asia/Karachi');
 
         // Check if flexible timing is enabled
         if ($designation->has_flexible_timing) {
@@ -174,7 +180,7 @@ class DashboardController extends Controller
             return response()->json(['error' => 'Already checked out today'], 400);
         }
 
-        $checkOutTime = Carbon::now();
+        $checkOutTime = Carbon::now('Asia/Karachi');
 
         // Check if flexible timing is enabled
         if ($designation->has_flexible_timing) {
@@ -226,25 +232,25 @@ class DashboardController extends Controller
         $employee = auth()->user()->employee;
 
         $attendances = Attendance::where('employee_id', $employee->id)
-            ->whereMonth('date', Carbon::now()->month)
+            ->whereMonth('date', Carbon::now('Asia/Karachi')->month)
             ->orderBy('date', 'desc')
             ->paginate(15);
 
         $summary = [
             'present' => Attendance::where('employee_id', $employee->id)
-                ->whereMonth('date', Carbon::now()->month)
+                ->whereMonth('date', Carbon::now('Asia/Karachi')->month)
                 ->where('status', 'present')
                 ->count(),
             'absent' => Attendance::where('employee_id', $employee->id)
-                ->whereMonth('date', Carbon::now()->month)
+                ->whereMonth('date', Carbon::now('Asia/Karachi')->month)
                 ->where('status', 'absent')
                 ->count(),
             'late' => Attendance::where('employee_id', $employee->id)
-                ->whereMonth('date', Carbon::now()->month)
+                ->whereMonth('date', Carbon::now('Asia/Karachi')->month)
                 ->where('is_late', true)
                 ->count(),
             'leave' => Attendance::where('employee_id', $employee->id)
-                ->whereMonth('date', Carbon::now()->month)
+                ->whereMonth('date', Carbon::now('Asia/Karachi')->month)
                 ->where('status', 'leave')
                 ->count()
         ];
@@ -261,134 +267,140 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        $balances = \App\Models\LeaveBalance::where('employee_id', $employee)
-            ->with('leaveType')
-            ->where('year', Carbon::now()->year)
-            ->get();
+            $leavetypes = LeaveType::where('is_active', true)->get();
+            
+            $balances = $leavetypes->map(function ($type) use ($employee) {
+                $usedDays = Leave::where('employee_id', $employee)
+                    ->where('leave_type_id', $type->id)
+                    ->where('status', 'approved')
+                    ->sum('total_days');
+    
+                return (object) [
+                    'leave_type_name' => $type->name,
+                    'total_allowed'   => $type->days_per_year,
+                    'used_days'       => $usedDays,
+                    'available_days'  => $type->days_per_year - $usedDays,
+                ];
+            });
 
-        $leavetypes = LeaveType::where('is_active', true)->get();
-
-
-
-
+          
 
         return view('employees.leaves', compact('leaves', 'balances', 'leavetypes'));
     }
 
-   public function applyLeave(Request $request)
-{
-    $request->validate([
-        'leave_type_id' => 'required|exists:leave_types,id',
-        'start_date' => 'required|date|after_or_equal:today',
-        'end_date' => 'required|date|after_or_equal:start_date',
-        'reason' => 'required|string|max:500'
-    ]);
-
-    $employee_id = auth()->user()->employee_id;
-    $user_id = auth()->user()->id;
-
-    // Check if attendance already marked for any date in range
-    $dates = [];
-    $currentDate = Carbon::parse($request->start_date);
-    $endDate = Carbon::parse($request->end_date);
-    
-    while ($currentDate <= $endDate) {
-        $attendanceExists = Attendance::where('employee_id', $employee_id)
-            ->whereDate('date', $currentDate->format('Y-m-d'))
-            ->exists();
-            
-        if ($attendanceExists) {
-            $dates[] = $currentDate->format('d M Y');
-        }
-        $currentDate->addDay();
-    }
-    
-    if (!empty($dates)) {
-        $dateList = implode(', ', $dates);
-        return redirect()->back()->with('error', "Cannot apply for leave. Attendance already marked on: {$dateList}");
-    }
-
-    $startDate = Carbon::parse($request->start_date);
-    $endDate = Carbon::parse($request->end_date);
-    $requestedDays = $startDate->diffInDays($endDate) + 1;
-
-    $leaveType = LeaveType::find($request->leave_type_id);
-    
-    if (!$leaveType) {
-        return redirect()->back()->with('error', 'Invalid leave type selected');
-    }
-
-    $currentYear = Carbon::now()->year;
-    
-    // Approved leaves count
-    $approvedLeaves = Leave::where('employee_id', $employee_id)
-        ->where('leave_type_id', $request->leave_type_id)
-        ->where('status', 'approved')
-        ->whereYear('start_date', $currentYear)
-        ->orWhereYear('end_date', $currentYear)
-        ->get()
-        ->sum('total_days');
-    
-    $pendingLeaves = Leave::where('employee_id', $employee_id)
-        ->where('leave_type_id', $request->leave_type_id)
-        ->where('status', 'pending')
-        ->whereYear('start_date', $currentYear)
-        ->orWhereYear('end_date', $currentYear)
-        ->get()
-        ->sum('total_days');
-    
-    $totalUsedLeaves = $approvedLeaves + $pendingLeaves;
-    
-    $availableLeaves = $leaveType->days_per_year - $totalUsedLeaves;
-    
-    if ($requestedDays > $availableLeaves) {
-        return redirect()->back()->with('error', "Only {$availableLeaves} days are available for {$leaveType->name} this year. You requested {$requestedDays} days.");
-    }
-
-    $totalDays = $requestedDays; 
-
-    try {
-        DB::beginTransaction();
-        
-        $leave = Leave::create([
-            'employee_id' => $employee_id,
-            'leave_type_id' => $request->leave_type_id,
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'total_days' => $totalDays,
-            'reason' => $request->reason,
-            'status' => 'pending',
-            'created_by' => $user_id
+    public function applyLeave(Request $request)
+    {
+        $request->validate([
+            'leave_type_id' => 'required|exists:leave_types,id',
+            'start_date' => 'required|date|after_or_equal:today',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'reason' => 'required|string|max:500'
         ]);
 
-        // Update or create leave balance record
-        $balance = \App\Models\LeaveBalance::firstOrNew([
-            'employee_id' => $employee_id,
-            'leave_type_id' => $request->leave_type_id,
-            'year' => $currentYear
-        ]);
+        $employee_id = auth()->user()->employee_id;
+        $user_id = auth()->user()->id;
 
-        if (!$balance->exists) {
-            $balance->total_days = $leaveType->days_per_year;
-            $balance->used_days = 0;
-            $balance->pending_days = 0;
-            $balance->remaining_days = $leaveType->days_per_year;
-            $balance->carried_forward = 0;
+        // Check if attendance already marked for any date in range
+        $dates = [];
+        $currentDate = Carbon::parse($request->start_date);
+        $endDate = Carbon::parse($request->end_date);
+
+        while ($currentDate <= $endDate) {
+            $attendanceExists = Attendance::where('employee_id', $employee_id)
+                ->whereDate('date', $currentDate->format('Y-m-d'))
+                ->exists();
+
+            if ($attendanceExists) {
+                $dates[] = $currentDate->format('d M Y');
+            }
+            $currentDate->addDay();
         }
 
-        $balance->pending_days += $totalDays;
-        $balance->remaining_days = $balance->total_days - ($balance->used_days + $balance->pending_days);
-        $balance->save();
+        if (!empty($dates)) {
+            $dateList = implode(', ', $dates);
+            return redirect()->back()->with('error', "Cannot apply for leave. Attendance already marked on: {$dateList}");
+        }
 
-        DB::commit();
+        $startDate = Carbon::parse($request->start_date);
+        $endDate = Carbon::parse($request->end_date);
+        $requestedDays = $startDate->diffInDays($endDate) + 1;
 
-        return redirect()->back()->with('success', 'Leave application submitted successfully');
+        $leaveType = LeaveType::find($request->leave_type_id);
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return redirect()->back()->with('error', 'Error submitting leave: ' . $e->getMessage());
+        if (!$leaveType) {
+            return redirect()->back()->with('error', 'Invalid leave type selected');
+        }
+
+        $currentYear = Carbon::now('Asia/Karachi')->year;
+
+        // Approved leaves count
+        $approvedLeaves = Leave::where('employee_id', $employee_id)
+            ->where('leave_type_id', $request->leave_type_id)
+            ->where('status', 'approved')
+            ->whereYear('start_date', $currentYear)
+            ->orWhereYear('end_date', $currentYear)
+            ->get()
+            ->sum('total_days');
+
+        $pendingLeaves = Leave::where('employee_id', $employee_id)
+            ->where('leave_type_id', $request->leave_type_id)
+            ->where('status', 'pending')
+            ->whereYear('start_date', $currentYear)
+            ->orWhereYear('end_date', $currentYear)
+            ->get()
+            ->sum('total_days');
+
+        $totalUsedLeaves = $approvedLeaves + $pendingLeaves;
+
+        $availableLeaves = $leaveType->days_per_year - $totalUsedLeaves;
+
+        if ($requestedDays > $availableLeaves) {
+            return redirect()->back()->with('error', "Only {$availableLeaves} days are available for {$leaveType->name} this year. You requested {$requestedDays} days.");
+        }
+
+        $totalDays = $requestedDays;
+
+        try {
+            DB::beginTransaction();
+
+            $leave = Leave::create([
+                'employee_id' => $employee_id,
+                'leave_type_id' => $request->leave_type_id,
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'total_days' => $totalDays,
+                'reason' => $request->reason,
+                'status' => 'pending',
+                'created_by' => $user_id
+            ]);
+
+            // Update or create leave balance record
+            $balance = \App\Models\LeaveBalance::firstOrNew([
+                'employee_id' => $employee_id,
+                'leave_type_id' => $request->leave_type_id,
+                'year' => $currentYear
+            ]);
+
+            if (!$balance->exists) {
+                $balance->total_days = $leaveType->days_per_year;
+                $balance->used_days = 0;
+                $balance->pending_days = 0;
+                $balance->remaining_days = $leaveType->days_per_year;
+                $balance->carried_forward = 0;
+            }
+
+            $balance->pending_days += $totalDays;
+            $balance->remaining_days = $balance->total_days - ($balance->used_days + $balance->pending_days);
+            $balance->save();
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'Leave application submitted successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error submitting leave: ' . $e->getMessage());
+        }
     }
-}
     public function cancelLeave($id)
     {
         $leave = Leave::where('id', $id)
@@ -400,5 +412,4 @@ class DashboardController extends Controller
 
         return redirect()->back()->with('success', 'Leave cancelled successfully');
     }
-    
 }

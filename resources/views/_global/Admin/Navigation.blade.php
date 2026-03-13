@@ -148,8 +148,8 @@
 
                 </ul>
             </li>
-            
-           
+
+
             <li>
                 <a href="#">
                     <span class="nav-link-icon">
@@ -213,83 +213,137 @@
 
                 </ul>
             </li>
-           
-             <li>
+            <li class="{{ request()->is('admin/payroll*') ? 'open' : '' }}">
                 <a href="#">
                     <span class="nav-link-icon">
-                        <i data-feather="user"></i>
+                        <i data-feather="dollar-sign"></i>
                     </span>
-                    <span>Attendance</span>
+                    <span>Payroll Management</span>
                 </a>
                 <ul>
+                    {{-- Salary Components --}}
+                    <li>
+                        <a href="{{ route('admin.payroll.salary-components.index') }}"
+                            class="{{ request()->is('admin/payroll/salary-components*') ? 'active' : '' }}">
+                            <span><i class="fas fa-coins mr-2"></i>Salary Components</span>
+                        </a>
+                    </li>
+
+                    {{-- Salary Templates --}}
+                    <li>
+                        <a href="{{ route('admin.payroll.salary-templates.index') }}"
+                            class="{{ request()->is('admin/payroll/salary-templates*') ? 'active' : '' }}">
+                            <span><i class="fas fa-file-invoice mr-2"></i>Salary Templates</span>
+                        </a>
+                    </li>
+
+                    {{-- Employee Salaries --}}
+                    <li>
+                        <a href="{{ route('admin.payroll.employee-salaries.index') }}"
+                            class="{{ request()->is('admin/payroll/employee-salaries*') ? 'active' : '' }}">
+                            <span><i class="fas fa-user-tie mr-2"></i>Employee Salaries</span>
+                        </a>
+                    </li>
+
+                    {{-- Payroll Processing --}}
+                    <li>
+                        <a href="{{ route('admin.payroll.payrolls.index') }}"
+                            class="{{ request()->is('admin/payroll/payrolls') && !request()->is('admin/payroll/payrolls/create') ? 'active' : '' }}">
+                            <span><i class="fas fa-file-invoice-dollar mr-2"></i>Payroll List</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{{ route('admin.payroll.payrolls.create') }}"
+                            class="{{ request()->is('admin/payroll/payrolls/create') ? 'active' : '' }}">
+                            <span><i class="fas fa-play-circle mr-2"></i>Process Payroll</span>
+                        </a>
+                    </li>
+
+                    {{-- Reports --}}
+                    <li>
+                        <a href="{{ route('admin.payroll.reports.index') }}"
+                            class="{{ request()->is('admin/payroll/reports*') ? 'active' : '' }}">
+                            <span><i class="fas fa-chart-pie mr-2"></i>Payroll Reports</span>
+                        </a>
+                    </li>
 
                     <li>
-                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/attendance') }}"
-                            class="{{ request()->is('admin/attendance') ? 'active' : '' }}">
+                        <a href="#">
                             <span class="nav-link-icon">
-                                <i data-feather="users"></i>
+                                <i data-feather="user"></i>
                             </span>
-                            <span>View Attendance</span>
+                            <span>Attendance</span>
                         </a>
+                        <ul>
+
+                            <li>
+                                {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                                <a href="{{ url('admin/attendance') }}"
+                                    class="{{ request()->is('admin/attendance') ? 'active' : '' }}">
+                                    <span class="nav-link-icon">
+                                        <i data-feather="users"></i>
+                                    </span>
+                                    <span>View Attendance</span>
+                                </a>
+                            </li>
+
+                            <li>
+                                {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                                <a href="{{ url('admin/attendance/monthly') }}"
+                                    class="{{ request()->is('admin/attendance/monthly') ? 'active' : '' }}">
+                                    <span class="nav-link-icon"><i data-feather="eye"></i></span>
+                                    <span>View Attendance Monthly</span>
+                                </a>
+                            </li>
+
+                        </ul>
+                    </li>
+                    <li
+                        class="{{ request()->is('admin/leaves*') || request()->is('admin/leave-types*') || request()->is('admin/holidays*') ? 'open' : '' }}">
+                        <a href="#">
+                            <span class="nav-link-icon">
+                                <i data-feather="calendar"></i>
+                            </span>
+                            <span>Leave Management</span>
+                        </a>
+                        <ul>
+                            <li>
+                                <a href="{{ route('admin.leaves.index') }}"
+                                    class="{{ request()->is('admin/leaves') ? 'active' : '' }}">
+                                    <span>Leave Applications</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.leave-types.index') }}"
+                                    class="{{ request()->is('admin/leave-types*') ? 'active' : '' }}">
+                                    <span>Leave Types</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.leaves.balances') }}"
+                                    class="{{ request()->is('admin/leaves/balances') ? 'active' : '' }}">
+                                    <span>Leave Balances</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.holidays.index') }}"
+                                    class="{{ request()->is('admin/holidays*') ? 'active' : '' }}">
+                                    <span>Holidays</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{{ route('admin.leaves.calendar') }}"
+                                    class="{{ request()->is('admin/leaves/calendar') ? 'active' : '' }}">
+                                    <span>Calendar</span>
+                                </a>
+                            </li>
+                        </ul>
                     </li>
 
-                    <li>
-                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/attendance/monthly') }}"
-                            class="{{ request()->is('admin/attendance/monthly') ? 'active' : '' }}">
-                            <span class="nav-link-icon"><i data-feather="eye"></i></span>
-                            <span>View Attendance Monthly</span>
-                        </a>
-                    </li>
+
+
 
                 </ul>
-            </li>
-            <li class="{{ request()->is('admin/leaves*') || request()->is('admin/leave-types*') || request()->is('admin/holidays*') ? 'open' : '' }}">
-    <a href="#">
-        <span class="nav-link-icon">
-            <i data-feather="calendar"></i>
-        </span>
-        <span>Leave Management</span>
-    </a>
-    <ul>
-        <li>
-            <a href="{{ route('admin.leaves.index') }}" 
-               class="{{ request()->is('admin/leaves') ? 'active' : '' }}">
-                <span>Leave Applications</span>
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.leave-types.index') }}" 
-               class="{{ request()->is('admin/leave-types*') ? 'active' : '' }}">
-                <span>Leave Types</span>
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.leaves.balances') }}" 
-               class="{{ request()->is('admin/leaves/balances') ? 'active' : '' }}">
-                <span>Leave Balances</span>
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.holidays.index') }}" 
-               class="{{ request()->is('admin/holidays*') ? 'active' : '' }}">
-                <span>Holidays</span>
-            </a>
-        </li>
-        <li>
-            <a href="{{ route('admin.leaves.calendar') }}" 
-               class="{{ request()->is('admin/leaves/calendar') ? 'active' : '' }}">
-                <span>Calendar</span>
-            </a>
-        </li>
-    </ul>
-</li>
-            
-
-            
-            
-        </ul>
     </div>
 </div>
 <script>

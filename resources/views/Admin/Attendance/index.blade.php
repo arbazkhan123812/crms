@@ -2,7 +2,30 @@
 
 @section('content')
     <div class="content">
-      
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
         <div class="page-header mb-4">
             <div class="row align-items-center">
                 <div class="col">
@@ -11,7 +34,8 @@
                         Daily Attendance
                     </h3>
                     <p class="text-muted mb-0">Track employee attendance for
-                        {{ Carbon\Carbon::parse($date)->format('d F, Y') }}</p>
+                        {{ Carbon\Carbon::parse($date)->format('d F, Y') }}
+                    </p>
                 </div>
                 <div class="col-auto">
                     <div class="d-flex">
@@ -38,7 +62,7 @@
             </div>
         </div>
 
-       
+
         <div class="row mb-4">
             <div class="col-md-3">
                 <div class="card bg-primary text-white">
@@ -208,7 +232,8 @@
                 <div class="row align-items-center">
                     <div class="col-md-6">
                         <p class="text-muted small mb-0">Showing {{ $attendances->firstItem() ?? 0 }} to
-                            {{ $attendances->lastItem() ?? 0 }} of {{ $attendances->total() }} entries</p>
+                            {{ $attendances->lastItem() ?? 0 }} of {{ $attendances->total() }} entries
+                        </p>
                     </div>
                     <div class="col-md-6">
                         <div class="float-right">{{ $attendances->links() }}</div>
@@ -489,7 +514,7 @@
                 $('#edit_remarks_field').hide();
             }
         });
-        
+
         $('#editAttendanceForm').submit(function (e) {
             e.preventDefault();
 
