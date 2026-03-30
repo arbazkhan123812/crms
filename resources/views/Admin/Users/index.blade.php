@@ -6,12 +6,10 @@
         <div class="page-header d-md-flex justify-content-between">
             
             <div class="mt-3 mt-md-0">
-                @can('users.create') 
                 
                 <button class="btn btn-primary" onclick="openUserModal('add')">
                     <i class="fa fa-plus mr-2"></i> Add New Admins
                 </button>
-                @endcan
             </div>
         </div>
 
@@ -46,7 +44,7 @@
                                             </td>
                                             <td><?= $row['username'] ?></td>
                                             <td><?= $row['email'] ?></td>
-                                            <td>{{ $row->roles->first()?->name ?? 'No Role Assigned' }}</span></td>
+                                            <td>{{ $row->role->first()?->name ?? 'No Role Assigned' }}</span></td>
                                             <td>
                                                 <?= $row['status'] == 1 ? '<span class="text-success">Active</span>' : '<span class="text-danger">Inactive</span>' ?>
                                             </td>

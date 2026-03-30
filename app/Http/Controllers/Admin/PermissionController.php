@@ -75,11 +75,14 @@ class PermissionController extends Controller
         $permissionNames = [];
         foreach ($permissionKeys as $key) {
             [$moduleId, $opId] = explode('_', $key);
+
             $operation = Operation::where('module_id', $moduleId)->where('id', $opId)->first();
             if ($operation) {
+             
                 $permissionNames[] = $operation->permission_name;
             }
         }
+     
 
         if ($type === 'role') {
             $role = Role::findById($id);

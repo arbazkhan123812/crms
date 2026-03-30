@@ -11,18 +11,18 @@ use Illuminate\Support\Facades\Auth;
 class UserController extends Controller
 {
 
-  public function __construct()
+    public function __construct()
     {
         // if(!Auth::check()){
-            
+
         //     $this->middleware('auth');
         // }
     }
     public function index()
     {
-        $users = User::with('roles')->get();
+        $users = User::with('role')->get();
         $roles = Role::all();
-        return view('Admin.Users.index', compact(['users','roles']));
+        return view('Admin.Users.index', compact(['users', 'roles']));
     }
     public function save_user(Request $request)
     {
@@ -44,24 +44,21 @@ class UserController extends Controller
         if ($request->input('password')) {
             $data['password'] = password_hash($request->input('password'), PASSWORD_BCRYPT);
         }
-        if ($id) {  
-          $update = User::find($id);
-          $update->update($data);
-        echo json_encode(['success' => true, 'message' => 'User Updated successfully!']);
-
-
-        } else if(!$id) {
+        if ($id) {
+            $update = User::find($id);
+            $update->update($data);
+            echo json_encode(['success' => true, 'message' => 'User Updated successfully!']);
+        } else if (!$id) {
             $user->create($data);
             echo json_encode(['success' => true, 'message' => 'User saved successfully!']);
-        }else{
-         echo json_encode(['success' => false, 'message' => 'Failed.']);
-
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Failed.']);
         }
     }
     public function delete_user($id)
     {
         $delete = User::destroy($id);
-      
+
 
         if ($delete) {
             echo json_encode(['success' => true, 'message' => 'User deleted successfully!']);
@@ -72,7 +69,7 @@ class UserController extends Controller
     public function get_user($id)
     {
         $user = User::find($id);
-      
+
 
         if ($user) {
             echo json_encode(['success' => true, 'data' => $user]);

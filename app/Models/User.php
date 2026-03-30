@@ -29,7 +29,6 @@ class User extends Authenticatable
         'password',
     ];
 
-    protected $guarded = ['is_admin'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -54,7 +53,5 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class,'role_id');
     }
   
-    public function leave(){
-        return $this->hasMany(Leave::class,"approved_by",'id');
-    }
+    
 }
