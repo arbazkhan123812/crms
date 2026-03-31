@@ -3,105 +3,33 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Module;
-use App\Models\Operation;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Spatie\Permission\Models\Permission;
 
 class PermissionController extends Controller
 {
-   
+    public function __construct()
+    {
+        $this->middleware('permission:permissions_view', ['only' => ['index']]);
+
+        $this->middleware('permission:permissions_save', ['only' => ['savePermissions']]);
+
+        $this->middleware('permission:permissions_userpermissions', ['only' => ['getPermissions']]);
+        $this->middleware('permission:permissions_userpermissions', ['only' => ['getAllPermissions']]);
+
+        $this->middleware('permission:users_delete', ['only' => ['delete_user']]);
+    }
     public function index()
     {
-        $roles = Role::all(['id', 'name']);
-        $users = User::with('roles')->get(['id', 'username', 'role_id']); // adjust fields
-        $modules = Module::with('operations')->get();
+        $roles = Role::all();
+        $users = User::all();
+        $permissions = Permission::all();
 
-        return view('Admin.Permissions.index', compact('roles', 'users', 'modules'));
+        return view('Admin.Permissions.index', compact('roles', 'users', 'permissions'));
     }
 
-
-    public function getPermissions(Request $request)
-    {
-        $type = $request->input('type');
-        $id = $request->input('id');
-
-        if ($type === 'role') {
-            $role = Role::findById($id);
-            $permissions = $role->permissions->pluck('name')->map(function($name) {
-                return $this->permissionNameToKey($name);
-            })->toArray();
-
-            return response()->json([
-                'success' => true,
-                'name' => $role->name,
-                'permissions' => $permissions,
-                'role_permissions' => [] 
-            ]);
-        }
-        elseif ($type === 'user') {
-            $user = User::find($id);
-            $role = $user->roles->first(); 
-
-            $directPermissions = $user->permissions->pluck('name')->map(function($name) {
-                return $this->permissionNameToKey($name);
-            })->toArray();
-
-            $rolePermissions = $user->getPermissionsViaRoles()->pluck('name')->map(function($name) {
-                return $this->permissionNameToKey($name);
-            })->toArray();
-
-            return response()->json([
-                'success' => true,
-                'name' => $user->username,
-                'role_id' => $role?->id,
-                'permissions' => $directPermissions,
-                'role_permissions' => $rolePermissions
-            ]);
-        }
-
-        return response()->json(['success' => false, 'message' => 'Invalid type']);
-    }
-
-  
-    public function savePermissions(Request $request)
-    {
-        $type = $request->input('type');
-        $id = $request->input('id');
-        $permissionKeys = $request->input('permissions', []); 
-
-        $permissionNames = [];
-        foreach ($permissionKeys as $key) {
-            [$moduleId, $opId] = explode('_', $key);
-
-            $operation = Operation::where('module_id', $moduleId)->where('id', $opId)->first();
-            if ($operation) {
-             
-                $permissionNames[] = $operation->permission_name;
-            }
-        }
-     
-
-        if ($type === 'role') {
-            $role = Role::findById($id);
-            $role->syncPermissions($permissionNames);
-            $message = 'Role permissions updated successfully.';
-        }
-        elseif ($type === 'user') {
-            $user = User::find($id);
-            $user->syncPermissions($permissionNames);
-            $message = 'User direct permissions updated successfully.';
-        }
-        else {
-            return response()->json(['success' => false, 'message' => 'Invalid type']);
-        }
-
-        return response()->json(['success' => true, 'message' => $message]);
-    }
-
-    
     public function getRoleName($roleId)
     {
         $role = Role::find($roleId);
@@ -110,33 +38,84 @@ class PermissionController extends Controller
         }
         return response()->json(['name' => '']);
     }
-
-  
-    public function copyRoleToUser(Request $request)
+    public function getPermissions(Request $request)
     {
-        $userId = $request->input('user_id');
-        $roleId = $request->input('role_id');
+        $type = $request->input('type');
+        $id = $request->input('id');
 
-        $user = User::find($userId);
-        $role = Role::findById($roleId);
+        if ($type === 'role') {
+            $role = Role::findById($id);
+            $permissions = $role->permissions->pluck('name')->toArray();
 
-        if (!$user || !$role) {
-            return response()->json(['success' => false, 'message' => 'User or role not found']);
+            return response()->json([
+                'success' => true,
+                'name' => $role->name,
+                'permissions' => $permissions,
+                'role_permissions' => []
+            ]);
+        } elseif ($type === 'user') {
+            $user = User::find($id);
+
+
+            // IMPORTANT: Get user's role permissions
+            $userRoles = $user->roles; // User ke saare roles
+
+
+            $rolePermissions = [];
+
+            foreach ($userRoles as $role) {
+                $rolePerms = $role->permissions->pluck('name')->toArray();
+
+                $rolePermissions = array_merge($rolePermissions, $rolePerms);
+            }
+            $rolePermissions = array_unique($rolePermissions); // Remove duplicates
+
+            // Get direct permissions
+            $directPermissions = $user->permissions->pluck('name')->toArray();
+
+            return response()->json([
+                'success' => true,
+                'name' => $user->username ?? $user->email,
+                'permissions' => $directPermissions,
+                'role_permissions' => $rolePermissions,
+                'role_id' => $user->roles->first()?->id,
+                'roles' => $user->roles->pluck('name')->toArray()
+            ]);
         }
 
-        $permissionNames = $role->permissions->pluck('name')->toArray();
-        $user->syncPermissions($permissionNames);
-
-        return response()->json(['success' => true, 'message' => 'Role permissions copied to user successfully.']);
+        return response()->json(['success' => false, 'message' => 'Invalid type']);
     }
 
-  
-    private function permissionNameToKey($permissionName)
+    public function savePermissions(Request $request)
     {
-        $operation = Operation::whereHas('module', function($q) use ($permissionName) {
-            $q->where('name', explode('.', $permissionName)[0] ?? '');
-        })->where('name', explode('.', $permissionName)[1] ?? '')->first();
+        app(\Spatie\Permission\PermissionRegistrar::class)->forgetCachedPermissions();
+        $type = $request->input('type');
 
-        return $operation ? $operation->module_id . '_' . $operation->id : null;
+        $id = $request->input('id');
+        $permissions = $request->input('permissions', []);
+
+        if ($type === 'role') {
+            $role = Role::findById($id);
+            $role->syncPermissions($permissions);
+            return response()->json([
+                'success' => true,
+                'message' => 'Role permissions updated successfully.'
+            ]);
+        } elseif ($type === 'user') {
+            $user = User::find($id);
+            $user->syncPermissions($permissions);
+            return response()->json([
+                'success' => true,
+                'message' => 'User permissions updated successfully.'
+            ]);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Invalid type']);
+    }
+
+    public function getAllPermissions()
+    {
+        $permissions = Permission::all();
+        return response()->json($permissions);
     }
 }

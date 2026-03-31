@@ -14,6 +14,10 @@ class RoleController extends Controller
             
         //     $this->middleware('auth');
         // }
+                $this->middleware('permission:roles_add', ['only' => ['save_role']]);
+
+        $this->middleware('permission:roles_delete', ['only' => ['delete_role']]);
+
     }
     public function index()
     {

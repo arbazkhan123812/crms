@@ -5,12 +5,15 @@
     <div class="content">
         <div class="page-header d-md-flex justify-content-between">
             <div class="mt-3 mt-md-0">
-               
-                
-                <button class="btn btn-primary" onclick="openUserModal('add')">
-                    <i class="fa fa-plus mr-2"></i> Add New Roles
-                </button>
-           
+
+
+                @can('roles_add')
+                    <button class="btn btn-primary" onclick="openUserModal('add')">
+                        <i class="fa fa-plus mr-2"></i> Add New Roles
+                    </button>
+                @endcan
+
+
             </div>
         </div>
 
@@ -32,22 +35,28 @@
                                     @foreach ($roles as $row)
                                         <tr>
                                             <td align="center">
+                                                @can('roles_edit')
+                                                    <button class="btn btn-sm btn-warning"
+                                                        onclick="openUserModal('edit', <?= $row['id'] ?>)">
+                                                        <i class="fa fa-edit"></i>
+                                                    </button>
+                                                @endcan
 
-                                                <button class="btn btn-sm btn-warning"
-                                                    onclick="openUserModal('edit', <?= $row['id'] ?>)">
-                                                    <i class="fa fa-edit"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteUser(<?= $row['id'] ?>)">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
+                                                @can('roles_delete')
+
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteUser(<?= $row['id'] ?>)">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                @endcan
+
 
                                             </td>
-                                            
-                                            
+
+
                                             <td>{{ $row->name ?? 'No Role Assigned' }}</span></td>
-                                            <td>{{ $row->guarded_name ?? 'No Role Assigned' }}</span></td>
-                                            <td>{{ $row->created_at  ?? 'No timestamps' }}</span></td>
-                                         
+                                            <td>{{ $row->guard_name ?? 'No Guard  Assigned' }}</span></td>
+                                            <td>{{ $row->created_at ?? 'No timestamps' }}</span></td>
+
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -70,15 +79,15 @@
                 </div>
                 <form id="userForm">
                     @csrf
-@if ($errors->any())
-        <div class="alert alert-danger border-0 shadow-sm mb-4">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+                    @if ($errors->any())
+                        <div class="alert alert-danger border-0 shadow-sm mb-4">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div class="modal-body">
                         <input type="hidden" name="id" id="role_id">
                         <div class="row">
@@ -90,9 +99,9 @@
                                 <label>Guarded Name *</label>
                                 <input type="text" class="form-control" name="guarded_name" id="guarded_name" required>
                             </div>
-                          
 
-                            
+
+
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -139,16 +148,14 @@
             if (mode === 'edit') {
                 $('#pass_note').show();
                 $.ajax({
-                    url: "{{ route('role.get','') }}/" + id,
+                    url: "{{ route('role.get', '') }}/" + id,
                     type: 'GET',
                     dataType: 'json',
                     success: function (res) {
                         if (res.success) {
-                            $('#user_id').val(res.data.id);
-                            $('#username').val(res.data.username);
-                            $('#full_name').val(res.data.full_name);
-                            $('#email').val(res.data.email);
-                            $('#role_id').val(res.data.role_id).trigger('change');
+                            $('#name').val(res.data.name);
+                            $('#role_id').val(res.data.id);
+                            $('#guarded_name').val(res.data.guard_name);
                             $('#status').val(res.data.status);
                             $('#userModal').modal('show');
                         }

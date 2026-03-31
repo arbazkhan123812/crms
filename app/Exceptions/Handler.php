@@ -25,6 +25,24 @@ class Handler extends ExceptionHandler
         //
     ];
 
+    public function render($request, Throwable $exception)
+    {
+        if ($exception instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized Access! No permission to perform this action.'
+                ], 403);
+            }
+
+            return redirect()->back()
+                ->with('error', 'Unauthorized Access! you dont have permission');
+        }
+
+        return parent::render($request, $exception);
+    }
+
     /**
      * A list of the inputs that are never flashed to the session on validation exceptions.
      *

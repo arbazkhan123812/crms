@@ -9,52 +9,65 @@
         <ul>
 
             {{-- Example for another link --}}
-            <li>
-                <a href="{{ url('admin/dashboard') }}" class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
-                    <span class="nav-link-icon">
-                        <i class="fas fa-home"></i>
-                    </span>
-                    <span>Dashboard</span>
-                </a>
-            </li>
-            <li>
-                <a href="#">
-                    <span class="nav-link-icon">
-                        <i data-feather="user"></i>
-                    </span>
-                    <span>User Management</span>
-                </a>
-                <ul>
+            @can('dashboard_view')
+                <li>
+                    <a href="{{ url('admin/dashboard') }}" class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
+                        <span class="nav-link-icon">
+                            <i class="fas fa-home"></i>
+                        </span>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+            @endcan
 
-                    <li>
-                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/users/index') }}"
-                            class="{{ request()->is('admin/users*') ? 'active' : '' }}">
-                            <span class="nav-link-icon">
-                                <i class="fas fa-users"></i>
-                            </span>
-                            <span>Users</span>
-                        </a>
-                    </li>
+            @can('users_management')
+                <li>
 
-                    <li>
-                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/roles/index') }}"
-                            class="{{ request()->is('admin/roles*') ? 'active' : '' }}">
-                            <span class="nav-link-icon"><i data-feather="star"></i></span>
-                            <span>Roles</span>
-                        </a>
-                    </li>
-                    <li>
-                        {{-- Laravel mein active class ke liye request()->is() best hai --}}
-                        <a href="{{ url('admin/permissions') }}"
-                            class="{{ request()->is('admin/permissions*') ? 'active' : '' }}">
-                            <span class="nav-link-icon"><i data-feather="key"></i></span>
-                            <span>Permissions</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
+                    <a href="#">
+                        <span class="nav-link-icon">
+                            <i data-feather="user"></i>
+                        </span>
+                        <span>User Management</span>
+                    </a>
+                    <ul>
+                        @can('users_view')
+                            <li>
+                                {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                                <a href="{{ url('admin/users/index') }}"
+                                    class="{{ request()->is('admin/users*') ? 'active' : '' }}">
+                                    <span class="nav-link-icon">
+                                        <i class="fas fa-users"></i>
+                                    </span>
+                                    <span>Users</span>
+                                </a>
+                            </li>
+                        @endcan
+
+
+                        @can('roles_view')
+                            <li>
+                                {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                                <a href="{{ url('admin/roles/index') }}"
+                                    class="{{ request()->is('admin/roles*') ? 'active' : '' }}">
+                                    <span class="nav-link-icon"><i data-feather="star"></i></span>
+                                    <span>Roles</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('permissions_view')
+                            <li>
+                                {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                                <a href="{{ url('admin/permissions') }}"
+                                    class="{{ request()->is('admin/permissions*') ? 'active' : '' }}">
+                                    <span class="nav-link-icon"><i data-feather="key"></i></span>
+                                    <span>Permissions</span>
+                                </a>
+                            </li>
+                        @endcan
+                    </ul>
+                </li>
+            @endcan
+
 
 
 

@@ -4,12 +4,14 @@
 
     <div class="content">
         <div class="page-header d-md-flex justify-content-between">
-            
+
             <div class="mt-3 mt-md-0">
-                
-                <button class="btn btn-primary" onclick="openUserModal('add')">
+
+                @can('users_add') <button class="btn btn-primary" onclick="openUserModal('add')">
                     <i class="fa fa-plus mr-2"></i> Add New Admins
-                </button>
+                </button> @endcan
+
+
             </div>
         </div>
 
@@ -32,19 +34,21 @@
                                     @foreach ($users as $row)
                                         <tr>
                                             <td align="center">
-
-                                                <button class="btn btn-sm btn-warning"
+                                                @can('users_edit')<button class="btn btn-sm btn-warning"
                                                     onclick="openUserModal('edit', <?= $row['id'] ?>)">
                                                     <i class="fa fa-edit"></i>
-                                                </button>
-                                                <button class="btn btn-sm btn-danger" onclick="deleteUser(<?= $row['id'] ?>)">
-                                                    <i class="fa fa-trash"></i>
-                                                </button>
+                                                </button> @endcan
+
+                                                @can('users_delete')
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteUser(<?= $row['id'] ?>)">
+                                                        <i class="fa fa-trash"></i>
+                                                    </button>
+                                                @endcan
 
                                             </td>
                                             <td><?= $row['username'] ?></td>
                                             <td><?= $row['email'] ?></td>
-                                            <td>{{ $row->role->first()?->name ?? 'No Role Assigned' }}</span></td>
+                                            <td>{{ $row->role->name ?? 'No Role Assigned' }}</span></td>
                                             <td>
                                                 <?= $row['status'] == 1 ? '<span class="text-success">Active</span>' : '<span class="text-danger">Inactive</span>' ?>
                                             </td>
@@ -70,15 +74,15 @@
                 </div>
                 <form id="userForm">
                     @csrf
-@if ($errors->any())
-        <div class="alert alert-danger border-0 shadow-sm mb-4">
-            <ul class="mb-0">
-                @foreach ($errors->all() as $error)
-                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
+                    @if ($errors->any())
+                        <div class="alert alert-danger border-0 shadow-sm mb-4">
+                            <ul class="mb-0">
+                                @foreach ($errors->all() as $error)
+                                    <li><i class="fas fa-exclamation-triangle mr-2"></i> {{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     <div class="modal-body">
                         <input type="hidden" name="id" id="user_id">
                         <div class="row">
@@ -160,7 +164,7 @@
             if (mode === 'edit') {
                 $('#pass_note').show();
                 $.ajax({
-                    url: "{{ route('user.get','') }}/" + id,
+                    url: "{{ route('user.get', '') }}/" + id,
                     type: 'GET',
                     dataType: 'json',
                     success: function (res) {
