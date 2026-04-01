@@ -12,14 +12,14 @@ class PermissionController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:permissions_view', ['only' => ['index']]);
+        // $this->middleware('permission:permissions_view', ['only' => ['index']]);
 
-        $this->middleware('permission:permissions_save', ['only' => ['savePermissions']]);
+        // $this->middleware('permission:permissions_save', ['only' => ['savePermissions']]);
 
-        $this->middleware('permission:permissions_userpermissions', ['only' => ['getPermissions']]);
-        $this->middleware('permission:permissions_userpermissions', ['only' => ['getAllPermissions']]);
+        // $this->middleware('permission:permissions_userpermissions', ['only' => ['getPermissions']]);
+        // $this->middleware('permission:permissions_userpermissions', ['only' => ['getAllPermissions']]);
 
-        $this->middleware('permission:users_delete', ['only' => ['delete_user']]);
+        // $this->middleware('permission:users_delete', ['only' => ['delete_user']]);
     }
     public function index()
     {

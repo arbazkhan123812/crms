@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\DesignationController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\EmployeeSalaryController;
 use App\Http\Controllers\Admin\HolidayController;
+use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\LeaveController;
 use App\Http\Controllers\Admin\LeaveTypeController;
 use App\Http\Controllers\Admin\PayrollController;
@@ -47,12 +48,17 @@ Route::get('RoleController/{id}', [RoleController::class, 'get_role'])->name('ro
 // Auth
 
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
- Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+
+    Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
+    Route::post('/leads/save', [LeadController::class, 'save'])->name('lead.save');
+    Route::delete('/leads/{id}', [LeadController::class, 'delete'])->name('lead.delete');
+    Route::get('/leads/{id}', [LeadController::class, 'get'])->name('lead.get');
+
+    Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
     Route::post('/permissions/get', [PermissionController::class, 'getPermissions'])->name('permissions.get');
     Route::post('/permissions/save', [PermissionController::class, 'savePermissions'])->name('permissions.save');
     Route::get('/permissions/all', [PermissionController::class, 'getAllPermissions'])->name('permissions.all');
-        Route::get('/permissions/role-name/{roleId}', [PermissionController::class, 'getRoleName'])->name('permissions.role-name');
-
+    Route::get('/permissions/role-name/{roleId}', [PermissionController::class, 'getRoleName'])->name('permissions.role-name');
 });
 
 

@@ -67,6 +67,35 @@
                     </ul>
                 </li>
             @endcan
+            @can('leads_view')
+            <li>
+
+                    <a href="#">
+                        <span class="nav-link-icon">
+                            <i data-feather="user"></i>
+                        </span>
+                        <span>Leads Management</span>
+                    </a>
+                    <ul>
+                        @can('leads_view')
+                            <li>
+                                {{-- Laravel mein active class ke liye request()->is() best hai --}}
+                                <a href="{{ url('admin/leads') }}"
+                                    class="{{ request()->is('admin/leads*') ? 'active' : '' }}">
+                                    <span class="nav-link-icon">
+                                        <i class="fas fa-users"></i>
+                                    </span>
+                                    <span>Leads</span>
+                                </a>
+                            </li>
+                        @endcan
+
+
+                     
+                    </ul>
+                </li>
+            @endcan
+
 
 
 

@@ -20,7 +20,13 @@ class UserController extends Controller
     }
     public function index()
     {
-        $users = User::with('role')->get();
+        $query = User::with('role');
+
+        if (!Auth::user()->hasRole('Admin')) {
+            $query->where('created_by', Auth::user()->id);
+        }
+
+        $users = $query->latest()->get();
         $roles = Role::all();
         return view('Admin.Users.index', compact(['users', 'roles']));
     }
@@ -33,6 +39,8 @@ class UserController extends Controller
             'full_name' => $request->input('full_name'),
             'email'     => $request->input('email'),
             'status'    => $request->input('status'),
+            'role_id'    => $request->input('role_id'),
+            'created_by' => Auth::user()->id
         ];
 
         if ($request->input('password')) {
@@ -41,10 +49,25 @@ class UserController extends Controller
 
         if ($id) {
 
-         
+
+
+            $update_data = $request->only(['username', 'full_name', 'email', 'status', 'updated_by', 'role_id']);
+
+            if ($request->input('password')) {
+                $update_data['password'] = bcrypt($request->input('password'));
+            }
+
+            $update_data['updated_by'] = Auth::user()->id;
 
             $user = User::find($id);
-            $user->update($data);
+            if ($user->created_by == Auth::user()->id || Auth::user()->hasRole('Admin')) {
+
+                $user->update($update_data);
+                return response()->json(['success' => true, 'message' => 'User updated successfully!']);
+            } else {
+                return response()->json(['success' => false, 'message' => 'You can only edit your own made Users!']);
+            }
+            $user->update($update_data);
 
             if ($request->has('role_id')) {
                 $role = Role::find($request->input('role_id'));
@@ -55,10 +78,13 @@ class UserController extends Controller
             return response()->json(['success' => true, 'message' => 'User Updated successfully!']);
         } else {
 
+            $data['created_by'] = Auth::user()->id;
             $user = User::create($data);
 
             if ($request->has('role_id')) {
-                $user->assignRole($request->input('role_id'));
+                $role = Role::find($request->input('role_id'));
+
+                $user->assignRole($role->name);
             }
 
             return response()->json(['success' => true, 'message' => 'User saved successfully!']);
@@ -66,7 +92,17 @@ class UserController extends Controller
     }
     public function delete_user($id)
     {
-        $delete = User::destroy($id);
+        $user = User::find($id);
+
+
+
+        if ($user->created_by == Auth::user()->id ||  Auth::user()->hasRole('Admin')) {
+
+            $user->delete();
+            return response()->json(['success' => true, 'message' => 'Lead deleted successfully!']);
+        } else {
+            return response()->json(['success' => false, 'message' => 'You can only delete your own made users!']);
+        }
 
         if ($delete) {
             echo json_encode(['success' => true, 'message' => 'User deleted successfully!']);
