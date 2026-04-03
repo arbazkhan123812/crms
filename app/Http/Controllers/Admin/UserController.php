@@ -15,6 +15,7 @@ class UserController extends Controller
     {
 
         $this->middleware('permission:users_save', ['only' => ['save_user']]);
+        $this->middleware('permission:users_view', ['only' => ['index']]);
 
         $this->middleware('permission:users_delete', ['only' => ['delete_user']]);
     }

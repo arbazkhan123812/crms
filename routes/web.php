@@ -45,6 +45,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('/permissions/save', [PermissionController::class, 'savePermissions'])->name('permissions.save');
     Route::get('/permissions/all', [PermissionController::class, 'getAllPermissions'])->name('permissions.all');
     Route::get('/permissions/role-name/{roleId}', [PermissionController::class, 'getRoleName'])->name('permissions.role-name');
+    Route::get('/leads/{id}/tasks', [LeadController::class, 'getTasks'])->name('lead.tasks');
+    Route::put('/tasks/{id}/status', [LeadController::class, 'updateTaskStatus'])->name('task.updateStatus');
+    Route::post('/leads/add-task', [LeadController::class, 'addTask'])->name('lead.addTask');
 });
 
 

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Lead;
+use App\Models\LeadTask;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -152,6 +153,88 @@ class LeadController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function addTask(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'lead_id' => 'required|exists:leads,id',
+                'subject' => 'required|string|min:3|max:255',
+                'description' => 'nullable|string',
+                'assigned_to' => 'required|exists:users,id',
+                'due_date' => 'nullable|date|after_or_equal:today'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $lead = Lead::findOrFail($request->lead_id);
+
+            $task = $lead->addTask(
+                $request->subject,
+                $request->description,
+                $request->assigned_to,
+                $request->due_date
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Task created successfully!',
+                'data' => $task
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getTasks($id)
+    {
+        try {
+            $lead = Lead::findOrFail($id);
+            $tasks = $lead->tasks()->with('assignedTo')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $tasks
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching tasks!'
+            ]);
+        }
+    }
+
+    public function updateTaskStatus(Request $request, $id)
+    {
+        try {
+            $task = LeadTask::findOrFail($id);
+
+            if ($request->status == 'completed') {
+                $task->complete();
+            } else {
+                $task->status = $request->status;
+                $task->save();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Task status updated!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error updating task!'
             ]);
         }
     }

@@ -56,13 +56,30 @@ class Lead extends Model
         return $this->notes;
     }
 
-    public function getInternalNotes()
+    // Tasks relationship
+    public function tasks()
     {
-        return $this->notes()->where('type', 'internal')->get();
+        return $this->hasMany(LeadTask::class)->orderBy('due_date', 'asc');
     }
 
-    public function getPublicNotes()
+    // Pending tasks
+    public function pendingTasks()
     {
-        return $this->notes()->where('type', 'public')->get();
+        return $this->tasks()->where('status', 'pending');
     }
+
+      public function addTask($subject, $description, $assignedTo, $dueDate = null)
+    {
+        return $this->tasks()->create([
+            'subject' => $subject,
+            'description' => $description,
+            'assigned_to' => $assignedTo,
+            'due_date' => $dueDate,
+            'status' => 'pending',
+            'created_by' => auth()->id()
+        ]);
+    }
+
+    
+    
 }
