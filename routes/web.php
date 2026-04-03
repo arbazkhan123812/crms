@@ -1,25 +1,10 @@
 <?php
 
-use App\Http\Controllers\Admin\AttendanceController;
-use App\Http\Controllers\Admin\CompanyController;
-use App\Http\Controllers\Admin\DepartmentController;
-use App\Http\Controllers\Admin\DesignationController;
-use App\Http\Controllers\Admin\EmployeeController;
-use App\Http\Controllers\Admin\EmployeeSalaryController;
-use App\Http\Controllers\Admin\HolidayController;
 use App\Http\Controllers\Admin\LeadController;
-use App\Http\Controllers\Admin\LeaveController;
-use App\Http\Controllers\Admin\LeaveTypeController;
-use App\Http\Controllers\Admin\PayrollController;
 use App\Http\Controllers\Admin\PermissionController;
-use App\Http\Controllers\Admin\RecruitmentController;
 use App\Http\Controllers\Admin\RoleController;
-use App\Http\Controllers\Admin\SalaryComponentController;
-use App\Http\Controllers\Admin\SalaryTemplateController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\Employee\DashboardController;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -53,6 +38,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('/leads/save', [LeadController::class, 'save'])->name('lead.save');
     Route::delete('/leads/{id}', [LeadController::class, 'delete'])->name('lead.delete');
     Route::get('/leads/{id}', [LeadController::class, 'get'])->name('lead.get');
+    Route::post('/leads/add-note', [LeadController::class, 'addNote'])->name('lead.addNote');
 
     Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
     Route::post('/permissions/get', [PermissionController::class, 'getPermissions'])->name('permissions.get');
