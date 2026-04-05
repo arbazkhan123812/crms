@@ -65,7 +65,8 @@
                             <div>
                                 <p class="card-text mb-1 text-muted">New This Month</p>
                                 <h4 class="card-title mb-0">
-                                    {{ $leads->where('created_at', '>=', now()->startOfMonth())->count() }}</h4>
+                                    {{ $leads->where('created_at', '>=', now()->startOfMonth())->count() }}
+                                </h4>
                                 <span class="text-muted small">Last 30 days</span>
                             </div>
                         </div>
@@ -84,6 +85,7 @@
                                 <th width="50"></th>
                                 <th>Lead Information</th>
                                 <th>Contact Details</th>
+                                <th>Lead Source</th>
                                 <th>Company</th>
                                 <th>Owner</th>
                                 <th>Status</th>
@@ -122,7 +124,11 @@
                                                 </td>
                                                 <td class="align-middle">{{ $lead->company ?: '-' }}</td>
                                                 <td class="align-middle">
-                                                    {{ $lead->owner?->full_name ?? ($lead->owner?->username ?? 'Not Assigned') }}</td>
+                                                    {{ $lead->owner?->full_name ?? ($lead->owner?->username ?? 'Not Assigned') }}
+                                                </td>
+                                                <td class="align-middle">
+                                                   {{ $lead->lead_source }}
+                                                </td>
                                                 <td class="align-middle">
                                                     @php
                                                         $statusColors = ['New' => 'primary', 'Contacted' => 'info', 'Qualified' => 'success', 'Lost' => 'danger', 'Cancelled' => 'warning', 'Junk' => 'secondary'];
@@ -145,70 +151,70 @@
                                                     @endcan
                                                     <!-- Dropdown Action Menu -->
                                                     <div class="dropdown">
-                                                        <button class="btn btn-sm btn-primary dropdown-toggle hide-caret"
-                                                            type="button" data-toggle="dropdown" aria-expanded="false">
-                                                            <i class="fas fa-ellipsis-v"></i>
-                                                        </button>
+                                                        @can('leads_performactions')
+                                                            <button class="btn btn-sm btn-primary dropdown-toggle hide-caret" type="button"
+                                                                data-toggle="dropdown" aria-expanded="false">
+                                                                <i class="fas fa-ellipsis-v"></i>
+                                                            </button>
+                                                        @endcan
                                                         <ul class="dropdown-menu dropdown-menu-right shadow-sm" style="min-width: 180px;">
-                                                            <li>
-                                                                <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                    onclick="viewLead({{ $lead->id }})">
-                                                                    <i class="fas fa-eye text-primary mr-2" style="width: 20px;"></i> View
-                                                                    Details
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                    onclick="editLead({{ $lead->id }})">
-                                                                    <i class="fas fa-edit text-primary mr-2" style="width: 20px;"></i> Edit
-                                                                    Lead
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                    onclick="openNoteAction({{ $lead->id }}, '{{ addslashes($lead->first_name) }} {{ addslashes($lead->last_name) }}')">
-                                                                    <i class="fas fa-sticky-note text-primary mr-2"
-                                                                        style="width: 20px;"></i> Add Note
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                    onclick="openTaskAction({{ $lead->id }}, '{{ addslashes($lead->first_name) }} {{ addslashes($lead->last_name) }}')">
-                                                                    <i class="fas fa-tasks text-primary mr-2" style="width: 20px;"></i>
-                                                                    Create Task
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                    onclick="openCallAction({{ $lead->id }})">
-                                                                    <i class="fas fa-phone-alt text-primary mr-2" style="width: 20px;"></i>
-                                                                    Log Call
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                    onclick="openEmailAction({{ $lead->id }})">
-                                                                    <i class="fas fa-envelope text-primary mr-2" style="width: 20px;"></i>
-                                                                    Send Email
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                    onclick="openMeetingAction({{ $lead->id }})">
-                                                                    <i class="fas fa-handshake text-primary mr-2" style="width: 20px;"></i>
-                                                                    Schedule Meeting
-                                                                </a>
-                                                            </li>
-                                                            <li>
-                                                                <hr class="dropdown-divider">
-                                                            </li>
-                                                            <li>
-                                                                <a class="dropdown-item d-flex align-items-center text-danger"
-                                                                    href="javascript:void(0)" onclick="deleteLead({{ $lead->id }})">
-                                                                    <i class="fas fa-trash-alt text-danger mr-2" style="width: 20px;"></i>
-                                                                    Delete Lead
-                                                                </a>
-                                                            </li>
+                                                            @can('leads_details')
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
+                                                                        onclick="viewLead({{ $lead->id }})">
+                                                                        <i class="fas fa-eye text-primary mr-2" style="width: 20px;"></i> View
+                                                                        Details
+                                                                    </a>
+                                                                </li>
+                                                            @endcan
+                                                            @can('leads_addnotes')
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
+                                                                        onclick="openNoteAction({{ $lead->id }}, '{{ addslashes($lead->first_name) }} {{ addslashes($lead->last_name) }}')">
+                                                                        <i class="fas fa-sticky-note text-primary mr-2"
+                                                                            style="width: 20px;"></i> Add Note
+                                                                    </a>
+                                                                </li>
+                                                            @endcan
+                                                            @can('leads_addtasks')
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
+                                                                        onclick="openTaskAction({{ $lead->id }}, '{{ addslashes($lead->first_name) }} {{ addslashes($lead->last_name) }}')">
+                                                                        <i class="fas fa-tasks text-primary mr-2" style="width: 20px;"></i>
+                                                                        Create Task
+                                                                    </a>
+                                                                </li>
+                                                            @endcan
+                                                            @can('leads_logcall')
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
+                                                                        onclick="openCallAction({{ $lead->id }}, '{{ addslashes($lead->first_name) }} {{ addslashes($lead->last_name) }}')">
+                                                                        <i class="fas fa-phone-alt text-primary mr-2" style="width: 20px;"></i>
+                                                                        Log Call
+                                                                    </a>
+                                                                </li>
+                                                            @endcan
+
+                                                            @can('leads_sendemail')
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
+                                                                        onclick="openEmailAction({{ $lead->id }})">
+                                                                        <i class="fas fa-envelope text-primary mr-2" style="width: 20px;"></i>
+                                                                        Send Email
+                                                                    </a>
+                                                                </li>
+                                                            @endcan
+                                                            @can('leads_schedulemeeting')
+                                                                <li>
+                                                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
+                                                                        onclick="openMeetingAction({{ $lead->id }})">
+                                                                        <i class="fas fa-handshake text-primary mr-2" style="width: 20px;"></i>
+                                                                        Schedule Meeting
+                                                                    </a>
+                                                                </li>
+                                                            @endcan
+
+
                                                         </ul>
                                                     </div>
                                 </div>
@@ -543,8 +549,77 @@
         </div>
     </div>
 
-    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Call Modal -->
+    <div class="modal fade" id="callModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-phone-alt mr-2"></i>Log Call
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="callForm">
+                    @csrf
+                    <input type="hidden" name="lead_id" id="call_lead_id">
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Lead Name</label>
+                            <input type="text" id="call_lead_name" class="form-control form-control-sm" readonly disabled>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Call Type <span class="text-danger">*</span></label>
+                            <select name="call_type" id="call_type" class="form-control form-control-sm" required>
+                                <option value="outbound"> Outbound (You called)</option>
+                                <option value="inbound"> Inbound (Lead called)</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Call Purpose</label>
+                            <select name="call_purpose" id="call_purpose" class="form-control form-control-sm">
+                                <option value="">Select Purpose</option>
+                                <option value="Initial Contact">Initial Contact</option>
+                                <option value="Follow-up">Follow-up</option>
+                                <option value="Proposal Discussion">Proposal Discussion</option>
+                                <option value="Negotiation">Negotiation</option>
+                                <option value="Closing">Closing</option>
+                                <option value="Support">Support</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Call Status <span class="text-danger">*</span></label>
+                            <select name="status" id="call_status" class="form-control form-control-sm" required>
+                                <option value="completed"> Completed - Successfully talked</option>
+                                <option value="missed">Missed - No answer</option>
+                                <option value="voicemail"> Voicemail - Left message</option>
+                                <option value="no_answer"> No Answer - Call back later</option>
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Duration (minutes:seconds)</label>
+                            <input type="text" name="duration" id="call_duration" class="form-control form-control-sm"
+                                placeholder="e.g., 5:30">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Call Date & Time <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="call_date" id="call_date"
+                                class="form-control form-control-sm" required>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="small mb-1">Call Notes</label>
+                            <textarea name="notes" id="call_notes" rows="3" class="form-control form-control-sm"
+                                placeholder="What was discussed? Any action items?"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary">Log Call</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>
         let currentLeadId = null;
         let currentLeadName = null;
@@ -612,8 +687,41 @@
                     }
                 });
             });
+          
+
+            // Call Form Submit
+            $('#callForm').on('submit', function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: '{{ route("admin.lead.addCall") }}',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Success!',
+                                text: response.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            $('#callModal').modal('hide');
+                            $('#callForm')[0].reset();
+                            // Optionally reload page or update call count
+                            // location.reload();
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                        }
+                    },
+                    error: function () {
+                        Swal.fire({ icon: 'error', title: 'Error!', text: 'Something went wrong!' });
+                    }
+                });
+            });
         });
 
+        
         // View Lead Details
         function viewLead(id) {
             $('#viewLeadModal').modal('show');
@@ -626,49 +734,49 @@
                     if (response.success) {
                         let l = response.data;
                         let html = `
-                        <div class="row">
-                            <div class="col-md-4 text-center">
-                                ${l.lead_image ?
+                                <div class="row">
+                                    <div class="col-md-4 text-center">
+                                        ${l.lead_image ?
                                 `<img src="{{ asset('') }}${l.lead_image}" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">` :
                                 `<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white mx-auto mb-3" style="width: 100px; height: 100px;">
-                                        <i class="fas fa-user fa-3x"></i>
-                                    </div>`
+                                                <i class="fas fa-user fa-3x"></i>
+                                            </div>`
                             }
-                                <h5>${escapeHtml(l.first_name)} ${escapeHtml(l.last_name)}</h5>
-                                <p class="text-muted small">${escapeHtml(l.title || 'No Title')}</p>
-                            </div>
-                            <div class="col-md-8">
-                                <table class="table table-sm table-borderless">
-                                    <tr><th width="35%">Email:</th><td>${escapeHtml(l.email || '-')}</td></tr>
-                                    <tr><th>Phone:</th><td>${escapeHtml(l.phone || '-')}</td></tr>
-                                    <tr><th>Mobile:</th><td>${escapeHtml(l.mobile || '-')}</td></tr>
-                                    <tr><th>Company:</th><td>${escapeHtml(l.company || '-')}</td></tr>
-                                    <tr><th>Lead Status:</th><td>${escapeHtml(l.lead_status || '-')}</td></tr>
-                                    <tr><th>Lead Source:</th><td>${escapeHtml(l.lead_source || '-')}</td></tr>
-                                    <tr><th>Annual Revenue:</th><td>${l.annual_revenue ? 'PKR ' + parseFloat(l.annual_revenue).toLocaleString() : '-'}</td></tr>
-                                    <tr><th>Owner:</th><td>${escapeHtml(l.owner?.full_name || l.owner?.username || 'Not Assigned')}</td></tr>
-                                </table>
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-12">
-                                <h6 class="text-primary"><i class="fas fa-map-marker-alt mr-2"></i>Address</h6>
-                                <p>${escapeHtml(l.street || '')}${l.street ? '<br>' : ''}
-                                ${escapeHtml(l.city || '')}${l.city ? ', ' : ''}
-                                ${escapeHtml(l.state || '')}${l.state ? '<br>' : ''}
-                                ${escapeHtml(l.country || '')}${l.zip_code ? ' - ' + escapeHtml(l.zip_code) : ''}</p>
-                                ${!l.street && !l.city && !l.state && !l.country ? '<p class="text-muted">No address provided</p>' : ''}
-                            </div>
-                        </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-12">
-                                <h6 class="text-primary"><i class="fas fa-align-left mr-2"></i>Description</h6>
-                                <p>${escapeHtml(l.description || 'No description provided')}</p>
-                            </div>
-                        </div>
-                    `;
+                                        <h5>${escapeHtml(l.first_name)} ${escapeHtml(l.last_name)}</h5>
+                                        <p class="text-muted small">${escapeHtml(l.title || 'No Title')}</p>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <table class="table table-sm table-borderless">
+                                            <tr><th width="35%">Email:</th><td>${escapeHtml(l.email || '-')}</td></tr>
+                                            <tr><th>Phone:</th><td>${escapeHtml(l.phone || '-')}</td></tr>
+                                            <tr><th>Mobile:</th><td>${escapeHtml(l.mobile || '-')}</td></tr>
+                                            <tr><th>Company:</th><td>${escapeHtml(l.company || '-')}</td></tr>
+                                            <tr><th>Lead Status:</th><td>${escapeHtml(l.lead_status || '-')}</td></tr>
+                                            <tr><th>Lead Source:</th><td>${escapeHtml(l.lead_source || '-')}</td></tr>
+                                            <tr><th>Annual Revenue:</th><td>${l.annual_revenue ? 'PKR ' + parseFloat(l.annual_revenue).toLocaleString() : '-'}</td></tr>
+                                            <tr><th>Owner:</th><td>${escapeHtml(l.owner?.full_name || l.owner?.username || 'Not Assigned')}</td></tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <h6 class="text-primary"><i class="fas fa-map-marker-alt mr-2"></i>Address</h6>
+                                        <p>${escapeHtml(l.street || '')}${l.street ? '<br>' : ''}
+                                        ${escapeHtml(l.city || '')}${l.city ? ', ' : ''}
+                                        ${escapeHtml(l.state || '')}${l.state ? '<br>' : ''}
+                                        ${escapeHtml(l.country || '')}${l.zip_code ? ' - ' + escapeHtml(l.zip_code) : ''}</p>
+                                        ${!l.street && !l.city && !l.state && !l.country ? '<p class="text-muted">No address provided</p>' : ''}
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <h6 class="text-primary"><i class="fas fa-align-left mr-2"></i>Description</h6>
+                                        <p>${escapeHtml(l.description || 'No description provided')}</p>
+                                    </div>
+                                </div>
+                            `;
                         $('#viewLeadContent').html(html);
                     }
                 }
@@ -695,9 +803,20 @@
         }
 
         // Placeholder actions
-        function openCallAction(id) {
-            Swal.fire({ icon: 'info', title: 'Coming Soon!', text: 'Call logging feature will be added soon.' });
-        }
+       function openCallAction(id, name) {
+    $('#call_lead_id').val(id);
+    $('#call_lead_name').val(name);
+    $('#call_type').val('outbound');
+    $('#call_purpose').val('');
+    $('#call_status').val('completed');
+    $('#call_duration').val('');
+    $('#call_notes').val('');
+    // Set default call date to now
+    let now = new Date();
+    let formattedDate = now.toISOString().slice(0, 16);
+    $('#call_date').val(formattedDate);
+    $('#callModal').modal('show');
+}
 
         function openEmailAction(id) {
             Swal.fire({ icon: 'info', title: 'Coming Soon!', text: 'Email feature will be added soon.' });

@@ -24,7 +24,10 @@ class LeadController extends Controller
         $query = Lead::with('owner');
 
         if (!Auth::user()->hasRole('Admin')) {
-            $query->where('created_by', Auth::id());
+            $query->where(function ($q) {
+                $q->where('created_by', Auth::id())
+                    ->orWhere('lead_owner', Auth::id());
+            });
         }
 
         $leads = $query->latest()->get();
@@ -235,6 +238,72 @@ class LeadController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating task!'
+            ]);
+        }
+    }
+
+    public function addCall(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'lead_id' => 'required|exists:leads,id',
+                'call_type' => 'required|in:inbound,outbound',
+                'call_purpose' => 'nullable|string|max:255',
+                'notes' => 'nullable|string',
+                'duration' => 'nullable|string|max:20',
+                'status' => 'required|in:completed,missed,voicemail,no_answer',
+                'call_date' => 'required|date'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $lead = Lead::findOrFail($request->lead_id);
+
+            $call = $lead->addCall(
+                $request->call_type,
+                $request->call_purpose,
+                $request->notes,
+                $request->duration,
+                $request->status,
+                $request->call_date
+            );
+
+            // Update lead's last_contacted_at
+            $lead->last_contacted_at = now();
+            $lead->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call logged successfully!',
+                'data' => $call
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getCalls($id)
+    {
+        try {
+            $lead = Lead::findOrFail($id);
+            $calls = $lead->calls()->with('calledBy')->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $calls
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching calls!'
             ]);
         }
     }

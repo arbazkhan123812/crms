@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -39,6 +40,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('/leads/{id}', [LeadController::class, 'delete'])->name('lead.delete');
     Route::get('/leads/{id}', [LeadController::class, 'get'])->name('lead.get');
     Route::post('/leads/add-note', [LeadController::class, 'addNote'])->name('lead.addNote');
+     Route::post('/leads/add-call', [LeadController::class, 'addCall'])->name('lead.addCall');
+    Route::get('/leads/{id}/calls', [LeadController::class, 'getCalls'])->name('lead.calls');
 
     Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
     Route::post('/permissions/get', [PermissionController::class, 'getPermissions'])->name('permissions.get');
@@ -48,8 +51,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/leads/{id}/tasks', [LeadController::class, 'getTasks'])->name('lead.tasks');
     Route::put('/tasks/{id}/status', [LeadController::class, 'updateTaskStatus'])->name('task.updateStatus');
     Route::post('/leads/add-task', [LeadController::class, 'addTask'])->name('lead.addTask');
+    
 });
-
+Route::get('dashboard',[DashboardController::class,'index'])->name('dashboard.index');
 
 
 Route::get('/', [AuthController::class, 'index']);

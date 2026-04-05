@@ -80,6 +80,23 @@ class Lead extends Model
         ]);
     }
 
-    
+    public function calls()
+    {
+        return $this->hasMany(LeadCall::class)->orderBy('call_date', 'desc');
+    }
+
+  
+    public function addCall($callType, $callPurpose, $notes, $duration, $status, $callDate)
+    {
+        return $this->calls()->create([
+            'call_type' => $callType,
+            'call_purpose' => $callPurpose,
+            'notes' => $notes,
+            'duration' => $duration,
+            'status' => $status,
+            'call_date' => $callDate,
+            'called_by' => auth()->id()
+        ]);
+    }
     
 }

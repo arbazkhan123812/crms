@@ -49,7 +49,7 @@ class AuthController extends Controller
             'password' => $request->password
         ])) {
 
-            $redirect = Auth::user()->employee_id ? '/employee/dashboard' : '/admin/users/index';
+            $redirect = Auth::user()->employee_id ? '/employee/dashboard' : 'dashboard';
 
             return response()->json([
                 'success' => true,
