@@ -42,6 +42,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('/leads/add-note', [LeadController::class, 'addNote'])->name('lead.addNote');
      Route::post('/leads/add-call', [LeadController::class, 'addCall'])->name('lead.addCall');
     Route::get('/leads/{id}/calls', [LeadController::class, 'getCalls'])->name('lead.calls');
+     Route::get('/leads/{id}/calls', [LeadController::class, 'getLeadCalls'])->name('lead.calls');
+    Route::post('/leads/log-call', [LeadController::class, 'logCall'])->name('lead.logCall');
+    Route::post('/leads/schedule-call', [LeadController::class, 'createScheduledCall'])->name('lead.scheduleCall');
+    Route::put('/leads/calls/{id}', [LeadController::class, 'updateCallToLogged'])->name('lead.updateCall');
+    Route::delete('/leads/calls/{id}', [LeadController::class, 'deleteLeadCall'])->name('lead.deleteCall');
+     Route::post('/leads/schedule-meeting', [LeadController::class, 'scheduleMeeting'])->name('lead.scheduleMeeting');
+    Route::get('/leads/{id}/meetings', [LeadController::class, 'getLeadMeetings'])->name('lead.meetings');
+    Route::put('/leads/meetings/{id}', [LeadController::class, 'updateMeeting'])->name('lead.updateMeeting');
+    Route::delete('/leads/meetings/{id}', [LeadController::class, 'deleteMeeting'])->name('lead.deleteMeeting');
+    Route::post('/leads/meetings/{id}/complete', [LeadController::class, 'completeMeeting'])->name('lead.completeMeeting');
     Route::post('/leads/send-email', [LeadController::class, 'sendEmail'])->name('lead.sendEmail');
     Route::get('/email-templates', [LeadController::class, 'getEmailTemplates'])->name('email.templates');
     Route::get('/email-template/{id}', [LeadController::class, 'getEmailTemplate'])->name('email.template.get');

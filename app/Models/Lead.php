@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\LeadActivity;
 
 class Lead extends Model
 {
@@ -80,13 +81,11 @@ class Lead extends Model
         return $this->notes;
     }
 
-    // Tasks relationship
     public function tasks()
     {
         return $this->hasMany(LeadTask::class)->orderBy('due_date', 'asc');
     }
 
-    // Pending tasks
     public function pendingTasks()
     {
         return $this->tasks()->where('status', 'pending');
@@ -109,7 +108,6 @@ class Lead extends Model
         return $this->hasMany(LeadCall::class)->orderBy('call_date', 'desc');
     }
 
-
     public function addCall($callType, $callPurpose, $notes, $duration, $status, $callDate)
     {
         return $this->calls()->create([
@@ -128,7 +126,6 @@ class Lead extends Model
         return $this->hasMany(LeadEmail::class)->orderBy('created_at', 'desc');
     }
 
-    // Method to log email
     public function logEmail($from, $to, $subject, $body, $cc = null, $bcc = null)
     {
         return $this->emails()->create([
@@ -142,5 +139,83 @@ class Lead extends Model
             'sent_by' => auth()->id()
         ]);
     }
-   
+
+    public function loggedCalls()
+    {
+        return $this->calls()->where('status', 'completed');
+    }
+
+    public function scheduledCalls()
+    {
+        return $this->calls()->where('status', 'scheduled');
+    }
+
+    public function missedCalls()
+    {
+        return $this->calls()->where('status', 'missed');
+    }
+    
+    public function meetings()
+    {
+        return $this->hasMany(LeadMeeting::class)->orderBy('meeting_date', 'desc');
+    }
+
+    public function upcomingMeetings()
+    {
+        return $this->meetings()->where('meeting_date', '>=', now())->where('status', 'scheduled');
+    }
+
+    public function completedMeetings()
+    {
+        return $this->meetings()->where('status', 'completed');
+    }
+
+    public function scheduleMeeting($title, $description, $meetingType, $location, $meetingLink, $meetingDate, $duration, $assignedTo)
+    {
+        return $this->meetings()->create([
+            'title' => $title,
+            'description' => $description,
+            'meeting_type' => $meetingType,
+            'location' => $location,
+            'meeting_link' => $meetingLink,
+            'meeting_date' => $meetingDate,
+            'duration' => $duration,
+            'status' => 'scheduled',
+            'assigned_to' => $assignedTo,
+            'created_by' => auth()->id()
+        ]);
+    }
+    
+    public function activities()
+    {
+        return $this->hasMany(LeadActivity::class)->orderBy('created_at', 'desc');
+    }
+
+    public function addActivity($type, $subject, $description = null, $dueDate = null, $assignedTo = null)
+    {
+        return $this->activities()->create([
+            'type' => $type,
+            'subject' => $subject,
+            'description' => $description,
+            'due_date' => $dueDate,
+            'assigned_to' => $assignedTo ?? auth()->id(),
+            'status' => $dueDate ? 'pending' : 'completed',
+            'completed_at' => !$dueDate ? now() : null
+        ]);
+    }
+
+    public function getActivitiesByType($type)
+    {
+        return $this->activities()->where('type', $type)->get();
+    }
+
+    public function pendingActivities()
+    {
+        return $this->activities()->where('status', 'pending')->where('due_date', '>=', now())->get();
+    }
+
+    public function overdueActivities()
+    {
+        return $this->activities()->where('status', 'pending')->where('due_date', '<', now())->get();
+    }
 }

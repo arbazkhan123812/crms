@@ -138,17 +138,6 @@
                                                         class="badge badge-{{ $statusColor }} px-2 py-1">{{ $lead->lead_status ?: '-' }}</span>
                                                 </td>
                                                 <td class="align-middle">
-                                                    @can('leads_edit')
-                                                        <button class="btn btn-sm btn-primary" onclick="editLead({{ $lead->id }})" title="Edit">
-                                                            <i class="fas fa-edit"></i>
-                                                        </button>
-                                                    @endcan
-                                                    @can('leads_delete')
-                                                        <button class="btn btn-sm btn-primary" onclick="deleteLead({{ $lead->id }})"
-                                                            title="Delete">
-                                                            <i class="fas fa-trash-alt"></i>
-                                                        </button>
-                                                    @endcan
                                                     <!-- Dropdown Action Menu -->
                                                     <div class="dropdown">
                                                         @can('leads_performactions')
@@ -185,13 +174,39 @@
                                                                     </a>
                                                                 </li>
                                                             @endcan
-                                                            @can('leads_logcall')
-                                                                <li>
-                                                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                        onclick="openCallAction({{ $lead->id }}, '{{ addslashes($lead->first_name) }} {{ addslashes($lead->last_name) }}')">
-                                                                        <i class="fas fa-phone-alt text-primary mr-2" style="width: 20px;"></i>
-                                                                        Log Call
+                                                            @can('leads_call')
+                                                                <li class="dropdown-submenu">
+                                                                    <a class="dropdown-item d-flex align-items-center justify-content-between call-submenu-toggle"
+                                                                        href="javascript:void(0)">
+                                                                        <span class="d-flex align-items-center">
+                                                                            <i class="fas fa-phone-alt text-primary mr-2"
+                                                                                style="width: 20px;"></i>
+                                                                            Call
+                                                                        </span>
+                                                                        <i class="fas fa-chevron-down text-muted submenu-arrow"></i>
                                                                     </a>
+                                                                    <div class="dropdown-submenu-menu">
+                                                                        @can('leads_logcall')
+
+                                                                            <a class="dropdown-item d-flex align-items-center dropdown-submenu-item"
+                                                                                href="javascript:void(0)"
+                                                                                onclick="openCallAction({{ $lead->id }}, '{{ addslashes($lead->first_name) }} {{ addslashes($lead->last_name) }}')">
+                                                                                <i class="fas fa-phone-volume text-primary mr-2"
+                                                                                    style="width: 20px;"></i>
+                                                                                Log Call
+                                                                            </a>
+                                                                        @endcan
+                                                                        @can('leads_createcall')
+
+                                                                            <a class="dropdown-item d-flex align-items-center dropdown-submenu-item"
+                                                                                href="javascript:void(0)"
+                                                                                onclick="openScheduleCallModal({{ $lead->id }})">
+                                                                                <i class="fas fa-calendar-plus text-primary mr-2"
+                                                                                    style="width: 20px;"></i>
+                                                                                Create a Call
+                                                                            </a>
+                                                                        @endcan
+                                                                    </div>
                                                                 </li>
                                                             @endcan
 
@@ -207,7 +222,7 @@
                                                             @can('leads_schedulemeeting')
                                                                 <li>
                                                                     <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                        onclick="openMeetingAction({{ $lead->id }})">
+                                                                        onclick="openMeetingModal({{ $lead->id }})">
                                                                         <i class="fas fa-handshake text-primary mr-2" style="width: 20px;"></i>
                                                                         Schedule Meeting
                                                                     </a>
@@ -217,6 +232,18 @@
 
                                                         </ul>
                                                     </div>
+                                                    @can('leads_edit')
+                                                        <button class="btn btn-sm btn-primary" onclick="editLead({{ $lead->id }})" title="Edit">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                    @endcan
+                                                    @can('leads_delete')
+                                                        <button class="btn btn-sm btn-primary" onclick="deleteLead({{ $lead->id }})"
+                                                            title="Delete">
+                                                            <i class="fas fa-trash-alt"></i>
+                                                        </button>
+                                                    @endcan
+
                                 </div>
                                 </td>
                                 </tr>
@@ -245,7 +272,7 @@
                     <input type="hidden" name="lead_id" id="email_lead_id">
                     <div class="modal-body">
                         <!-- From Email -->
-                        
+
                         <!-- To Email -->
                         <div class="form-group">
                             <label class="form-label mb-1">To</label>
@@ -653,34 +680,30 @@
         </div>
     </div>
 
-    <!-- Call Modal -->
-    <div class="modal fade" id="callModal" tabindex="-1" role="dialog">
+    <!-- Log Call Modal -->
+    <div class="modal fade" id="logCallModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-md">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title">
-                        <i class="fas fa-phone-alt mr-2"></i>Log Call
+                        <i class="fas fa-phone-alt mr-2"></i>Log a Call
                     </h5>
                     <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
                 </div>
-                <form id="callForm">
+                <form id="logCallForm">
                     @csrf
-                    <input type="hidden" name="lead_id" id="call_lead_id">
+                    <input type="hidden" name="lead_id" id="logCall_lead_id">
                     <div class="modal-body">
-                        <div class="form-group mb-3">
-                            <label class="small mb-1">Lead Name</label>
-                            <input type="text" id="call_lead_name" class="form-control form-control-sm" readonly disabled>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label class="small mb-1">Call Type <span class="text-danger">*</span></label>
-                            <select name="call_type" id="call_type" class="form-control form-control-sm" required>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Call Type</label>
+                            <select name="call_type" id="log_call_type" class="form-control" required>
                                 <option value="outbound"> Outbound (You called)</option>
                                 <option value="inbound"> Inbound (Lead called)</option>
                             </select>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="small mb-1">Call Purpose</label>
-                            <select name="call_purpose" id="call_purpose" class="form-control form-control-sm">
+                        <div class="form-group">
+                            <label class="form-label mb-1">Call Purpose</label>
+                            <select name="call_purpose" id="log_call_purpose" class="form-control">
                                 <option value="">Select Purpose</option>
                                 <option value="Initial Contact">Initial Contact</option>
                                 <option value="Follow-up">Follow-up</option>
@@ -691,39 +714,171 @@
                                 <option value="Other">Other</option>
                             </select>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="small mb-1">Call Status <span class="text-danger">*</span></label>
-                            <select name="status" id="call_status" class="form-control form-control-sm" required>
-                                <option value="completed"> Completed - Successfully talked</option>
-                                <option value="missed">Missed - No answer</option>
-                                <option value="voicemail"> Voicemail - Left message</option>
-                                <option value="no_answer"> No Answer - Call back later</option>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Call Status</label>
+                            <select name="status" id="log_call_status" class="form-control" required>
+                                <option value="completed"> Completed</option>
+                                <option value="missed"> Missed</option>
+                                <option value="voicemail"> Voicemail</option>
+                                <option value="no_answer"> No Answer</option>
                             </select>
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="small mb-1">Duration (minutes:seconds)</label>
-                            <input type="text" name="duration" id="call_duration" class="form-control form-control-sm"
+                        <div class="form-group">
+                            <label class="form-label mb-1">Duration</label>
+                            <input type="text" name="duration" id="log_call_duration" class="form-control"
                                 placeholder="e.g., 5:30">
                         </div>
-                        <div class="form-group mb-3">
-                            <label class="small mb-1">Call Date & Time <span class="text-danger">*</span></label>
-                            <input type="datetime-local" name="call_date" id="call_date"
-                                class="form-control form-control-sm" required>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Call Date & Time</label>
+                            <input type="datetime-local" name="call_date" id="log_call_date" class="form-control" required>
                         </div>
                         <div class="form-group mb-0">
-                            <label class="small mb-1">Call Notes</label>
-                            <textarea name="notes" id="call_notes" rows="3" class="form-control form-control-sm"
-                                placeholder="What was discussed? Any action items?"></textarea>
+                            <label class="form-label mb-1">Notes</label>
+                            <textarea name="notes" id="log_call_notes" rows="3" class="form-control"
+                                placeholder="Call notes..."></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-sm btn-primary">Log Call</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Log Call</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
+    <!-- Schedule Meeting Modal -->
+    <div class="modal fade" id="meetingModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-calendar-alt mr-2"></i>Schedule Meeting
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="meetingForm">
+                    @csrf
+                    <input type="hidden" name="lead_id" id="meeting_lead_id">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label mb-1">Meeting Title <span class="text-danger">*</span></label>
+                            <input type="text" name="title" id="meeting_title" class="form-control" required
+                                placeholder="e.g., Proposal Discussion, Product Demo">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Meeting Type</label>
+                            <select name="meeting_type" id="meeting_type" class="form-control">
+                                <option value="virtual">💻 Virtual (Zoom/Google Meet)</option>
+                                <option value="physical">🏢 Physical (In-person)</option>
+                                <option value="phone">📞 Phone Call</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="location_field">
+                            <label class="form-label mb-1">Location/Venue</label>
+                            <input type="text" name="location" id="meeting_location" class="form-control"
+                                placeholder="Office address, coffee shop, etc.">
+                        </div>
+                        <div class="form-group" id="link_field" style="display: none;">
+                            <label class="form-label mb-1">Meeting Link</label>
+                            <input type="url" name="meeting_link" id="meeting_link" class="form-control"
+                                placeholder="https://zoom.us/... or https://meet.google.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Meeting Date & Time <span class="text-danger">*</span></label>
+                            <input type="datetime-local" name="meeting_date" id="meeting_date" class="form-control"
+                                required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Duration</label>
+                            <select name="duration" id="meeting_duration" class="form-control">
+                                <option value="">Select Duration</option>
+                                <option value="15 minutes">15 minutes</option>
+                                <option value="30 minutes">30 minutes</option>
+                                <option value="45 minutes">45 minutes</option>
+                                <option value="1 hour">1 hour</option>
+                                <option value="1.5 hours">1.5 hours</option>
+                                <option value="2 hours">2 hours</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Assigned To <span class="text-danger">*</span></label>
+                            <select name="assigned_to" id="meeting_assigned_to" class="form-control" required>
+                                <option value="">Select User</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->username ?? $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="form-label mb-1">Description/Agenda</label>
+                            <textarea name="description" id="meeting_description" rows="3" class="form-control"
+                                placeholder="What will be discussed?"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Schedule Meeting</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Call Modal -->
+    <div class="modal fade" id="scheduleCallModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-calendar-plus mr-2"></i>Create a Call
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="scheduleCallForm">
+                    @csrf
+                    <input type="hidden" name="lead_id" id="scheduleCall_lead_id">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="form-label mb-1">Call Type</label>
+                            <select name="call_type" id="schedule_call_type" class="form-control" required>
+                                <option value="outbound"> Outbound </option>
+                                <option value="inbound"> Inbound </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Call Purpose</label>
+                            <select name="call_purpose" id="schedule_call_purpose" class="form-control">
+                                <option value="">Select Purpose</option>
+                                <option value="Initial Contact">Initial Contact</option>
+                                <option value="Follow-up">Follow-up</option>
+                                <option value="Proposal Discussion">Proposal Discussion</option>
+                                <option value="Negotiation">Negotiation</option>
+                                <option value="Closing">Closing</option>
+                                <option value="Support">Support</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Schedule Date & Time</label>
+                            <input type="datetime-local" name="call_date" id="schedule_call_date" class="form-control"
+                                required>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="form-label mb-1">Notes</label>
+                            <textarea name="notes" id="schedule_call_notes" rows="3" class="form-control"
+                                placeholder="Call notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Schedule Call</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentLeadId = null;
         let currentLeadName = null;
@@ -792,28 +947,59 @@
                 });
             });
 
+            $('.call-submenu-toggle').on('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-            // Call Form Submit
-            $('#callForm').on('submit', function (e) {
+                let $submenu = $(this).closest('.dropdown-submenu');
+                $('.dropdown-submenu').not($submenu).removeClass('show')
+                    .children('.dropdown-submenu-menu').removeClass('show');
+
+                $submenu.toggleClass('show');
+                $submenu.children('.dropdown-submenu-menu').toggleClass('show');
+            });
+
+            $('.call-submenu-toggle').on('mouseenter', function () {
+                let $submenu = $(this).closest('.dropdown-submenu');
+                $submenu.addClass('show');
+                $submenu.children('.dropdown-submenu-menu').addClass('show');
+            });
+
+            $('.dropdown-submenu-menu').on('mouseenter', function () {
+                $(this).addClass('show').closest('.dropdown-submenu').addClass('show');
+            });
+
+            $('.dropdown-submenu').on('mouseleave', function () {
+                $(this).removeClass('show');
+                $(this).children('.dropdown-submenu-menu').removeClass('show');
+            });
+
+            $('.dropdown').on('hidden.bs.dropdown', function () {
+                $(this).find('.dropdown-submenu').removeClass('show');
+                $(this).find('.dropdown-submenu-menu').removeClass('show');
+            });
+
+
+
+            // Meeting type change event
+            $(document).on('change', '#meeting_type', function () {
+                toggleMeetingFields();
+            });
+
+            // Meeting Form Submit
+            $('#meetingForm').on('submit', function (e) {
                 e.preventDefault();
 
                 $.ajax({
-                    url: '{{ route("admin.lead.addCall") }}',
+                    url: '{{ route("admin.lead.scheduleMeeting") }}',
                     type: 'POST',
                     data: $(this).serialize(),
                     success: function (response) {
                         if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success!',
-                                text: response.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                            $('#callModal').modal('hide');
-                            $('#callForm')[0].reset();
-                            // Optionally reload page or update call count
-                            // location.reload();
+                            Swal.fire({ icon: 'success', title: 'Success!', text: response.message, timer: 1500, showConfirmButton: false });
+                            $('#meetingModal').modal('hide');
+                            $('#meetingForm')[0].reset();
+                            loadLeadMeetings(currentLeadId);
                         } else {
                             Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
                         }
@@ -823,66 +1009,638 @@
                     }
                 });
             });
+
+            // Complete Meeting
+            function completeMeeting(meetingId) {
+                Swal.fire({
+                    title: 'Complete Meeting',
+                    html: `<textarea id="meeting_notes" class="swal2-textarea" placeholder="Meeting notes..."></textarea>`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Mark Complete',
+                    preConfirm: () => {
+                        return { notes: document.getElementById('meeting_notes').value }
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{{ url("admin/leads/meetings") }}/' + meetingId + '/complete',
+                            type: 'POST',
+                            data: {
+                                _token: '{{ csrf_token() }}',
+                                notes: result.value.notes
+                            },
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({ icon: 'success', title: 'Success!', text: response.message, timer: 1500, showConfirmButton: false });
+                                    loadLeadMeetings(currentLeadId);
+                                } else {
+                                    Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Delete Meeting
+            function deleteMeeting(meetingId) {
+                Swal.fire({
+                    title: 'Delete Meeting?',
+                    text: "This action cannot be undone!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Yes, delete it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: '{{ url("admin/leads/meetings") }}/' + meetingId,
+                            type: 'POST',
+                            data: { _token: '{{ csrf_token() }}', _method: 'DELETE' },
+                            success: function (response) {
+                                if (response.success) {
+                                    Swal.fire({ icon: 'success', title: 'Deleted!', text: response.message, timer: 1500, showConfirmButton: false });
+                                    loadLeadMeetings(currentLeadId);
+                                } else {
+                                    Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+
+
+
+            // Log Call Form Submit
+            $('#logCallForm').on('submit', function (e) {
+                e.preventDefault();
+                let now = new Date();
+                let formattedDate = now.toISOString().slice(0, 16);
+                if (!$('#log_call_date').val()) {
+                    $('#log_call_date').val(formattedDate);
+                }
+
+                $.ajax({
+                    url: '{{ route("admin.lead.addCall") }}',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({ icon: 'success', title: 'Success!', text: response.message, timer: 1500, showConfirmButton: false });
+                            $('#logCallModal').modal('hide');
+                            $('#logCallForm')[0].reset();
+                            loadLeadCalls(currentLeadId);
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                        }
+                    }
+                });
+            });
+
+            // Schedule Call Form Submit
+            $('#scheduleCallForm').on('submit', function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: '{{ route("admin.lead.scheduleCall") }}',
+                    type: 'POST',
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        if (response.success) {
+                            Swal.fire({ icon: 'success', title: 'Success!', text: response.message, timer: 1500, showConfirmButton: false });
+                            $('#scheduleCallModal').modal('hide');
+                            $('#scheduleCallForm')[0].reset();
+                            loadLeadCalls(currentLeadId);
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                        }
+                    }
+                });
+            });
         });
 
 
         // View Lead Details
         function viewLead(id) {
+            currentLeadId = id;
             $('#viewLeadModal').modal('show');
-            $('#viewLeadContent').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i><p class="mt-2">Loading...</p></div>');
+            $('#viewLeadContent').html(`
+                                        <div class="p-3">
+                                            <div class="text-center py-4">
+                                                <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                                                <p class="mt-2">Loading lead details...</p>
+                                            </div>
+                                        </div>
+                                    `);
 
+            // Load lead details
             $.ajax({
                 url: '{{ url("admin/leads") }}/' + id,
                 type: 'GET',
                 success: function (response) {
                     if (response.success) {
-                        let l = response.data;
-                        let html = `
-                                                <div class="row">
-                                                    <div class="col-md-4 text-center">
-                                                        ${l.lead_image ?
-                                `<img src="{{ asset('') }}${l.lead_image}" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">` :
-                                `<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white mx-auto mb-3" style="width: 100px; height: 100px;">
-                                                                <i class="fas fa-user fa-3x"></i>
-                                                            </div>`
-                            }
-                                                        <h5>${escapeHtml(l.first_name)} ${escapeHtml(l.last_name)}</h5>
-                                                        <p class="text-muted small">${escapeHtml(l.title || 'No Title')}</p>
-                                                    </div>
-                                                    <div class="col-md-8">
-                                                        <table class="table table-sm table-borderless">
-                                                            <tr><th width="35%">Email:</th><td>${escapeHtml(l.email || '-')}</td></tr>
-                                                            <tr><th>Phone:</th><td>${escapeHtml(l.phone || '-')}</td></tr>
-                                                            <tr><th>Mobile:</th><td>${escapeHtml(l.mobile || '-')}</td></tr>
-                                                            <tr><th>Company:</th><td>${escapeHtml(l.company || '-')}</td></tr>
-                                                            <tr><th>Lead Status:</th><td>${escapeHtml(l.lead_status || '-')}</td></tr>
-                                                            <tr><th>Lead Source:</th><td>${escapeHtml(l.lead_source || '-')}</td></tr>
-                                                            <tr><th>Annual Revenue:</th><td>${l.annual_revenue ? 'PKR ' + parseFloat(l.annual_revenue).toLocaleString() : '-'}</td></tr>
-                                                            <tr><th>Owner:</th><td>${escapeHtml(l.owner?.full_name || l.owner?.username || 'Not Assigned')}</td></tr>
-                                                        </table>
-                                                    </div>
-                                                </div>
-                                                <hr>
-                                                <div class="row">
-                                                    <div class="col-12">
-                                                        <h6 class="text-primary"><i class="fas fa-map-marker-alt mr-2"></i>Address</h6>
-                                                        <p>${escapeHtml(l.street || '')}${l.street ? '<br>' : ''}
-                                                        ${escapeHtml(l.city || '')}${l.city ? ', ' : ''}
-                                                        ${escapeHtml(l.state || '')}${l.state ? '<br>' : ''}
-                                                        ${escapeHtml(l.country || '')}${l.zip_code ? ' - ' + escapeHtml(l.zip_code) : ''}</p>
-                                                        ${!l.street && !l.city && !l.state && !l.country ? '<p class="text-muted">No address provided</p>' : ''}
-                                                    </div>
-                                                </div>
-                                                <hr>
-                                                <div class="row">
-                                                    <div class="col-12">
-                                                        <h6 class="text-primary"><i class="fas fa-align-left mr-2"></i>Description</h6>
-                                                        <p>${escapeHtml(l.description || 'No description provided')}</p>
-                                                    </div>
-                                                </div>
-                                            `;
-                        $('#viewLeadContent').html(html);
+                        displayLeadDetails(response.data);
+                        loadLeadCalls(id);
                     }
+                }
+            });
+        }
+        
+            // Load Lead Meetings
+            function loadLeadMeetings(leadId) {
+                $.ajax({
+                    url: '{{ url("admin/leads") }}/' + leadId + '/meetings',
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.success) {
+                            displayUpcomingMeetings(response.upcoming_meetings);
+                            displayPastMeetings(response.completed_meetings);
+                        }
+                    }
+                });
+            }
+
+            // Display Upcoming Meetings
+            function displayUpcomingMeetings(meetings) {
+                if (meetings.length === 0) {
+                    $('#upcomingMeetingsList').html('<div class="alert alert-info">No upcoming meetings scheduled.</div>');
+                    return;
+                }
+
+                let html = '<div class="table-responsive"><table class="table table-sm table-hover">';
+                html += '<thead class="thead-light"><tr><th>Date/Time</th><th>Title</th><th>Type</th><th>Location/Link</th><th>Assigned To</th><th width="100">Actions</th></tr></thead><tbody>';
+
+                meetings.forEach(meeting => {
+                    let typeIcon = meeting.meeting_type == 'virtual' ? '💻' : (meeting.meeting_type == 'physical' ? '🏢' : '📞');
+                    let locationDisplay = meeting.meeting_type == 'virtual' ?
+                        (meeting.meeting_link ? '<a href="' + meeting.meeting_link + '" target="_blank">Join Link</a>' : meeting.location || '-') :
+                        (meeting.location || '-');
+
+                    html += `
+                <tr>
+                    <td>${new Date(meeting.meeting_date).toLocaleString()}</td>
+                    <td><strong>${escapeHtml(meeting.title)}</strong>${meeting.description ? '<br><small class="text-muted">' + escapeHtml(meeting.description.substring(0, 50)) + '</small>' : ''}</td>
+                    <td>${typeIcon} ${meeting.meeting_type}</td>
+                    <td>${locationDisplay}</td>
+                    <td>${escapeHtml(meeting.assigned_to?.username || meeting.assigned_to?.name || '-')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-success" onclick="completeMeeting(${meeting.id})" title="Mark Complete">
+                            <i class="fas fa-check-circle"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMeeting(${meeting.id})" title="Delete">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+                });
+
+                html += '</tbody></table></div>';
+                $('#upcomingMeetingsList').html(html);
+            }
+
+            // Display Past Meetings
+            function displayPastMeetings(meetings) {
+                if (meetings.length === 0) {
+                    $('#pastMeetingsList').html('<div class="alert alert-info">No past meetings found.</div>');
+                    return;
+                }
+
+                let html = '<div class="table-responsive"><table class="table table-sm table-hover">';
+                html += '<thead class="thead-light"><tr><th>Date/Time</th><th>Title</th><th>Type</th><th>Notes</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+
+                meetings.forEach(meeting => {
+                    let typeIcon = meeting.meeting_type == 'virtual' ? '💻' : (meeting.meeting_type == 'physical' ? '🏢' : '📞');
+
+                    html += `
+                <tr>
+                    <td>${new Date(meeting.meeting_date).toLocaleString()}</td>
+                    <td><strong>${escapeHtml(meeting.title)}</strong>${meeting.description ? '<br><small class="text-muted">' + escapeHtml(meeting.description.substring(0, 50)) + '</small>' : ''}</td>
+                    <td>${typeIcon} ${meeting.meeting_type}</td>
+                    <td><small>${escapeHtml(meeting.notes ? meeting.notes.substring(0, 50) : '-')}</small></td>
+                    <td><span class="badge badge-success">${meeting.status}</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMeeting(${meeting.id})" title="Delete">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+                });
+
+                html += '</tbody></table></div>';
+                $('#pastMeetingsList').html(html);
+            }
+
+            // Open Meeting Modal
+            function openMeetingModal(leadId) {
+                $('#meeting_lead_id').val(leadId);
+                $('#meeting_title').val('');
+                $('#meeting_type').val('virtual');
+                $('#meeting_location').val('');
+                $('#meeting_link').val('');
+                $('#meeting_description').val('');
+                $('#meeting_duration').val('');
+                $('#meeting_assigned_to').val('');
+
+                let now = new Date();
+                now.setHours(now.getHours() + 2);
+                let formattedDate = now.toISOString().slice(0, 16);
+                $('#meeting_date').val(formattedDate);
+
+                // Toggle fields based on meeting type
+                toggleMeetingFields();
+
+                $('#meetingModal').modal('show');
+            }
+
+            // Toggle Meeting Fields
+            function toggleMeetingFields() {
+                let meetingType = $('#meeting_type').val();
+                if (meetingType === 'virtual') {
+                    $('#location_field').hide();
+                    $('#link_field').show();
+                    $('#meeting_link').prop('required', false);
+                    $('#meeting_location').prop('required', false);
+                } else if (meetingType === 'physical') {
+                    $('#location_field').show();
+                    $('#link_field').hide();
+                    $('#meeting_location').prop('required', true);
+                    $('#meeting_link').prop('required', false);
+                } else {
+                    $('#location_field').hide();
+                    $('#link_field').hide();
+                    $('#meeting_location').prop('required', false);
+                    $('#meeting_link').prop('required', false);
+                }
+            }
+        function displayLeadDetails(lead) {
+            let html = `
+                                        <div class="p-3">
+                                            <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                                                <div class="mr-3">
+                                                    ${lead.lead_image ?
+                    `<img src="{{ asset('') }}${lead.lead_image}" class="rounded-circle" width="50" height="50" style="object-fit: cover;">` :
+                    `<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 50px; height: 50px;">
+                                                            <i class="fas fa-user fa-1x"></i>
+                                                        </div>`
+                }
+                                                </div>
+                                                <div>
+                                                    <h5 class="mb-0">${escapeHtml(lead.first_name)} ${escapeHtml(lead.last_name)}</h5>
+                                                    <small class="text-muted">${escapeHtml(lead.email || 'No email')} | ${escapeHtml(lead.phone || 'No phone')}</small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Tabs -->
+                                            <ul class="nav nav-tabs" id="leadTabs" role="tablist">
+                                                <li class="nav-item">
+                                                    <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab">
+                                                        <i class="fas fa-info-circle"></i> Information
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link" id="calls-tab" data-toggle="tab" href="#calls" role="tab">
+                                                        <i class="fas fa-phone-alt"></i> Calls
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link" id="notes-tab" data-toggle="tab" href="#notes" role="tab">
+                                                        <i class="fas fa-sticky-note"></i> Notes
+                                                    </a>
+                                                </li>
+                                                <li class="nav-item">
+                                                    <a class="nav-link" id="tasks-tab" data-toggle="tab" href="#tasks" role="tab">
+                                                        <i class="fas fa-tasks"></i> Tasks
+                                                    </a>
+                                                </li>
+                                            </ul>
+
+                                            <div class="tab-content mt-3" id="leadTabsContent">
+                                                <!-- Information Tab -->
+                                                <div class="tab-pane fade show active" id="info" role="tabpanel">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <table class="table table-sm">
+                                                                <tr><th width="35%">Company:</th><td>${escapeHtml(lead.company || '-')}</td></tr>
+                                                                <tr><th>Title:</th><td>${escapeHtml(lead.title || '-')}</td></tr>
+                                                                <tr><th>Lead Source:</th><td>${escapeHtml(lead.lead_source || '-')}</td></tr>
+                                                                <tr><th>Lead Status:</th><td>${escapeHtml(lead.lead_status || '-')}</td></tr>
+                                                                <tr><th>Annual Revenue:</th><td>${lead.annual_revenue ? 'PKR ' + parseFloat(lead.annual_revenue).toLocaleString() : '-'}</td></tr>
+                                                                <tr><th>Employees:</th><td>${escapeHtml(lead.no_of_employees || '-')}</td></tr>
+                                                            </table>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <table class="table table-sm">
+                                                                <tr><th>Owner:</th><td>${escapeHtml(lead.owner?.full_name || lead.owner?.username || '-')}</td></tr>
+                                                                <tr><th>Created By:</th><td>${escapeHtml(lead.user?.full_name || lead.user?.username || '-')}</td></tr>
+                                                                <tr><th>Created At:</th><td>${new Date(lead.created_at).toLocaleString()}</td></tr>
+                                                                <tr><th>Last Contacted:</th><td>${lead.last_contacted_at ? new Date(lead.last_contacted_at).toLocaleString() : '-'}</td></tr>
+                                                            </table>
+                                                        </div>
+                                                        <div class="col-12">
+                                                            <hr>
+                                                            <h6>Address</h6>
+                                                            <p>${escapeHtml(lead.street || '')}${lead.street ? '<br>' : ''}
+                                                            ${escapeHtml(lead.city || '')}${lead.city ? ', ' : ''}
+                                                            ${escapeHtml(lead.state || '')}${lead.state ? '<br>' : ''}
+                                                            ${escapeHtml(lead.country || '')}${lead.zip_code ? ' - ' + escapeHtml(lead.zip_code) : ''}</p>
+                                                            <hr>
+                                                            <h6>Description</h6>
+                                                            <p>${escapeHtml(lead.description || 'No description')}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Meetings Tab -->
+        <div class="tab-pane fade" id="meetings" role="tabpanel">
+            <div class="mb-3">
+                <button class="btn btn-sm btn-primary" onclick="openMeetingModal(${lead.id})">
+                    <i class="fas fa-plus"></i> Schedule Meeting
+                </button>
+            </div>
+
+            <!-- Sub Tabs for Meetings -->
+            <ul class="nav nav-tabs" id="meetingsSubTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="upcoming-meetings-tab" data-toggle="tab" href="#upcomingMeetings" role="tab">
+                        <i class="fas fa-clock"></i> Upcoming Meetings
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="past-meetings-tab" data-toggle="tab" href="#pastMeetings" role="tab">
+                        <i class="fas fa-history"></i> Past Meetings
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content mt-3" id="meetingsSubTabsContent">
+                <div class="tab-pane fade show active" id="upcomingMeetings" role="tabpanel">
+                    <div id="upcomingMeetingsList">
+                        <div class="text-center py-3">
+                            <i class="fas fa-spinner fa-spin text-muted"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="pastMeetings" role="tabpanel">
+                    <div id="pastMeetingsList">
+                        <div class="text-center py-3">
+                            <i class="fas fa-spinner fa-spin text-muted"></i> Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+                                                <!-- Calls Tab -->
+                                                <div class="tab-pane fade" id="calls" role="tabpanel">
+                                                    <div class="mb-3">
+                                                        <button class="btn btn-sm btn-primary mr-2" onclick="openLogCallModal(${lead.id})">
+                                                            <i class="fas fa-phone-alt"></i> Log a Call
+                                                        </button>
+                                                        <button class="btn btn-sm btn-success" onclick="openScheduleCallModal(${lead.id})">
+                                                            <i class="fas fa-calendar-plus"></i> Create a Call
+                                                        </button>
+                                                    </div>
+
+                                                    <!-- Sub Tabs for Calls -->
+                                                    <ul class="nav nav-tabs" id="callsSubTabs" role="tablist">
+                                                        <li class="nav-item">
+                                                            <a class="nav-link active" id="logged-calls-tab" data-toggle="tab" href="#loggedCalls" role="tab">
+                                                                <i class="fas fa-history"></i> Logged Calls
+                                                            </a>
+                                                        </li>
+                                                        <li class="nav-item">
+                                                            <a class="nav-link" id="scheduled-calls-tab" data-toggle="tab" href="#scheduledCalls" role="tab">
+                                                                <i class="fas fa-calendar"></i> Scheduled Calls
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+
+                                                    <div class="tab-content mt-3" id="callsSubTabsContent">
+                                                        <!-- Logged Calls Sub Tab -->
+                                                        <div class="tab-pane fade show active" id="loggedCalls" role="tabpanel">
+                                                            <div id="loggedCallsList">
+                                                                <div class="text-center py-3">
+                                                                    <i class="fas fa-spinner fa-spin text-muted"></i> Loading...
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Scheduled Calls Sub Tab -->
+                                                        <div class="tab-pane fade" id="scheduledCalls" role="tabpanel">
+                                                            <div id="scheduledCallsList">
+                                                                <div class="text-center py-3">
+                                                                    <i class="fas fa-spinner fa-spin text-muted"></i> Loading...
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Notes Tab -->
+                                                <div class="tab-pane fade" id="notes" role="tabpanel">
+                                                    <div id="notesList">
+                                                        <div class="text-center py-3">
+                                                            <i class="fas fa-spinner fa-spin text-muted"></i> Loading...
+                                                        </div>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-primary mt-2" onclick="openNoteAction(${lead.id}, '${escapeHtml(lead.first_name)} ${escapeHtml(lead.last_name)}')">
+                                                        <i class="fas fa-plus"></i> Add Note
+                                                    </button>
+                                                </div>
+
+                                                <!-- Tasks Tab -->
+                                                <div class="tab-pane fade" id="tasks" role="tabpanel">
+                                                    <div id="tasksList">
+                                                        <div class="text-center py-3">
+                                                            <i class="fas fa-spinner fa-spin text-muted"></i> Loading...
+                                                        </div>
+                                                    </div>
+                                                    <button class="btn btn-sm btn-primary mt-2" onclick="openTaskAction(${lead.id}, '${escapeHtml(lead.first_name)} ${escapeHtml(lead.last_name)}')">
+                                                        <i class="fas fa-plus"></i> Add Task
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `;
+            $('#viewLeadContent').html(html);
+        }
+
+
+
+        // Load Lead Calls
+        function loadLeadCalls(leadId) {
+            $.ajax({
+                url: '{{ url("admin/leads") }}/' + leadId + '/calls',
+                type: 'GET',
+                success: function (response) {
+                    if (response.success) {
+                        loadLeadMeetings(leadId);
+                        displayLoggedCalls(response.logged_calls);
+                        displayScheduledCalls(response.scheduled_calls);
+                    }
+                }
+            });
+        }
+
+        // Display Logged Calls
+        function displayLoggedCalls(calls) {
+            if (calls.length === 0) {
+                $('#loggedCallsList').html('<div class="alert alert-info">No logged calls found.</div>');
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-sm table-hover">';
+            html += '<thead class="thead-light"><tr><th>Date</th><th>Type</th><th>Purpose</th><th>Duration</th><th>Status</th><th>Notes</th><th width="60">Actions</th></tr></thead><tbody>';
+
+            calls.forEach(call => {
+                let statusBadge = call.status == 'completed' ? 'success' : (call.status == 'missed' ? 'danger' : (call.status == 'voicemail' ? 'info' : 'warning'));
+                html += `
+                                            <tr>
+                                                <td>${new Date(call.call_date).toLocaleString()}</td>
+                                                <td><span class="badge badge-${call.call_type == 'outbound' ? 'info' : 'warning'}">${call.call_type}</span></td>
+                                                <td>${escapeHtml(call.call_purpose || '-')}</td>
+                                                <td>${call.duration || '-'}</td>
+                                                <td><span class="badge badge-${statusBadge}">${call.status}</span></td>
+                                                <td><small>${escapeHtml(call.notes ? call.notes.substring(0, 50) : '-')}</small></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteCall(${call.id})" title="Delete">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `;
+            });
+
+            html += '</tbody></table></div>';
+            $('#loggedCallsList').html(html);
+        }
+
+        // Display Scheduled Calls
+        function displayScheduledCalls(calls) {
+            if (calls.length === 0) {
+                $('#scheduledCallsList').html('<div class="alert alert-info">No scheduled calls found.</div>');
+                return;
+            }
+
+            let html = '<div class="table-responsive"><table class="table table-sm table-hover">';
+            html += '<thead class="thead-light"><tr><th>Date</th><th>Type</th><th>Purpose</th><th>Notes</th><th width="120">Actions</th></tr></thead><tbody>';
+
+            calls.forEach(call => {
+                html += `
+                                            <tr>
+                                                <td>${new Date(call.call_date).toLocaleString()}</td>
+                                                <td><span class="badge badge-${call.call_type == 'outbound' ? 'info' : 'warning'}">${call.call_type}</span></td>
+                                                <td>${escapeHtml(call.call_purpose || '-')}</td>
+                                                <td><small>${escapeHtml(call.notes ? call.notes.substring(0, 50) : '-')}</small></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-success" onclick="completeScheduledCall(${call.id})" title="Mark Complete">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-danger" onclick="deleteCall(${call.id})" title="Delete">
+                                                        <i class="fas fa-trash-alt"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        `;
+            });
+
+            html += '</tbody></table></div>';
+            $('#scheduledCallsList').html(html);
+        }
+
+        // Open Log Call Modal
+        function openLogCallModal(leadId) {
+            $('#logCall_lead_id').val(leadId);
+            $('#logCallModal').modal('show');
+        }
+
+        // Open Schedule Call Modal
+        function openScheduleCallModal(leadId) {
+            $('#scheduleCall_lead_id').val(leadId);
+            let now = new Date();
+            now.setHours(now.getHours() + 1);
+            let formattedDate = now.toISOString().slice(0, 16);
+            $('#schedule_call_date').val(formattedDate);
+            $('#scheduleCallModal').modal('show');
+        }
+
+        // Delete Call
+        function deleteCall(callId) {
+            Swal.fire({
+                title: 'Delete Call?',
+                text: "This action cannot be undone!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{{ url("admin/leads/calls") }}/' + callId,
+                        type: 'POST',
+                        data: { _token: '{{ csrf_token() }}', _method: 'DELETE' },
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({ icon: 'success', title: 'Deleted!', text: response.message, timer: 1500, showConfirmButton: false });
+                                loadLeadCalls(currentLeadId);
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                            }
+                        }
+                    });
+                }
+            });
+        }
+
+        // Complete Scheduled Call
+        function completeScheduledCall(callId) {
+            Swal.fire({
+                title: 'Complete Call',
+                html: `
+                                            <input type="text" id="call_duration" class="swal2-input" placeholder="Duration (e.g., 5:30)">
+                                            <select id="call_status" class="swal2-select">
+                                                <option value="completed">Completed</option>
+                                                <option value="missed">Missed</option>
+                                                <option value="voicemail">Voicemail</option>
+                                                <option value="no_answer">No Answer</option>
+                                            </select>
+                                            <textarea id="call_notes" class="swal2-textarea" placeholder="Call notes..."></textarea>
+                                        `,
+                showCancelButton: true,
+                confirmButtonText: 'Save',
+                preConfirm: () => {
+                    return {
+                        duration: document.getElementById('call_duration').value,
+                        status: document.getElementById('call_status').value,
+                        notes: document.getElementById('call_notes').value
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{{ url("admin/leads/calls") }}/' + callId,
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            _method: 'PUT',
+                            duration: result.value.duration,
+                            status: result.value.status,
+                            notes: result.value.notes
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({ icon: 'success', title: 'Success!', text: response.message, timer: 1500, showConfirmButton: false });
+                                loadLeadCalls(currentLeadId);
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                            }
+                        }
+                    });
                 }
             });
         }
@@ -908,18 +1666,17 @@
 
         // Placeholder actions
         function openCallAction(id, name) {
-            $('#call_lead_id').val(id);
-            $('#call_lead_name').val(name);
-            $('#call_type').val('outbound');
-            $('#call_purpose').val('');
-            $('#call_status').val('completed');
-            $('#call_duration').val('');
-            $('#call_notes').val('');
+            $('#logCall_lead_id').val(id);
+            $('#log_call_type').val('outbound');
+            $('#log_call_purpose').val('');
+            $('#log_call_status').val('completed');
+            $('#log_call_duration').val('');
+            $('#log_call_notes').val('');
             // Set default call date to now
             let now = new Date();
             let formattedDate = now.toISOString().slice(0, 16);
-            $('#call_date').val(formattedDate);
-            $('#callModal').modal('show');
+            $('#log_call_date').val(formattedDate);
+            $('#logCallModal').modal('show');
         }
 
         // Email Action
@@ -1063,8 +1820,8 @@
 
         // Escape HTML helper
         function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function (m) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>]/g, function (m) {
                 if (m === '&') return '&amp;';
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
@@ -1204,8 +1961,8 @@
         }
 
         function escapeHtml(str) {
-            if (!str) return '';
-            return str.replace(/[&<>]/g, function (m) {
+            if (str === null || str === undefined) return '';
+            return String(str).replace(/[&<>]/g, function (m) {
                 if (m === '&') return '&amp;';
                 if (m === '<') return '&lt;';
                 if (m === '>') return '&gt;';
@@ -1314,6 +2071,60 @@
 
         .dropdown-divider {
             margin: 0.3rem 0;
+        }
+
+        .dropdown-submenu {
+            position: relative;
+        }
+
+        .dropdown-submenu>.dropdown-item {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .dropdown-submenu>.dropdown-item:hover,
+        .dropdown-submenu.show>.dropdown-item {
+            background-color: #f1f5f9;
+        }
+
+        .dropdown-submenu>.dropdown-submenu-menu {
+            display: none;
+            margin: 0.35rem 0 0.15rem 2.15rem;
+            padding-left: 0;
+            border-left: 2px solid #e2e8f0;
+        }
+
+        .dropdown-submenu.show>.dropdown-submenu-menu {
+            display: block;
+        }
+
+        .dropdown-submenu-item {
+            font-size: 0.78rem;
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            margin-bottom: 0.15rem;
+            white-space: nowrap;
+        }
+
+        .dropdown-submenu-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .submenu-arrow {
+            font-size: 0.72rem;
+            transition: transform 0.2s ease;
+        }
+
+        .dropdown-submenu.show .submenu-arrow {
+            transform: rotate(180deg);
+        }
+
+        @media (max-width: 991.98px) {
+            .dropdown-submenu>.dropdown-submenu-menu {
+                margin-left: 1.5rem;
+            }
         }
 
         .btn-outline-secondary {

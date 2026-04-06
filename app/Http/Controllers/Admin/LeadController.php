@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Mail\LeadNotification;
 use App\Models\EmailTemplate;
 use App\Models\Lead;
+use App\Models\LeadCall;
 use App\Models\LeadEmail;
+use App\Models\LeadMeeting;
 use App\Models\LeadTask;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -22,6 +24,8 @@ class LeadController extends Controller
         $this->middleware('permission:leads_save', ['only' => ['save']]);
         $this->middleware('permission:leads_delete', ['only' => ['delete']]);
         $this->middleware('permission:leads_sendemail', ['only' => ['sendEmail']]);
+        $this->middleware('permission:leads_logCall', ['only' => ['logCall']]);
+        $this->middleware('permission:leads_createcall', ['only' => ['addCall']]);
     }
 
     public function index()
@@ -144,14 +148,20 @@ class LeadController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                'success' => false,
+                    'success' => false,
                     'message' => $validator->errors()->first()
                 ]);
             }
 
             $lead = Lead::findOrFail($request->lead_id);
             $note = $lead->addNote($request->note, $request->type);
-
+            $lead->addActivity(
+                'note',
+                'Note added',
+                $request->note,
+                null,
+                auth()->id()
+            );
             return response()->json([
                 'success' => true,
                 'message' => 'Note added successfully!',
@@ -192,6 +202,13 @@ class LeadController extends Controller
                 $request->due_date
             );
 
+            $lead->addActivity(
+                'task',
+                'Task created: ' . $request->subject,
+                $request->description,
+                $request->due_date,
+                $request->assigned_to
+            );
             return response()->json([
                 'success' => true,
                 'message' => 'Task created successfully!',
@@ -302,6 +319,13 @@ class LeadController extends Controller
                 $subject
             );
 
+            $lead->addActivity(
+                'email',
+                'Email sent: ' . $subject,
+                'To: ' . $request->to_email . "\nSubject: " . $subject,
+                null,
+                auth()->id()
+            );
             // Log email activity
             $emailLog = $lead->logEmail(
                 Auth::user()->email,
@@ -319,7 +343,7 @@ class LeadController extends Controller
             ];
             Mail::to($request->to_email)->send(new LeadNotification($details));
 
-        
+
             return response()->json([
                 'success' => true,
                 'message' => 'Email sent successfully!',
@@ -432,6 +456,14 @@ class LeadController extends Controller
                 $request->call_date
             );
 
+            $lead->addActivity(
+                'call',
+                'Call logged: ' . ($request->call_purpose ?? 'Call'),
+                'Type: ' . $request->call_type . "\nStatus: " . $request->status . "\nDuration: " . ($request->duration ?? 'N/A') . "\nNotes: " . ($request->notes ?? ''),
+                null,
+                auth()->id()
+            );
+
             // Update lead's last_contacted_at
             $lead->last_contacted_at = now();
             $lead->save();
@@ -445,6 +477,26 @@ class LeadController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getLeadCalls($id)
+    {
+        try {
+            $lead = Lead::findOrFail($id);
+            $loggedCalls = $lead->calls()->where('status', 'completed')->orderBy('call_date', 'desc')->get();
+            $scheduledCalls = $lead->calls()->where('status', 'scheduled')->orderBy('call_date', 'asc')->get();
+
+            return response()->json([
+                'success' => true,
+                'logged_calls' => $loggedCalls,
+                'scheduled_calls' => $scheduledCalls
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching calls!'
             ]);
         }
     }
@@ -463,6 +515,561 @@ class LeadController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error fetching calls!'
+            ]);
+        }
+    }
+
+    // Get all calls (for calls index page)
+    public function callsIndex()
+    {
+        $calls = LeadCall::with(['lead', 'calledBy'])
+            ->orderBy('call_date', 'desc')
+            ->paginate(20);
+
+        $leads = Lead::all();
+        $users = User::all();
+
+        return view('Admin.Calls.index', compact('calls', 'leads', 'users'));
+    }
+
+    // Create a new scheduled call (future call)
+    public function createCall(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'lead_id' => 'nullable|exists:leads,id',
+                'call_type' => 'required|in:inbound,outbound',
+                'call_purpose' => 'nullable|string|max:255',
+                'notes' => 'nullable|string',
+                'duration' => 'nullable|string|max:20',
+                'status' => 'required|in:scheduled,completed,missed,voicemail,no_answer',
+                'call_date' => 'required|date',
+                'called_by' => 'required|exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $call = LeadCall::create([
+                'lead_id' => $request->lead_id,
+                'call_type' => $request->call_type,
+                'call_purpose' => $request->call_purpose,
+                'notes' => $request->notes,
+                'duration' => $request->duration,
+                'status' => $request->status,
+                'call_date' => $request->call_date,
+                'called_by' => $request->called_by
+            ]);
+
+            // If call is completed and has lead, update lead's last_contacted_at
+            if ($request->status == 'completed' && $request->lead_id) {
+                $lead = Lead::find($request->lead_id);
+                if ($lead) {
+                    $lead->last_contacted_at = now();
+                    $lead->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $request->status == 'scheduled' ? 'Call scheduled successfully!' : 'Call logged successfully!',
+                'data' => $call
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function logCall(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'lead_id' => 'required|exists:leads,id',
+                'call_type' => 'required|in:inbound,outbound',
+                'call_purpose' => 'nullable|string|max:255',
+                'notes' => 'nullable|string',
+                'duration' => 'nullable|string|max:20',
+                'status' => 'required|in:completed,missed,voicemail,no_answer',
+                'call_date' => 'required|date'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $lead = Lead::findOrFail($request->lead_id);
+
+            $call = $lead->calls()->create([
+                'call_type' => $request->call_type,
+                'call_purpose' => $request->call_purpose,
+                'notes' => $request->notes,
+                'duration' => $request->duration,
+                'status' => $request->status,
+                'call_date' => $request->call_date,
+                'called_by' => auth()->id()
+            ]);
+
+            // Update lead's last_contacted_at
+            $lead->last_contacted_at = now();
+            $lead->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call logged successfully!',
+                'data' => $call
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // Create a scheduled call (future call)
+    public function createScheduledCall(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'lead_id' => 'required|exists:leads,id',
+                'call_type' => 'required|in:inbound,outbound',
+                'call_purpose' => 'nullable|string|max:255',
+                'notes' => 'nullable|string',
+                'call_date' => 'required|date|after:now'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $lead = Lead::findOrFail($request->lead_id);
+
+            $call = $lead->calls()->create([
+                'call_type' => $request->call_type,
+                'call_purpose' => $request->call_purpose,
+                'notes' => $request->notes,
+                'duration' => null,
+                'status' => 'scheduled',
+                'call_date' => $request->call_date,
+                'called_by' => auth()->id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call scheduled successfully!',
+                'data' => $call
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // Update scheduled call to logged call
+    public function updateCallToLogged(Request $request, $id)
+    {
+        try {
+            $call = LeadCall::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'duration' => 'nullable|string|max:20',
+                'notes' => 'nullable|string',
+                'status' => 'required|in:completed,missed,voicemail,no_answer'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $call->duration = $request->duration;
+            $call->notes = $request->notes;
+            $call->status = $request->status;
+            $call->save();
+
+            // Update lead's last_contacted_at if completed
+            if ($request->status == 'completed' && $call->lead_id) {
+                $lead = Lead::find($call->lead_id);
+                if ($lead) {
+                    $lead->last_contacted_at = now();
+                    $lead->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // Delete call
+    public function deleteLeadCall($id)
+    {
+        try {
+            $call = LeadCall::findOrFail($id);
+            $call->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting call!'
+            ]);
+        }
+    }
+
+    // Update call
+    public function updateCall(Request $request, $id)
+    {
+        try {
+            $call = LeadCall::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'lead_id' => 'nullable|exists:leads,id',
+                'call_type' => 'required|in:inbound,outbound',
+                'call_purpose' => 'nullable|string|max:255',
+                'notes' => 'nullable|string',
+                'duration' => 'nullable|string|max:20',
+                'status' => 'required|in:scheduled,completed,missed,voicemail,no_answer',
+                'call_date' => 'required|date',
+                'called_by' => 'required|exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $oldStatus = $call->status;
+            $call->update($request->all());
+
+            // If status changed to completed and has lead, update lead's last_contacted_at
+            if ($oldStatus != 'completed' && $request->status == 'completed' && $call->lead_id) {
+                $lead = Lead::find($call->lead_id);
+                if ($lead) {
+                    $lead->last_contacted_at = now();
+                    $lead->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // Delete call
+    public function deleteCall($id)
+    {
+        try {
+            $call = LeadCall::findOrFail($id);
+            $call->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting call!'
+            ]);
+        }
+    }
+
+    // Get call details
+    public function getCall($id)
+    {
+        try {
+            $call = LeadCall::with(['lead', 'calledBy'])->findOrFail($id);
+            return response()->json([
+                'success' => true,
+                'data' => $call
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Call not found!'
+            ]);
+        }
+    }
+
+    // Get upcoming calls for dashboard
+    public function getUpcomingCalls()
+    {
+        try {
+            $calls = LeadCall::upcoming()->with('lead')->get();
+            return response()->json([
+                'success' => true,
+                'data' => $calls
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching calls!'
+            ]);
+        }
+    }
+
+    // Convert scheduled call to logged call
+    public function convertToLoggedCall(Request $request, $id)
+    {
+        try {
+            $call = LeadCall::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'duration' => 'nullable|string|max:20',
+                'notes' => 'nullable|string',
+                'call_purpose' => 'nullable|string'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $call->status = 'completed';
+            if ($request->duration) {
+                $call->duration = $request->duration;
+            }
+            if ($request->notes) {
+                $call->notes = $request->notes;
+            }
+            if ($request->call_purpose) {
+                $call->call_purpose = $request->call_purpose;
+            }
+            $call->save();
+
+            // Update lead's last_contacted_at
+            if ($call->lead_id) {
+                $lead = Lead::find($call->lead_id);
+                if ($lead) {
+                    $lead->last_contacted_at = now();
+                    $lead->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Call logged successfully!',
+                'data' => $call
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function scheduleMeeting(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'lead_id' => 'required|exists:leads,id',
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'meeting_type' => 'required|in:virtual,physical,phone',
+                'location' => 'nullable|string|max:255',
+                'meeting_link' => 'nullable|url|max:500',
+                'meeting_date' => 'required|date|after:now',
+                'duration' => 'nullable|string|max:50',
+                'assigned_to' => 'required|exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $lead = Lead::findOrFail($request->lead_id);
+
+            $meeting = $lead->scheduleMeeting(
+                $request->title,
+                $request->description,
+                $request->meeting_type,
+                $request->location,
+                $request->meeting_link,
+                $request->meeting_date,
+                $request->duration,
+                $request->assigned_to
+            );
+
+            // Add activity to timeline
+            $lead->addActivity(
+                'meeting',
+                'Meeting scheduled: ' . $request->title,
+                'Date: ' . date('d M Y, h:i A', strtotime($request->meeting_date)) . "\nType: " . $request->meeting_type . "\n" . ($request->description ?? ''),
+                null,
+                auth()->id()
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Meeting scheduled successfully!',
+                'data' => $meeting
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // Get lead meetings
+    public function getLeadMeetings($id)
+    {
+        try {
+            $lead = Lead::findOrFail($id);
+            $upcomingMeetings = $lead->upcomingMeetings()->with('assignedTo')->get();
+            $completedMeetings = $lead->completedMeetings()->with('assignedTo')->get();
+
+            return response()->json([
+                'success' => true,
+                'upcoming_meetings' => $upcomingMeetings,
+                'completed_meetings' => $completedMeetings
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching meetings!'
+            ]);
+        }
+    }
+
+    // Update meeting
+    public function updateMeeting(Request $request, $id)
+    {
+        try {
+            $meeting = LeadMeeting::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'title' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'meeting_type' => 'required|in:virtual,physical,phone',
+                'location' => 'nullable|string|max:255',
+                'meeting_link' => 'nullable|url|max:500',
+                'meeting_date' => 'required|date',
+                'duration' => 'nullable|string|max:50',
+                'status' => 'required|in:scheduled,completed,cancelled,rescheduled',
+                'assigned_to' => 'required|exists:users,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $meeting->update($request->all());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Meeting updated successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    // Delete meeting
+    public function deleteMeeting($id)
+    {
+        try {
+            $meeting = LeadMeeting::findOrFail($id);
+            $meeting->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Meeting deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting meeting!'
+            ]);
+        }
+    }
+
+    // Complete meeting
+    public function completeMeeting(Request $request, $id)
+    {
+        try {
+            $meeting = LeadMeeting::findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'notes' => 'nullable|string'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $meeting->complete($request->notes);
+
+            // Update lead's last_contacted_at
+            if ($meeting->lead_id) {
+                $lead = Lead::find($meeting->lead_id);
+                if ($lead) {
+                    $lead->last_contacted_at = now();
+                    $lead->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Meeting marked as completed!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
             ]);
         }
     }
