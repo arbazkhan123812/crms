@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\EmailTemplate;
 use App\Models\Lead;
 use App\Models\LeadTask;
 use App\Models\User;
@@ -242,6 +243,162 @@ class LeadController extends Controller
         }
     }
 
+    public function sendEmail(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'lead_id' => 'required|exists:leads,id',
+                'to_email' => 'required|email',
+                'from_email' => 'required|email',
+                'subject' => 'required|string|max:255',
+                'body' => 'required|string',
+                'cc' => 'nullable|string',
+                'bcc' => 'nullable|string',
+                'template_id' => 'nullable|exists:email_templates,id'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $lead = Lead::findOrFail($request->lead_id);
+
+            // Prepare email content
+            $body = $request->body;
+            $subject = $request->subject;
+
+            // Replace placeholders if template is used
+            if ($request->template_id) {
+                $template = EmailTemplate::find($request->template_id);
+                if ($template) {
+                    $body = str_replace(
+                        ['{name}', '{company}', '{email}', '{phone}'],
+                        [$lead->first_name . ' ' . $lead->last_name, $lead->company, $lead->email, $lead->phone],
+                        $template->body
+                    );
+                    $subject = str_replace(
+                        ['{name}', '{company}'],
+                        [$lead->first_name . ' ' . $lead->last_name, $lead->company],
+                        $template->subject
+                    );
+                }
+            }
+
+            // Replace placeholders in custom email
+            $body = str_replace(
+                ['{name}', '{company}', '{email}', '{phone}'],
+                [$lead->first_name . ' ' . $lead->last_name, $lead->company, $lead->email, $lead->phone],
+                $body
+            );
+            $subject = str_replace(
+                ['{name}', '{company}'],
+                [$lead->first_name . ' ' . $lead->last_name, $lead->company],
+                $subject
+            );
+
+            // Log email activity
+            $emailLog = $lead->logEmail(
+                $request->from_email,
+                $request->to_email,
+                $subject,
+                $body,
+                $request->cc,
+                $request->bcc
+            );
+
+            // Add activity to timeline
+            $lead->addActivity(
+                'email',
+                'Email sent to: ' . $request->to_email,
+                'Subject: ' . $subject . "\n\n" . $body,
+                null,
+                auth()->id()
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email sent successfully!',
+                'data' => $emailLog
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function getEmailTemplates()
+    {
+        try {
+            $templates = EmailTemplate::all();
+            return response()->json([
+                'success' => true,
+                'data' => $templates
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching templates!'
+            ]);
+        }
+    }
+
+    public function getEmailTemplate($id)
+    {
+        try {
+            $template = EmailTemplate::findOrFail($id);
+            return response()->json([
+                'success' => true,
+                'data' => $template
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Template not found!'
+            ]);
+        }
+    }
+
+    public function saveEmailTemplate(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'subject' => 'required|string|max:255',
+                'body' => 'required|string'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $template = EmailTemplate::create([
+                'name' => $request->name,
+                'subject' => $request->subject,
+                'body' => $request->body,
+                'category' => $request->category,
+                'created_by' => auth()->id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Template saved successfully!',
+                'data' => $template
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
     public function addCall(Request $request)
     {
         try {

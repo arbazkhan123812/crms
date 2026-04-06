@@ -127,7 +127,7 @@
                                                     {{ $lead->owner?->full_name ?? ($lead->owner?->username ?? 'Not Assigned') }}
                                                 </td>
                                                 <td class="align-middle">
-                                                   {{ $lead->lead_source }}
+                                                    {{ $lead->lead_source }}
                                                 </td>
                                                 <td class="align-middle">
                                                     @php
@@ -196,14 +196,13 @@
                                                             @endcan
 
                                                             @can('leads_sendemail')
-                                                                <li>
-                                                                    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
-                                                                        onclick="openEmailAction({{ $lead->id }})">
-                                                                        <i class="fas fa-envelope text-primary mr-2" style="width: 20px;"></i>
-                                                                        Send Email
-                                                                    </a>
-                                                                </li>
-                                                            @endcan
+<li>
+    <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
+        onclick="openEmailAction({{ $lead->id }}, '{{ addslashes($lead->first_name) }} {{ addslashes($lead->last_name) }}', '{{ $lead->email }}')">
+        <i class="fas fa-envelope text-primary mr-2" style="width: 20px;"></i> Send Email
+    </a>
+</li>
+@endcan
                                                             @can('leads_schedulemeeting')
                                                                 <li>
                                                                     <a class="dropdown-item d-flex align-items-center" href="javascript:void(0)"
@@ -226,6 +225,173 @@
             </div>
         </div>
     </div>
+    </div>
+
+    <!-- Email Modal (Gmail Style) -->
+    <div class="modal fade" id="emailModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-envelope mr-2"></i>Send Email
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="emailForm">
+                    @csrf
+                    <input type="hidden" name="lead_id" id="email_lead_id">
+                    <div class="modal-body p-0">
+                        <!-- Email Header -->
+                        <div class="p-3 border-bottom bg-light">
+                            <div class="row mb-2">
+                                <div class="col-md-2 text-muted small pt-2">From:</div>
+                                <div class="col-md-10">
+                                    <input type="email" name="from_email" id="email_from"
+                                        class="form-control form-control-sm" value="{{ Auth::user()->email }}" required>
+                                </div>
+                            </div>
+                            <div class="row mb-2">
+                                <div class="col-md-2 text-muted small pt-2">To:</div>
+                                <div class="col-md-10">
+                                    <input type="email" name="to_email" id="email_to" class="form-control form-control-sm"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="row mb-2" id="ccRow" style="display: none;">
+                                <div class="col-md-2 text-muted small pt-2">Cc:</div>
+                                <div class="col-md-10">
+                                    <input type="text" name="cc" id="email_cc" class="form-control form-control-sm"
+                                        placeholder="email@example.com, another@example.com">
+                                </div>
+                            </div>
+                            <div class="row mb-2" id="bccRow" style="display: none;">
+                                <div class="col-md-2 text-muted small pt-2">Bcc:</div>
+                                <div class="col-md-10">
+                                    <input type="text" name="bcc" id="email_bcc" class="form-control form-control-sm"
+                                        placeholder="email@example.com, another@example.com">
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-2 text-muted small pt-2"></div>
+                                <div class="col-md-10">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-link text-muted p-0 mr-3" onclick="toggleCc()">
+                                            <i class="fas fa-plus-circle"></i> Cc
+                                        </button>
+                                        <button type="button" class="btn btn-link text-muted p-0" onclick="toggleBcc()">
+                                            <i class="fas fa-plus-circle"></i> Bcc
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Email Body -->
+                        <div class="p-3">
+                            <div class="form-group mb-3">
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text bg-white border-right-0">
+                                            <i class="fas fa-tag text-muted"></i>
+                                        </span>
+                                    </div>
+                                    <input type="text" name="subject" id="email_subject"
+                                        class="form-control form-control-sm border-left-0" placeholder="Subject" required>
+                                </div>
+                            </div>
+
+                            <!-- Template Selector -->
+                            <div class="form-group mb-3">
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">
+                                            <i class="fas fa-file-alt text-muted"></i>
+                                        </span>
+                                    </div>
+                                    <select name="template_id" id="email_template" class="form-control form-control-sm">
+                                        <option value="">-- Use Template (Optional) --</option>
+                                    </select>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-outline-secondary btn-sm"
+                                            onclick="openTemplateModal()">
+                                            <i class="fas fa-plus"></i> New
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Rich Text Editor Area -->
+                            <div class="form-group mb-0">
+                                <div class="border rounded" style="background: white;">
+                                    <div class="border-bottom p-2 bg-light">
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-light"
+                                                onclick="formatText('bold')"><b>B</b></button>
+                                            <button type="button" class="btn btn-light"
+                                                onclick="formatText('italic')"><i>I</i></button>
+                                            <button type="button" class="btn btn-light"
+                                                onclick="formatText('underline')"><u>U</u></button>
+                                        </div>
+                                    </div>
+                                    <textarea name="body" id="email_body" rows="12" class="form-control border-0"
+                                        style="resize: none; font-family: monospace;"
+                                        placeholder="Write your message here..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary">
+                            <i class="fas fa-paper-plane mr-1"></i> Send
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template Modal -->
+    <div class="modal fade" id="templateModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-md">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-save mr-2"></i>Save as Template
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <form id="templateForm">
+                    @csrf
+                    <div class="modal-body">
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Template Name <span class="text-danger">*</span></label>
+                            <input type="text" name="name" id="template_name" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Category</label>
+                            <input type="text" name="category" id="template_category" class="form-control form-control-sm"
+                                placeholder="e.g., Follow-up, Proposal, Welcome">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="small mb-1">Subject <span class="text-danger">*</span></label>
+                            <input type="text" name="subject" id="template_subject" class="form-control form-control-sm"
+                                required>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="small mb-1">Body <span class="text-danger">*</span></label>
+                            <textarea name="body" id="template_body" rows="5" class="form-control form-control-sm"
+                                required></textarea>
+                            <small class="text-muted d-block mt-1">Use: {name}, {company}, {email}, {phone}</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary">Save Template</button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <!-- Lead Modal (Create/Edit) -->
@@ -687,7 +853,7 @@
                     }
                 });
             });
-          
+
 
             // Call Form Submit
             $('#callForm').on('submit', function (e) {
@@ -721,7 +887,7 @@
             });
         });
 
-        
+
         // View Lead Details
         function viewLead(id) {
             $('#viewLeadModal').modal('show');
@@ -734,49 +900,49 @@
                     if (response.success) {
                         let l = response.data;
                         let html = `
-                                <div class="row">
-                                    <div class="col-md-4 text-center">
-                                        ${l.lead_image ?
+                                        <div class="row">
+                                            <div class="col-md-4 text-center">
+                                                ${l.lead_image ?
                                 `<img src="{{ asset('') }}${l.lead_image}" class="rounded-circle mb-3" width="100" height="100" style="object-fit: cover;">` :
                                 `<div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white mx-auto mb-3" style="width: 100px; height: 100px;">
-                                                <i class="fas fa-user fa-3x"></i>
-                                            </div>`
+                                                        <i class="fas fa-user fa-3x"></i>
+                                                    </div>`
                             }
-                                        <h5>${escapeHtml(l.first_name)} ${escapeHtml(l.last_name)}</h5>
-                                        <p class="text-muted small">${escapeHtml(l.title || 'No Title')}</p>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <table class="table table-sm table-borderless">
-                                            <tr><th width="35%">Email:</th><td>${escapeHtml(l.email || '-')}</td></tr>
-                                            <tr><th>Phone:</th><td>${escapeHtml(l.phone || '-')}</td></tr>
-                                            <tr><th>Mobile:</th><td>${escapeHtml(l.mobile || '-')}</td></tr>
-                                            <tr><th>Company:</th><td>${escapeHtml(l.company || '-')}</td></tr>
-                                            <tr><th>Lead Status:</th><td>${escapeHtml(l.lead_status || '-')}</td></tr>
-                                            <tr><th>Lead Source:</th><td>${escapeHtml(l.lead_source || '-')}</td></tr>
-                                            <tr><th>Annual Revenue:</th><td>${l.annual_revenue ? 'PKR ' + parseFloat(l.annual_revenue).toLocaleString() : '-'}</td></tr>
-                                            <tr><th>Owner:</th><td>${escapeHtml(l.owner?.full_name || l.owner?.username || 'Not Assigned')}</td></tr>
-                                        </table>
-                                    </div>
-                                </div>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <h6 class="text-primary"><i class="fas fa-map-marker-alt mr-2"></i>Address</h6>
-                                        <p>${escapeHtml(l.street || '')}${l.street ? '<br>' : ''}
-                                        ${escapeHtml(l.city || '')}${l.city ? ', ' : ''}
-                                        ${escapeHtml(l.state || '')}${l.state ? '<br>' : ''}
-                                        ${escapeHtml(l.country || '')}${l.zip_code ? ' - ' + escapeHtml(l.zip_code) : ''}</p>
-                                        ${!l.street && !l.city && !l.state && !l.country ? '<p class="text-muted">No address provided</p>' : ''}
-                                    </div>
-                                </div>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-12">
-                                        <h6 class="text-primary"><i class="fas fa-align-left mr-2"></i>Description</h6>
-                                        <p>${escapeHtml(l.description || 'No description provided')}</p>
-                                    </div>
-                                </div>
-                            `;
+                                                <h5>${escapeHtml(l.first_name)} ${escapeHtml(l.last_name)}</h5>
+                                                <p class="text-muted small">${escapeHtml(l.title || 'No Title')}</p>
+                                            </div>
+                                            <div class="col-md-8">
+                                                <table class="table table-sm table-borderless">
+                                                    <tr><th width="35%">Email:</th><td>${escapeHtml(l.email || '-')}</td></tr>
+                                                    <tr><th>Phone:</th><td>${escapeHtml(l.phone || '-')}</td></tr>
+                                                    <tr><th>Mobile:</th><td>${escapeHtml(l.mobile || '-')}</td></tr>
+                                                    <tr><th>Company:</th><td>${escapeHtml(l.company || '-')}</td></tr>
+                                                    <tr><th>Lead Status:</th><td>${escapeHtml(l.lead_status || '-')}</td></tr>
+                                                    <tr><th>Lead Source:</th><td>${escapeHtml(l.lead_source || '-')}</td></tr>
+                                                    <tr><th>Annual Revenue:</th><td>${l.annual_revenue ? 'PKR ' + parseFloat(l.annual_revenue).toLocaleString() : '-'}</td></tr>
+                                                    <tr><th>Owner:</th><td>${escapeHtml(l.owner?.full_name || l.owner?.username || 'Not Assigned')}</td></tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <h6 class="text-primary"><i class="fas fa-map-marker-alt mr-2"></i>Address</h6>
+                                                <p>${escapeHtml(l.street || '')}${l.street ? '<br>' : ''}
+                                                ${escapeHtml(l.city || '')}${l.city ? ', ' : ''}
+                                                ${escapeHtml(l.state || '')}${l.state ? '<br>' : ''}
+                                                ${escapeHtml(l.country || '')}${l.zip_code ? ' - ' + escapeHtml(l.zip_code) : ''}</p>
+                                                ${!l.street && !l.city && !l.state && !l.country ? '<p class="text-muted">No address provided</p>' : ''}
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <h6 class="text-primary"><i class="fas fa-align-left mr-2"></i>Description</h6>
+                                                <p>${escapeHtml(l.description || 'No description provided')}</p>
+                                            </div>
+                                        </div>
+                                    `;
                         $('#viewLeadContent').html(html);
                     }
                 }
@@ -803,23 +969,167 @@
         }
 
         // Placeholder actions
-       function openCallAction(id, name) {
-    $('#call_lead_id').val(id);
-    $('#call_lead_name').val(name);
-    $('#call_type').val('outbound');
-    $('#call_purpose').val('');
-    $('#call_status').val('completed');
-    $('#call_duration').val('');
-    $('#call_notes').val('');
-    // Set default call date to now
-    let now = new Date();
-    let formattedDate = now.toISOString().slice(0, 16);
-    $('#call_date').val(formattedDate);
-    $('#callModal').modal('show');
-}
+        function openCallAction(id, name) {
+            $('#call_lead_id').val(id);
+            $('#call_lead_name').val(name);
+            $('#call_type').val('outbound');
+            $('#call_purpose').val('');
+            $('#call_status').val('completed');
+            $('#call_duration').val('');
+            $('#call_notes').val('');
+            // Set default call date to now
+            let now = new Date();
+            let formattedDate = now.toISOString().slice(0, 16);
+            $('#call_date').val(formattedDate);
+            $('#callModal').modal('show');
+        }
 
-        function openEmailAction(id) {
-            Swal.fire({ icon: 'info', title: 'Coming Soon!', text: 'Email feature will be added soon.' });
+        // Email Action
+        function openEmailAction(id, name, email) {
+            $('#email_lead_id').val(id);
+            $('#email_to').val(email);
+            $('#email_from').val('{{ Auth::user()->email }}');
+            $('#email_subject').val('');
+            $('#email_body').val('');
+            $('#email_cc').val('');
+            $('#email_bcc').val('');
+            $('#email_template').val('');
+            $('#ccRow').hide();
+            $('#bccRow').hide();
+            $('#emailModal').modal('show');
+
+            // Load templates
+            loadEmailTemplates();
+        }
+
+        // Load Email Templates
+        function loadEmailTemplates() {
+            $.ajax({
+                url: '{{ route("admin.email.templates") }}',
+                type: 'GET',
+                success: function (response) {
+                    if (response.success && response.data.length > 0) {
+                        let options = '<option value="">-- Use Template (Optional) --</option>';
+                        response.data.forEach(template => {
+                            options += `<option value="${template.id}">${escapeHtml(template.name)} (${escapeHtml(template.category || 'Uncategorized')})</option>`;
+                        });
+                        $('#email_template').html(options);
+                    }
+                }
+            });
+        }
+
+        // Template Change Event
+        $('#email_template').change(function () {
+            let templateId = $(this).val();
+            if (templateId) {
+                $.ajax({
+                    url: '{{ url("admin/email-template") }}/' + templateId,
+                    type: 'GET',
+                    success: function (response) {
+                        if (response.success) {
+                            $('#email_subject').val(response.data.subject);
+                            $('#email_body').val(response.data.body);
+                        }
+                    }
+                });
+            }
+        });
+
+        // Email Form Submit
+        $('#emailForm').on('submit', function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '{{ route("admin.lead.sendEmail") }}',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Success!',
+                            text: response.message,
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
+                        $('#emailModal').modal('hide');
+                        $('#emailForm')[0].reset();
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                    }
+                },
+                error: function () {
+                    Swal.fire({ icon: 'error', title: 'Error!', text: 'Something went wrong!' });
+                }
+            });
+        });
+
+        // Template Form Submit
+        $('#templateForm').on('submit', function (e) {
+            e.preventDefault();
+
+            $.ajax({
+                url: '{{ route("admin.email.template.save") }}',
+                type: 'POST',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        Swal.fire({ icon: 'success', title: 'Success!', text: response.message, timer: 1500, showConfirmButton: false });
+                        $('#templateModal').modal('hide');
+                        $('#templateForm')[0].reset();
+                        loadEmailTemplates(); // Reload templates
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                    }
+                }
+            });
+        });
+
+        // Open Template Modal
+        function openTemplateModal() {
+            let subject = $('#email_subject').val();
+            let body = $('#email_body').val();
+            $('#template_subject').val(subject);
+            $('#template_body').val(body);
+            $('#template_name').val('');
+            $('#template_category').val('');
+            $('#templateModal').modal('show');
+        }
+
+        // Toggle CC Field
+        function toggleCc() {
+            $('#ccRow').toggle();
+        }
+
+        // Toggle BCC Field
+        function toggleBcc() {
+            $('#bccRow').toggle();
+        }
+
+        // Simple Rich Text Formatting
+        function formatText(command) {
+            let textarea = document.getElementById('email_body');
+            let start = textarea.selectionStart;
+            let end = textarea.selectionEnd;
+            let selectedText = textarea.value.substring(start, end);
+            let replacement = '';
+
+            switch (command) {
+                case 'bold':
+                    replacement = `**${selectedText}**`;
+                    break;
+                case 'italic':
+                    replacement = `*${selectedText}*`;
+                    break;
+                case 'underline':
+                    replacement = `_${selectedText}_`;
+                    break;
+            }
+
+            textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start, start + replacement.length);
         }
 
         function openMeetingAction(id) {

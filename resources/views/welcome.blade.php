@@ -10,7 +10,7 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-body">
-                        <h5>Welcome to HRMS Arbaz!</h5>
+                        <h5>Welcome to CRMS Arbaz!</h5>
                         <p>Aapka theme ab Laravel par successfully integrate ho gaya hai.</p>
                     </div>
                 </div>

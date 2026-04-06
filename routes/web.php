@@ -42,6 +42,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('/leads/add-note', [LeadController::class, 'addNote'])->name('lead.addNote');
      Route::post('/leads/add-call', [LeadController::class, 'addCall'])->name('lead.addCall');
     Route::get('/leads/{id}/calls', [LeadController::class, 'getCalls'])->name('lead.calls');
+    Route::post('/leads/send-email', [LeadController::class, 'sendEmail'])->name('lead.sendEmail');
+    Route::get('/email-templates', [LeadController::class, 'getEmailTemplates'])->name('email.templates');
+    Route::get('/email-template/{id}', [LeadController::class, 'getEmailTemplate'])->name('email.template.get');
+    Route::post('/email-template/save', [LeadController::class, 'saveEmailTemplate'])->name('email.template.save');
 
     Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
     Route::post('/permissions/get', [PermissionController::class, 'getPermissions'])->name('permissions.get');

@@ -1,4 +1,3 @@
-// database/migrations/2024_04_03_000002_create_lead_tasks_table.php
 <?php
 
 use Illuminate\Database\Migrations\Migration;

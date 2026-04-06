@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HR MS | Login</title> <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>CRMS | Login</title> <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -455,7 +455,7 @@
                         <div class="logo-text">HR MS</div>
                     </div>
                     
-                    <h1 class="brand-title">Human Resource Management System</h1>
+                    <h1 class="brand-title">CRMS System</h1>
                     <p class="brand-subtitle">Streamline your HR operations and employee management</p>
                 </div>
             </div>

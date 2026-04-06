@@ -7,13 +7,37 @@ use Illuminate\Database\Eloquent\Model;
 class Lead extends Model
 {
     protected $table = 'leads';
-    
+
     protected $fillable = [
-        'lead_image', 'lead_owner', 'first_name', 'last_name', 'title', 'phone', 'mobile',
-        'lead_source', 'industry', 'annual_revenue', 'email_opt_out', 'company', 'email',
-        'fax', 'website', 'lead_status', 'no_of_employees', 'rating', 'skype_id',
-        'secondary_email', 'twitter', 'street', 'state', 'country', 'city', 'zip_code', 
-        'description', 'created_by', 'updated_by'
+        'lead_image',
+        'lead_owner',
+        'first_name',
+        'last_name',
+        'title',
+        'phone',
+        'mobile',
+        'lead_source',
+        'industry',
+        'annual_revenue',
+        'email_opt_out',
+        'company',
+        'email',
+        'fax',
+        'website',
+        'lead_status',
+        'no_of_employees',
+        'rating',
+        'skype_id',
+        'secondary_email',
+        'twitter',
+        'street',
+        'state',
+        'country',
+        'city',
+        'zip_code',
+        'description',
+        'created_by',
+        'updated_by'
     ];
 
     protected $casts = [
@@ -31,7 +55,7 @@ class Lead extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
-    
+
     public function getFullNameAttribute()
     {
         return trim($this->first_name . ' ' . $this->last_name);
@@ -68,7 +92,7 @@ class Lead extends Model
         return $this->tasks()->where('status', 'pending');
     }
 
-      public function addTask($subject, $description, $assignedTo, $dueDate = null)
+    public function addTask($subject, $description, $assignedTo, $dueDate = null)
     {
         return $this->tasks()->create([
             'subject' => $subject,
@@ -85,7 +109,7 @@ class Lead extends Model
         return $this->hasMany(LeadCall::class)->orderBy('call_date', 'desc');
     }
 
-  
+
     public function addCall($callType, $callPurpose, $notes, $duration, $status, $callDate)
     {
         return $this->calls()->create([
@@ -98,5 +122,24 @@ class Lead extends Model
             'called_by' => auth()->id()
         ]);
     }
-    
+
+    public function emails()
+    {
+        return $this->hasMany(LeadEmail::class)->orderBy('created_at', 'desc');
+    }
+
+    // Method to log email
+    public function logEmail($from, $to, $subject, $body, $cc = null, $bcc = null)
+    {
+        return $this->emails()->create([
+            'from_email' => $from,
+            'to_email' => $to,
+            'cc' => $cc,
+            'bcc' => $bcc,
+            'subject' => $subject,
+            'body' => $body,
+            'status' => 'sent',
+            'sent_by' => auth()->id()
+        ]);
+    }
 }
