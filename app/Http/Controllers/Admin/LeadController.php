@@ -20,7 +20,7 @@ class LeadController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:leads_view', ['only' => ['index']]);
+        $this->middleware('permission:leads_view', ['only' => ['index', 'show']]);
         $this->middleware('permission:leads_save', ['only' => ['save']]);
         $this->middleware('permission:leads_delete', ['only' => ['delete']]);
         $this->middleware('permission:leads_sendemail', ['only' => ['sendEmail']]);
@@ -46,6 +46,46 @@ class LeadController extends Controller
         $leadStatuses = ['New', 'Contacted', 'Qualified', 'Lost', 'Cancelled', 'Junk'];
 
         return view('Admin.Leads.index', compact('leads', 'users', 'leadSources', 'leadStatuses'));
+    }
+
+    public function show($id)
+    {
+        $query = Lead::with([
+            'owner',
+            'user',
+            'notes.createdBy',
+            'tasks.assignedTo',
+            'activities.assignedTo',
+            'calls.calledBy',
+            'emails.sentBy',
+            'meetings.assignedTo',
+        ]);
+
+        if (!Auth::user()->hasRole('Admin')) {
+            $query->where(function ($q) {
+                $q->where('created_by', Auth::id())
+                    ->orWhere('lead_owner', Auth::id());
+            });
+        }
+
+        $lead = $query->findOrFail($id);
+
+        $scheduledCalls = $lead->calls->where('status', 'scheduled')->sortBy('call_date');
+        $loggedCalls = $lead->calls->where('status', '!=', 'scheduled')->sortByDesc('call_date');
+        $upcomingMeetings = $lead->meetings->where('status', 'scheduled')->sortBy('meeting_date');
+        $completedMeetings = $lead->meetings->where('status', '!=', 'scheduled')->sortByDesc('meeting_date');
+        $pendingActivities = $lead->activities->where('status', 'pending')->sortBy('due_date');
+        $completedActivities = $lead->activities->where('status', '!=', 'pending')->sortByDesc('completed_at');
+
+        return view('Admin.Leads.show', compact(
+            'lead',
+            'scheduledCalls',
+            'loggedCalls',
+            'upcomingMeetings',
+            'completedMeetings',
+            'pendingActivities',
+            'completedActivities'
+        ));
     }
 
     public function save(Request $request)
@@ -130,10 +170,36 @@ class LeadController extends Controller
     public function get($id)
     {
         try {
-            $lead = Lead::with('owner')->findOrFail($id);
+            $lead = Lead::with(['owner', 'user'])->findOrFail($id);
             return response()->json(['success' => true, 'data' => $lead]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Lead not found!']);
+        }
+    }
+
+    public function getNotes($id)
+    {
+        try {
+            $lead = Lead::findOrFail($id);
+            $notes = $lead->notes()->with('createdBy')->get()->map(function ($note) {
+                return [
+                    'id' => $note->id,
+                    'note' => $note->note,
+                    'type' => $note->type,
+                    'created_at' => $note->created_at,
+                    'created_by_name' => optional($note->createdBy)->username ?? optional($note->createdBy)->name ?? 'User',
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $notes
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching notes!'
+            ]);
         }
     }
 
@@ -226,7 +292,16 @@ class LeadController extends Controller
     {
         try {
             $lead = Lead::findOrFail($id);
-            $tasks = $lead->tasks()->with('assignedTo')->get();
+            $tasks = $lead->tasks()->with('assignedTo')->get()->map(function ($task) {
+                return [
+                    'id' => $task->id,
+                    'subject' => $task->subject,
+                    'description' => $task->description,
+                    'due_date' => $task->due_date,
+                    'status' => $task->status,
+                    'assigned_to_name' => optional($task->assignedTo)->username ?? optional($task->assignedTo)->name ?? '-',
+                ];
+            });
 
             return response()->json([
                 'success' => true,
@@ -758,7 +833,7 @@ class LeadController extends Controller
                 'duration' => 'nullable|string|max:20',
                 'status' => 'required|in:scheduled,completed,missed,voicemail,no_answer',
                 'call_date' => 'required|date',
-                'called_by' => 'required|exists:users,id'
+                'called_by' => 'nullable|exists:users,id'
             ]);
 
             if ($validator->fails()) {
@@ -769,7 +844,16 @@ class LeadController extends Controller
             }
 
             $oldStatus = $call->status;
-            $call->update($request->all());
+            $call->update([
+                'lead_id' => $request->input('lead_id', $call->lead_id),
+                'call_type' => $request->call_type,
+                'call_purpose' => $request->call_purpose,
+                'notes' => $request->notes,
+                'duration' => $request->duration,
+                'status' => $request->status,
+                'call_date' => $request->call_date,
+                'called_by' => $request->input('called_by', $call->called_by),
+            ]);
 
             // If status changed to completed and has lead, update lead's last_contacted_at
             if ($oldStatus != 'completed' && $request->status == 'completed' && $call->lead_id) {
@@ -960,8 +1044,36 @@ class LeadController extends Controller
     {
         try {
             $lead = Lead::findOrFail($id);
-            $upcomingMeetings = $lead->upcomingMeetings()->with('assignedTo')->get();
-            $completedMeetings = $lead->completedMeetings()->with('assignedTo')->get();
+            $upcomingMeetings = $lead->upcomingMeetings()->with('assignedTo')->get()->map(function ($meeting) {
+                return [
+                    'id' => $meeting->id,
+                    'title' => $meeting->title,
+                    'description' => $meeting->description,
+                    'meeting_type' => $meeting->meeting_type,
+                    'location' => $meeting->location,
+                    'meeting_link' => $meeting->meeting_link,
+                    'meeting_date' => $meeting->meeting_date,
+                    'duration' => $meeting->duration,
+                    'status' => $meeting->status,
+                    'notes' => $meeting->notes,
+                    'assigned_to_name' => optional($meeting->assignedTo)->username ?? optional($meeting->assignedTo)->name ?? '-',
+                ];
+            });
+            $completedMeetings = $lead->completedMeetings()->with('assignedTo')->get()->map(function ($meeting) {
+                return [
+                    'id' => $meeting->id,
+                    'title' => $meeting->title,
+                    'description' => $meeting->description,
+                    'meeting_type' => $meeting->meeting_type,
+                    'location' => $meeting->location,
+                    'meeting_link' => $meeting->meeting_link,
+                    'meeting_date' => $meeting->meeting_date,
+                    'duration' => $meeting->duration,
+                    'status' => $meeting->status,
+                    'notes' => $meeting->notes,
+                    'assigned_to_name' => optional($meeting->assignedTo)->username ?? optional($meeting->assignedTo)->name ?? '-',
+                ];
+            });
 
             return response()->json([
                 'success' => true,
@@ -1073,4 +1185,91 @@ class LeadController extends Controller
             ]);
         }
     }
+
+    public function convertToCustomer($id)
+{
+    try {
+        $lead = Lead::findOrFail($id);
+        
+        // Check if already converted
+        if ($lead->isConverted()) {
+            return redirect()->route('admin.leads.index')->with('error', 'Lead already converted!');
+        }
+        
+        return view('Admin.Leads.convert', compact('lead'));
+    } catch (\Exception $e) {
+        return redirect()->route('admin.leads.index')->with('error', 'Error: ' . $e->getMessage());
+    }
+}
+
+public function processConversion(Request $request, $id)
+{
+    try {
+        $lead = Lead::findOrFail($id);
+        
+        $validator = Validator::make($request->all(), [
+            'account_name' => 'required|string|max:255',
+            'account_email' => 'nullable|email',
+            'account_phone' => 'nullable|string',
+            'account_website' => 'nullable|url',
+            'account_industry' => 'nullable|string',
+            'account_annual_revenue' => 'nullable|numeric',
+            'account_no_of_employees' => 'nullable|integer',
+            'account_street' => 'nullable|string',
+            'account_city' => 'nullable|string',
+            'account_state' => 'nullable|string',
+            'account_country' => 'nullable|string',
+            'account_zip_code' => 'nullable|string',
+            'account_description' => 'nullable|string',
+            'contact_first_name' => 'required|string|max:255',
+            'contact_last_name' => 'nullable|string|max:255',
+            'contact_title' => 'nullable|string|max:255',
+            'contact_email' => 'nullable|email',
+            'contact_phone' => 'nullable|string',
+            'contact_mobile' => 'nullable|string',
+            'contact_description' => 'nullable|string'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $accountData = [
+            'name' => $request->account_name,
+            'email' => $request->account_email,
+            'phone' => $request->account_phone,
+            'website' => $request->account_website,
+            'industry' => $request->account_industry,
+            'annual_revenue' => $request->account_annual_revenue,
+            'no_of_employees' => $request->account_no_of_employees,
+            'street' => $request->account_street,
+            'city' => $request->account_city,
+            'state' => $request->account_state,
+            'country' => $request->account_country,
+            'zip_code' => $request->account_zip_code,
+            'description' => $request->account_description,
+            'type' => 'Customer'
+        ];
+
+        $contactData = [
+            'first_name' => $request->contact_first_name,
+            'last_name' => $request->contact_last_name,
+            'title' => $request->contact_title,
+            'email' => $request->contact_email,
+            'phone' => $request->contact_phone,
+            'mobile' => $request->contact_mobile,
+            'description' => $request->contact_description
+        ];
+
+        $result = $lead->convertToAccountAndContact($accountData, $contactData);
+
+        if ($result['success']) {
+            return redirect()->route('admin.leads.index')->with('success', 'Lead converted to customer successfully!');
+        } else {
+            return redirect()->back()->with('error', $result['message']);
+        }
+    } catch (\Exception $e) {
+        return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
+    }
+}
 }

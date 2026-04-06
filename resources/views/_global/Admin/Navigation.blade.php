@@ -68,14 +68,7 @@
                 </li>
             @endcan
             @can('leads_view')
-            <li>
 
-                    <a href="#">
-                        <span class="nav-link-icon">
-                            <i data-feather="user"></i>
-                        </span>
-                        <span>Leads Management</span>
-                    </a>
                     <ul>
                         @can('leads_view')
                             <li>
@@ -93,7 +86,7 @@
 
                      
                     </ul>
-                </li>
+                
             @endcan
 
 

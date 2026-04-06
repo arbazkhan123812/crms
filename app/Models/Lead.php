@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\LeadActivity;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Lead extends Model
 {
@@ -218,4 +219,59 @@ class Lead extends Model
     {
         return $this->activities()->where('status', 'pending')->where('due_date', '<', now())->get();
     }
+    public function isConverted()
+{
+    return $this->lead_status === 'Converted';
+}
+
+// Get converted account
+public function convertedAccount()
+{
+    return $this->hasOne(Account::class, 'converted_from_lead');
+}
+
+// Get converted contact
+public function convertedContact()
+{
+    return $this->hasOne(Contact::class, 'converted_from_lead');
+}
+
+// Convert lead to account and contact
+public function convertToAccountAndContact($accountData, $contactData)
+{
+    DB::beginTransaction();
+    try {
+        // Create Account
+        $account = Account::create(array_merge($accountData, [
+            'converted_from_lead' => $this->id,
+            'created_by' => auth()->id()
+        ]));
+
+        // Create Contact
+        $contact = Contact::create(array_merge($contactData, [
+            'account_id' => $account->id,
+            'converted_from_lead' => $this->id,
+            'created_by' => auth()->id()
+        ]));
+
+        // Update lead status
+        $this->lead_status = 'Converted';
+        $this->save();
+
+        // Add activity log
+        $this->addActivity(
+            'conversion',
+            'Lead converted to Customer',
+            "Account: {$account->name}\nContact: {$contact->first_name} {$contact->last_name}",
+            null,
+            auth()->id()
+        );
+
+        DB::commit();
+        return ['success' => true, 'account' => $account, 'contact' => $contact];
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return ['success' => false, 'message' => $e->getMessage()];
+    }
+}
 }
