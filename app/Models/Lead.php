@@ -142,4 +142,5 @@ class Lead extends Model
             'sent_by' => auth()->id()
         ]);
     }
+   
 }

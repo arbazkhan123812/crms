@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\LeadNotification;
 use App\Models\EmailTemplate;
 use App\Models\Lead;
+use App\Models\LeadEmail;
 use App\Models\LeadTask;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
 class LeadController extends Controller
@@ -18,6 +21,7 @@ class LeadController extends Controller
         $this->middleware('permission:leads_view', ['only' => ['index']]);
         $this->middleware('permission:leads_save', ['only' => ['save']]);
         $this->middleware('permission:leads_delete', ['only' => ['delete']]);
+        $this->middleware('permission:leads_sendemail', ['only' => ['sendEmail']]);
     }
 
     public function index()
@@ -140,7 +144,7 @@ class LeadController extends Controller
 
             if ($validator->fails()) {
                 return response()->json([
-                    'success' => false,
+                'success' => false,
                     'message' => $validator->errors()->first()
                 ]);
             }
@@ -249,7 +253,6 @@ class LeadController extends Controller
             $validator = Validator::make($request->all(), [
                 'lead_id' => 'required|exists:leads,id',
                 'to_email' => 'required|email',
-                'from_email' => 'required|email',
                 'subject' => 'required|string|max:255',
                 'body' => 'required|string',
                 'cc' => 'nullable|string',
@@ -301,7 +304,7 @@ class LeadController extends Controller
 
             // Log email activity
             $emailLog = $lead->logEmail(
-                $request->from_email,
+                Auth::user()->email,
                 $request->to_email,
                 $subject,
                 $body,
@@ -309,15 +312,14 @@ class LeadController extends Controller
                 $request->bcc
             );
 
-            // Add activity to timeline
-            $lead->addActivity(
-                'email',
-                'Email sent to: ' . $request->to_email,
-                'Subject: ' . $subject . "\n\n" . $body,
-                null,
-                auth()->id()
-            );
+            $details = [
+                'subject'   => $request->subject, // User input se subject
+                'body'      => $request->body,    // User input se body (matter)
+                'lead_name' => $lead->first_name . ' ' . $lead->last_name,
+            ];
+            Mail::to($request->to_email)->send(new LeadNotification($details));
 
+        
             return response()->json([
                 'success' => true,
                 'message' => 'Email sent successfully!',
