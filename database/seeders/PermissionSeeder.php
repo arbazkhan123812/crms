@@ -71,7 +71,7 @@ class PermissionSeeder extends Seeder
         $user->givePermissionTo([
             'dashboard_view'
         ]);
-
+de
         // Create a Super Admin user (optional)
         $superAdminUser = User::create([
             'username' => 'superadmin',

@@ -9,6 +9,7 @@ use App\Models\Lead;
 use App\Models\LeadCall;
 use App\Models\LeadEmail;
 use App\Models\LeadMeeting;
+use App\Models\LeadNote;
 use App\Models\LeadTask;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -20,12 +21,25 @@ class LeadController extends Controller
 {
     public function __construct()
     {
-        $this->middleware('permission:leads_view', ['only' => ['index', 'show']]);
-        $this->middleware('permission:leads_save', ['only' => ['save']]);
-        $this->middleware('permission:leads_delete', ['only' => ['delete']]);
-        $this->middleware('permission:leads_sendemail', ['only' => ['sendEmail']]);
-        $this->middleware('permission:leads_logCall', ['only' => ['logCall']]);
-        $this->middleware('permission:leads_createcall', ['only' => ['addCall']]);
+        // $this->middleware('permission:leads_view', ['only' => ['index']]);
+        // $this->middleware('permission:leads_view|leads_details', ['only' => ['show']]);
+        // $this->middleware('permission:leads_save', ['only' => ['save']]);
+        // $this->middleware('permission:leads_delete', ['only' => ['delete']]);
+        // $this->middleware('permission:leads_sendemail', ['only' => ['sendEmail']]);
+        // $this->middleware('permission:leads_notes|leads_addnote|leads_addnotes', ['only' => ['getNotes']]);
+        // $this->middleware('permission:leads_addnote|leads_addnotes', ['only' => ['addNote', 'updateNote', 'deleteNote']]);
+        // $this->middleware('permission:leads_task|leads_addtasks', ['only' => ['getTasks']]);
+        // $this->middleware('permission:leads_addtasks', ['only' => ['addTask', 'updateTask', 'deleteTask', 'updateTaskStatus']]);
+        // $this->middleware('permission:leads_call|leads_viewlogcall|leads_schedulecalls|leads_createcall|leads_logcall|leads_addlogcall', ['only' => ['getLeadCalls', 'getCalls', 'getCall']]);
+        // $this->middleware('permission:leads_logcall|leads_addlogcall', ['only' => ['logCall', 'addCall']]);
+        // $this->middleware('permission:leads_schedulecalls|leads_createcall', ['only' => ['createScheduledCall']]);
+        // $this->middleware('permission:leads_markcompleteupcommingcall|leads_addlogcall', ['only' => ['updateCallToLogged']]);
+        // $this->middleware('permission:leads_editscheduledcalls|leads_addlogcall|leads_createcall', ['only' => ['updateCall']]);
+        // $this->middleware('permission:leads_deletecall', ['only' => ['deleteLeadCall', 'deleteCall']]);
+        // $this->middleware('permission:leads_viewschedulemeeting|leads_viewupcomingmeeting|leads_viewpastmeeting|leads_schedulemeeting', ['only' => ['getLeadMeetings']]);
+        // $this->middleware('permission:leads_schedulemeeting', ['only' => ['scheduleMeeting', 'updateMeeting']]);
+        // $this->middleware('permission:leads_markcompleteupcommingmeeting', ['only' => ['completeMeeting']]);
+        // $this->middleware('permission:leads_deleteupcomingmeeting|leads_deletepastmeeting', ['only' => ['deleteMeeting']]);
     }
 
     public function index()
@@ -76,6 +90,8 @@ class LeadController extends Controller
         $completedMeetings = $lead->meetings->where('status', '!=', 'scheduled')->sortByDesc('meeting_date');
         $pendingActivities = $lead->activities->where('status', 'pending')->sortBy('due_date');
         $completedActivities = $lead->activities->where('status', '!=', 'pending')->sortByDesc('completed_at');
+        $users = User::orderBy('username')->get();
+        $emailTemplates = EmailTemplate::orderBy('name')->get();
 
         return view('Admin.Leads.show', compact(
             'lead',
@@ -84,7 +100,9 @@ class LeadController extends Controller
             'upcomingMeetings',
             'completedMeetings',
             'pendingActivities',
-            'completedActivities'
+            'completedActivities',
+            'users',
+            'emailTemplates'
         ));
     }
 
@@ -241,6 +259,55 @@ class LeadController extends Controller
         }
     }
 
+    public function updateNote(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'note' => 'required|string|min:2',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $note = LeadNote::findOrFail($id);
+            $note->note = $request->note;
+            $note->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Note updated successfully!',
+                'data' => $note
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteNote($id)
+    {
+        try {
+            $note = LeadNote::findOrFail($id);
+            $note->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Note deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting note!'
+            ]);
+        }
+    }
+
     public function addTask(Request $request)
     {
         try {
@@ -335,6 +402,65 @@ class LeadController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Error updating task!'
+            ]);
+        }
+    }
+
+    public function updateTask(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'subject' => 'required|string|min:3|max:255',
+                'description' => 'nullable|string',
+                'assigned_to' => 'required|exists:users,id',
+                'due_date' => 'nullable|date',
+                'status' => 'required|string|max:50',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $validator->errors()->first()
+                ]);
+            }
+
+            $task = LeadTask::findOrFail($id);
+            $task->update([
+                'subject' => $request->subject,
+                'description' => $request->description,
+                'assigned_to' => $request->assigned_to,
+                'due_date' => $request->due_date,
+                'status' => $request->status,
+                'completed_at' => $request->status === 'completed' ? now() : null,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Task updated successfully!',
+                'data' => $task
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ]);
+        }
+    }
+
+    public function deleteTask($id)
+    {
+        try {
+            $task = LeadTask::findOrFail($id);
+            $task->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Task deleted successfully!'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting task!'
             ]);
         }
     }

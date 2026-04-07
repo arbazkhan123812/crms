@@ -172,16 +172,15 @@
                                                 </td>
                                                 <td class="align-middle">
                                                     <!-- Dropdown Action Menu -->
-                                                    <div class="dropdown">
+                                                    <div class="dropdown lead-actions-dropdown">
 
                                                         @can('leads_performactions')
-                                                            <button class="btn btn-sm btn-primary dropdown-toggle hide-caret" type="button"
-                                                                onclick="event.stopPropagation()"
+                                                            <button class="btn btn-sm btn-primary dropdown-toggle hide-caret lead-action-toggle" type="button"
                                                                 data-toggle="dropdown" aria-expanded="false">
                                                                 <i class="fas fa-ellipsis-v"></i>
                                                             </button>
                                                         @endcan
-                                                        <ul class="dropdown-menu dropdown-menu-right shadow-sm" style="min-width: 180px;">
+                                                        <ul class="dropdown-menu dropdown-menu-right shadow-sm lead-actions-menu" style="min-width: 220px;">
                                                             @can('leads_details')
                                                                 <li>
                                                                     <a class="dropdown-item d-flex align-items-center" href="{{ route('admin.lead.show', $lead->id) }}"
@@ -210,7 +209,7 @@
                                                                 </li>
                                                             @endcan
                                                             @can('leads_call')
-                                                                <li class="dropdown-submenu">
+                                                                <li class="dropdown-submenu lead-actions-group">
                                                                     <a class="dropdown-item d-flex align-items-center justify-content-between call-submenu-toggle"
                                                                         href="javascript:void(0)">
                                                                         <span class="d-flex align-items-center">
@@ -220,7 +219,7 @@
                                                                         </span>
                                                                         <i class="fas fa-chevron-down text-muted submenu-arrow"></i>
                                                                     </a>
-                                                                    <div class="dropdown-submenu-menu">
+                                                                    <div class="dropdown-submenu-menu lead-actions-submenu">
                                                                         @can('leads_logcall')
 
                                                                             <a class="dropdown-item d-flex align-items-center dropdown-submenu-item"
@@ -998,15 +997,41 @@
 
         $(document).ready(function () {
 
-            $('.lead-row').on('click', function () {
+            $(document).on('click', '.lead-row', function () {
+                if ($(this).find('.dropdown.show').length) {
+                    return;
+                }
+
                 let targetUrl = $(this).data('href');
                 if (targetUrl) {
                     window.location.href = targetUrl;
                 }
             });
 
-            $('.lead-row').find('a, button, .dropdown-menu, .dropdown-toggle').on('click', function (e) {
+            $(document).on('click', '.lead-row a, .lead-row button, .lead-row .dropdown-menu, .lead-row .dropdown-toggle', function (e) {
                 e.stopPropagation();
+            });
+
+            $(document).on('click', '.lead-action-toggle', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                let $dropdown = $(this).closest('.dropdown');
+                let $menu = $dropdown.find('.dropdown-menu').first();
+                let isOpen = $dropdown.hasClass('show');
+
+                $('.dropdown').not($dropdown).removeClass('show').find('.dropdown-menu').removeClass('show');
+                $('.dropdown-submenu, .dropdown-submenu-menu').removeClass('show');
+
+                $dropdown.toggleClass('show', !isOpen);
+                $menu.toggleClass('show', !isOpen);
+                $(this).attr('aria-expanded', !isOpen ? 'true' : 'false');
+            });
+
+            $(document).on('click', function () {
+                $('.dropdown').removeClass('show').find('.dropdown-menu').removeClass('show');
+                $('.dropdown-submenu, .dropdown-submenu-menu').removeClass('show');
+                $('.lead-action-toggle').attr('aria-expanded', 'false');
             });
 
 
@@ -1077,7 +1102,7 @@
                 });
             });
 
-            $('.call-submenu-toggle').on('click', function (e) {
+            $(document).on('click', '.call-submenu-toggle', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
 
@@ -1089,22 +1114,22 @@
                 $submenu.children('.dropdown-submenu-menu').toggleClass('show');
             });
 
-            $('.call-submenu-toggle').on('mouseenter', function () {
+            $(document).on('mouseenter', '.call-submenu-toggle', function () {
                 let $submenu = $(this).closest('.dropdown-submenu');
                 $submenu.addClass('show');
                 $submenu.children('.dropdown-submenu-menu').addClass('show');
             });
 
-            $('.dropdown-submenu-menu').on('mouseenter', function () {
+            $(document).on('mouseenter', '.dropdown-submenu-menu', function () {
                 $(this).addClass('show').closest('.dropdown-submenu').addClass('show');
             });
 
-            $('.dropdown-submenu').on('mouseleave', function () {
+            $(document).on('mouseleave', '.dropdown-submenu', function () {
                 $(this).removeClass('show');
                 $(this).children('.dropdown-submenu-menu').removeClass('show');
             });
 
-            $('.dropdown').on('hidden.bs.dropdown', function () {
+            $(document).on('hidden.bs.dropdown', '.dropdown', function () {
                 $(this).find('.dropdown-submenu').removeClass('show');
                 $(this).find('.dropdown-submenu-menu').removeClass('show');
             });
@@ -2424,6 +2449,7 @@
             padding: 0.5rem 0;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
             border: none;
+            overflow: visible;
         }
 
         .dropdown-item {
@@ -2455,20 +2481,27 @@
             background-color: #f1f5f9;
         }
 
-        .dropdown-submenu>.dropdown-submenu-menu {
-            display: none;
-            margin: 0.35rem 0 0.15rem 2.15rem;
-            padding-left: 0;
-            border-left: 2px solid #e2e8f0;
+        .table-responsive {
+            overflow-x: auto;
+            overflow-y: visible;
         }
 
+        .dropdown-submenu-menu {
+            display: none;
+            position: static;
+            background: #f8fafc;
+            border-radius: 8px;
+            margin: 0.35rem 0.75rem 0.25rem 0.75rem;
+            padding: 0.35rem 0;
+            min-width: 100%;
+        }
         .dropdown-submenu.show>.dropdown-submenu-menu {
             display: block;
         }
 
         .dropdown-submenu-item {
             font-size: 0.78rem;
-            padding: 0.45rem 0.9rem;
+            padding: 0.45rem 1rem 0.45rem 2.25rem;
             border-radius: 8px;
             margin-bottom: 0.15rem;
             white-space: nowrap;
@@ -2487,12 +2520,6 @@
             transform: rotate(180deg);
         }
 
-        @media (max-width: 991.98px) {
-            .dropdown-submenu>.dropdown-submenu-menu {
-                margin-left: 1.5rem;
-            }
-        }
-
         .btn-outline-secondary {
             border-color: #e2e8f0;
         }
@@ -2504,3 +2531,4 @@
         }
     </style>
 @endsection
+

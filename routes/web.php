@@ -42,6 +42,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/leads/{id}', [LeadController::class, 'get'])->name('lead.get');
     Route::get('/leads/{id}/notes', [LeadController::class, 'getNotes'])->name('lead.notes');
     Route::post('/leads/add-note', [LeadController::class, 'addNote'])->name('lead.addNote');
+    Route::put('/leads/notes/{id}', [LeadController::class, 'updateNote'])->name('lead.updateNote');
+    Route::delete('/leads/notes/{id}', [LeadController::class, 'deleteNote'])->name('lead.deleteNote');
     Route::post('/leads/add-call', [LeadController::class, 'addCall'])->name('lead.addCall');
     Route::get('/leads/{id}/calls', [LeadController::class, 'getCalls'])->name('lead.calls');
     Route::get('/leads/{id}/calls', [LeadController::class, 'getLeadCalls'])->name('lead.calls');
@@ -50,6 +52,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('/leads/{id}/process-conversion', [LeadController::class, 'processConversion'])->name('lead.processConversion');
     Route::post('/leads/schedule-call', [LeadController::class, 'createScheduledCall'])->name('lead.scheduleCall');
     Route::put('/leads/calls/{id}', [LeadController::class, 'updateCallToLogged'])->name('lead.updateCall');
+    Route::put('/leads/calls/{id}/full', [LeadController::class, 'updateCall'])->name('lead.updateCallFull');
     Route::delete('/leads/calls/{id}', [LeadController::class, 'deleteLeadCall'])->name('lead.deleteCall');
     Route::post('/leads/schedule-meeting', [LeadController::class, 'scheduleMeeting'])->name('lead.scheduleMeeting');
     Route::get('/leads/{id}/meetings', [LeadController::class, 'getLeadMeetings'])->name('lead.meetings');
@@ -67,6 +70,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/permissions/all', [PermissionController::class, 'getAllPermissions'])->name('permissions.all');
     Route::get('/permissions/role-name/{roleId}', [PermissionController::class, 'getRoleName'])->name('permissions.role-name');
     Route::get('/leads/{id}/tasks', [LeadController::class, 'getTasks'])->name('lead.tasks');
+    Route::put('/leads/tasks/{id}', [LeadController::class, 'updateTask'])->name('lead.updateTask');
+    Route::delete('/leads/tasks/{id}', [LeadController::class, 'deleteTask'])->name('lead.deleteTask');
     Route::put('/tasks/{id}/status', [LeadController::class, 'updateTaskStatus'])->name('task.updateStatus');
     Route::post('/leads/add-task', [LeadController::class, 'addTask'])->name('lead.addTask');
 });
