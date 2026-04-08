@@ -95,6 +95,27 @@
             @endcan
         </div>
 
+        @can('accounts_viewemailcommunications')
+<div class="card mb-4 border">
+    <div class="card-header bg-light py-2 d-flex justify-content-between align-items-center">
+        <h6 class="mb-0">
+            <i class="fas fa-envelope text-primary mr-2"></i>Email Communication
+        </h6>
+        @can('accounts_composeemail')
+        <button type="button" class="btn btn-sm btn-primary" onclick="openEmailModal('account', {{ $account->id }}, @js($account->email))">
+            <i class="fas fa-plus-circle mr-1"></i> Compose Email
+        </button>
+        
+        @endcan
+    </div>
+    <div class="card-body p-0" id="emailsList">
+        <div class="text-center py-4">
+            <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+            <p class="mt-2">Loading emails...</p>
+        </div>
+    </div>
+</div>
+@endcan
         @can('accounts_viewaccountdetails')
         
         <div class="card mb-4 border">
@@ -187,5 +208,73 @@
             </div>
         </div>
         @endcan
+
     </div>
+    @include('Partials.email-modal')
+    <script>
+function loadEmails() {
+    $.ajax({
+        url: '{{ route("admin.emails.get", ["entityType" => "account", "entityId" => $account->id]) }}',
+        type: 'GET',
+        success: function(response) {
+            if(response.success) {
+                displayEmails(response.data);
+            } else {
+                $('#emailsList').html('<div class="text-center py-4 text-muted">No emails found.</div>');
+            }
+        },
+        error: function() {
+            $('#emailsList').html('<div class="text-center py-4 text-muted">Error loading emails.</div>');
+        }
+    });
+}
+
+function displayEmails(emails) {
+    if(!emails || emails.length === 0) {
+        $('#emailsList').html('<div class="text-center py-4 text-muted"><i class="fas fa-inbox fa-2x mb-2"></i><br>No emails sent yet.</div>');
+        return;
+    }
+    
+    let html = '<div class="table-responsive"><table class="table table-hover mb-0">';
+    html += '<thead class="thead-light"><tr><th>Date</th><th>From</th><th>To</th><th>Subject</th><th>Status</th><th width="80">Actions</th></tr></thead><tbody>';
+    
+    emails.forEach(email => {
+        html += `
+            <tr>
+                <td>${new Date(email.created_at).toLocaleString()}</td>
+                <td>${escapeHtml(email.from_email)}</small></td>
+                <td>${escapeHtml(email.to_email)}</small></td>
+                <td><strong>${escapeHtml(email.subject)}</strong><br><small class="text-muted">${escapeHtml(email.body.substring(0, 100))}${email.body.length > 100 ? '...' : ''}</small></td>
+                <td><span class="badge badge-success">${email.status}</span></td>
+               
+            </tr>
+        `;
+    });
+    
+    html += '</tbody></table></div>';
+    $('#emailsList').html(html);
+}
+
+function viewEmail(id) {
+    Swal.fire({
+        title: 'Email Details',
+        html: '<div>Loading...</div>',
+        width: '600px'
+    });
+}
+
+function escapeHtml(str) {
+    if(!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if(m === '&') return '&amp;';
+        if(m === '<') return '&lt;';
+        if(m === '>') return '&gt;';
+        return m;
+    });
+}
+
+$(document).ready(function() {
+    loadEmails();
+});
+</script>
 @endsection

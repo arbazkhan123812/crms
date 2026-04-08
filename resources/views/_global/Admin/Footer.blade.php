@@ -7,6 +7,16 @@
 
     <script>
        $(document).ready(function() {
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Access Denied',
+            text: @json(session('error')),
+            confirmButtonColor: '#35394f',
+            confirmButtonText: 'Understood'
+        });
+    @endif
+
     // 1. Initialize NiceScroll once
     var nicescroll = $(".content").niceScroll({
         cursorcolor: "#35394f",

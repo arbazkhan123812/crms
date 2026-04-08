@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\ContactController;
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -98,9 +99,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('/leads/tasks/{id}', [LeadController::class, 'deleteTask'])->name('lead.deleteTask');
     Route::put('/tasks/{id}/status', [LeadController::class, 'updateTaskStatus'])->name('task.updateStatus');
     Route::post('/leads/add-task', [LeadController::class, 'addTask'])->name('lead.addTask');
+    Route::post('/email/send', [EmailController::class, 'sendEmail'])->name('email.send');
+    Route::get('/emails/{entityType}/{entityId}', [EmailController::class, 'getEmails'])->name('emails.get');
 });
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
-
 
 Route::get('/', [AuthController::class, 'index']);
 Route::post('/Auth/login', [AuthController::class, 'process_login'])->name('auth.login.process');

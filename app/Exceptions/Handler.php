@@ -28,16 +28,17 @@ class Handler extends ExceptionHandler
     public function render($request, Throwable $exception)
     {
         if ($exception instanceof \Spatie\Permission\Exceptions\UnauthorizedException) {
+            $permissionMessage = 'You do not have permission to access this page.';
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Unauthorized Access! No permission to perform this action.'
+                    'message' => $permissionMessage
                 ], 403);
             }
 
             return redirect()->back()
-                ->with('error', 'Unauthorized Access! you dont have permission');
+                ->with('error', $permissionMessage);
         }
 
         return parent::render($request, $exception);
