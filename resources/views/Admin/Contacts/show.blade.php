@@ -19,6 +19,8 @@
         </div>
 
         <div class="row mb-4">
+            @can('contacts_showcontactnamecard') 
+            
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-statistics">
                     <div class="card-body">
@@ -35,6 +37,10 @@
                     </div>
                 </div>
             </div>
+            @endcan
+
+            @can('contacts_showcontacttitlecard')
+            
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-statistics">
                     <div class="card-body">
@@ -51,6 +57,10 @@
                     </div>
                 </div>
             </div>
+            @endcan
+
+            @can('contacts_showcontactphonecard')
+            
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-statistics">
                     <div class="card-body">
@@ -67,6 +77,10 @@
                     </div>
                 </div>
             </div>
+            @endcan
+
+            @can('contacts_showcontactcreationcard')
+            
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-statistics">
                     <div class="card-body">
@@ -83,8 +97,10 @@
                     </div>
                 </div>
             </div>
+            @endcan
         </div>
 
+        @can('contacts_viewcontactdetails')
         <div class="card mb-4 border">
             <div class="card-header bg-light py-2">
                 <h6 class="mb-0">
@@ -104,7 +120,10 @@
                 </div>
             </div>
         </div>
+        @endcan
 
+        @can('contacts_viewprofilesummary')
+        
         <div class="card mb-4 border">
             <div class="card-header bg-light py-2">
                 <h6 class="mb-0">
@@ -128,7 +147,10 @@
                 </div>
             </div>
         </div>
+        @endcan
 
+        @can('contacts_relatedaccountscontacts')
+        
         <div class="card border">
             <div class="card-header bg-light py-2">
                 <h6 class="mb-0">
@@ -164,5 +186,6 @@
                 @endif
             </div>
         </div>
+        @endcan
     </div>
 @endsection

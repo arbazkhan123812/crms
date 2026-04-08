@@ -167,10 +167,10 @@
             <div class="col-12">
                 <div class="card">
                     <div class="card-body text-center">
-                        <button type="submit" class="btn btn-success btn-lg">
+                        <button type="submit" class="btn btn-primary ">
                             <i class="fas fa-exchange-alt mr-2"></i> Convert to Customer
                         </button>
-                        <a href="{{ route('admin.leads.index') }}" class="btn btn-secondary btn-lg ml-2">
+                        <a href="{{ route('admin.leads.index') }}" class="btn btn-secondary ml-2">
                             <i class="fas fa-times mr-2"></i> Cancel
                         </a>
                     </div>

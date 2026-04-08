@@ -340,7 +340,7 @@
                                 </select>
                                 <div class="input-group-append">
                                     <button type="button" class="btn btn-primary" onclick="openTemplateModal()">
-                                        <i class="fas fa-plus"></i> New
+                                        <i class="fas fa-plus mr-2"></i> New
                                     </button>
                                 </div>
                             </div>
