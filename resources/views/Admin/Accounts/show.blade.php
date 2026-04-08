@@ -19,6 +19,8 @@
         </div>
 
         <div class="row mb-4">
+            @can('accounts_showaccountsnamecard')
+            
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-statistics">
                     <div class="card-body">
@@ -35,6 +37,8 @@
                     </div>
                 </div>
             </div>
+            @endcan
+            @can('accounts_showaccountsindustrycard')
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-statistics">
                     <div class="card-body">
@@ -51,6 +55,8 @@
                     </div>
                 </div>
             </div>
+            @endcan
+            @can('accounts_showaccountscontactcard')
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-statistics">
                     <div class="card-body">
@@ -67,6 +73,9 @@
                     </div>
                 </div>
             </div>
+            @endcan
+            @can('accounts_showaccountscreationcard')
+            
             <div class="col-lg-3 col-md-6 mb-3">
                 <div class="card card-statistics">
                     <div class="card-body">
@@ -83,8 +92,11 @@
                     </div>
                 </div>
             </div>
+            @endcan
         </div>
 
+        @can('accounts_viewaccountdetails')
+        
         <div class="card mb-4 border">
             <div class="card-header bg-light py-2">
                 <h6 class="mb-0">
@@ -104,7 +116,9 @@
                 </div>
             </div>
         </div>
+        @endcan
 
+        @can('accounts_viewaccountaddressdescription')
         <div class="card mb-4 border">
             <div class="card-header bg-light py-2">
                 <h6 class="mb-0">
@@ -133,7 +147,10 @@
                 </div>
             </div>
         </div>
+        @endcan
 
+        @can('accounts_viewlinkedcontact')
+        
         <div class="card border">
             <div class="card-header bg-light py-2">
                 <h6 class="mb-0">
@@ -169,5 +186,6 @@
                 @endif
             </div>
         </div>
+        @endcan
     </div>
 @endsection
