@@ -71,6 +71,7 @@ class LeadController extends Controller
             'tasks.assignedTo',
             'activities.assignedTo',
             'calls.calledBy',
+            'calls.callOwner',
             'emails.sentBy',
             'meetings.assignedTo',
         ]);
@@ -636,7 +637,8 @@ class LeadController extends Controller
                 'notes' => 'nullable|string',
                 'duration' => 'nullable|string|max:20',
                 'status' => 'required|in:completed,missed,voicemail,no_answer',
-                'call_date' => 'required|date'
+                'call_date' => 'required|date',
+                'call_owner' => 'required|exists:users,id'
             ]);
 
             if ($validator->fails()) {
@@ -654,7 +656,8 @@ class LeadController extends Controller
                 $request->notes,
                 $request->duration,
                 $request->status,
-                $request->call_date
+                $request->call_date,
+                $request->call_owner
             );
 
             $lead->addActivity(
@@ -686,8 +689,14 @@ class LeadController extends Controller
     {
         try {
             $lead = Lead::findOrFail($id);
-            $loggedCalls = $lead->calls()->where('status', 'completed')->orderBy('call_date', 'desc')->get();
-            $scheduledCalls = $lead->calls()->where('status', 'scheduled')->orderBy('call_date', 'asc')->get();
+            $loggedCalls = $lead->calls()->with(['calledBy', 'callOwner'])->where('status', 'completed')->orderBy('call_date', 'desc')->get()->map(function ($call) {
+                $call->call_owner_name = optional($call->callOwner)->username ?? optional($call->callOwner)->name ?? optional($call->calledBy)->username ?? optional($call->calledBy)->name ?? '-';
+                return $call;
+            });
+            $scheduledCalls = $lead->calls()->with(['calledBy', 'callOwner'])->where('status', 'scheduled')->orderBy('call_date', 'asc')->get()->map(function ($call) {
+                $call->call_owner_name = optional($call->callOwner)->username ?? optional($call->callOwner)->name ?? optional($call->calledBy)->username ?? optional($call->calledBy)->name ?? '-';
+                return $call;
+            });
 
             return response()->json([
                 'success' => true,
@@ -706,7 +715,7 @@ class LeadController extends Controller
     {
         try {
             $lead = Lead::findOrFail($id);
-            $calls = $lead->calls()->with('calledBy')->get();
+            $calls = $lead->calls()->with(['calledBy', 'callOwner'])->get();
 
             return response()->json([
                 'success' => true,
@@ -745,7 +754,8 @@ class LeadController extends Controller
                 'duration' => 'nullable|string|max:20',
                 'status' => 'required|in:scheduled,completed,missed,voicemail,no_answer',
                 'call_date' => 'required|date',
-                'called_by' => 'required|exists:users,id'
+                'called_by' => 'required|exists:users,id',
+                'call_owner' => 'required|exists:users,id'
             ]);
 
             if ($validator->fails()) {
@@ -763,7 +773,8 @@ class LeadController extends Controller
                 'duration' => $request->duration,
                 'status' => $request->status,
                 'call_date' => $request->call_date,
-                'called_by' => $request->called_by
+                'called_by' => $request->called_by,
+                'call_owner' => $request->call_owner
             ]);
 
             // If call is completed and has lead, update lead's last_contacted_at
@@ -798,7 +809,8 @@ class LeadController extends Controller
                 'notes' => 'nullable|string',
                 'duration' => 'nullable|string|max:20',
                 'status' => 'required|in:completed,missed,voicemail,no_answer',
-                'call_date' => 'required|date'
+                'call_date' => 'required|date',
+                'call_owner' => 'required|exists:users,id'
             ]);
 
             if ($validator->fails()) {
@@ -817,7 +829,8 @@ class LeadController extends Controller
                 'duration' => $request->duration,
                 'status' => $request->status,
                 'call_date' => $request->call_date,
-                'called_by' => auth()->id()
+                'called_by' => auth()->id(),
+                'call_owner' => $request->call_owner
             ]);
 
             // Update lead's last_contacted_at
@@ -846,7 +859,8 @@ class LeadController extends Controller
                 'call_type' => 'required|in:inbound,outbound',
                 'call_purpose' => 'nullable|string|max:255',
                 'notes' => 'nullable|string',
-                'call_date' => 'required|date|after:now'
+                'call_date' => 'required|date|after:now',
+                'call_owner' => 'required|exists:users,id'
             ]);
 
             if ($validator->fails()) {
@@ -865,7 +879,8 @@ class LeadController extends Controller
                 'duration' => null,
                 'status' => 'scheduled',
                 'call_date' => $request->call_date,
-                'called_by' => auth()->id()
+                'called_by' => auth()->id(),
+                'call_owner' => $request->call_owner
             ]);
 
             return response()->json([
@@ -959,7 +974,8 @@ class LeadController extends Controller
                 'duration' => 'nullable|string|max:20',
                 'status' => 'required|in:scheduled,completed,missed,voicemail,no_answer',
                 'call_date' => 'required|date',
-                'called_by' => 'nullable|exists:users,id'
+                'called_by' => 'nullable|exists:users,id',
+                'call_owner' => 'required|exists:users,id'
             ]);
 
             if ($validator->fails()) {
@@ -979,6 +995,7 @@ class LeadController extends Controller
                 'status' => $request->status,
                 'call_date' => $request->call_date,
                 'called_by' => $request->input('called_by', $call->called_by),
+                'call_owner' => $request->call_owner,
             ]);
 
             // If status changed to completed and has lead, update lead's last_contacted_at
@@ -1025,7 +1042,7 @@ class LeadController extends Controller
     public function getCall($id)
     {
         try {
-            $call = LeadCall::with(['lead', 'calledBy'])->findOrFail($id);
+            $call = LeadCall::with(['lead', 'calledBy', 'callOwner'])->findOrFail($id);
             return response()->json([
                 'success' => true,
                 'data' => $call

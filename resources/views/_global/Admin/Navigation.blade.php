@@ -82,6 +82,28 @@
                                 </a>
                             </li>
                         @endcan
+                        @can('accounts_view')
+                            <li>
+                                <a href="{{ url('admin/accounts') }}"
+                                    class="{{ request()->is('admin/accounts') ? 'active' : '' }}">
+                                    <span class="nav-link-icon">
+                                        <i class="fas fa-building"></i>
+                                    </span>
+                                    <span>Accounts</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('contacts_view')
+                            <li>
+                                <a href="{{ url('admin/contacts') }}"
+                                    class="{{ request()->is('admin/contacts*') ? 'active' : '' }}">
+                                    <span class="nav-link-icon">
+                                        <i class="fas fa-address-book"></i>
+                                    </span>
+                                    <span>Contacts</span>
+                                </a>
+                            </li>
+                        @endcan
 
 
                      

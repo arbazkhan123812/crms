@@ -749,6 +749,15 @@
                             </select>
                         </div>
                         <div class="form-group">
+                            <label class="form-label mb-1">Call Owner</label>
+                            <select name="call_owner" id="log_call_owner" class="form-control" required>
+                                <option value="">Select Call Owner</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->username ?? $user->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label mb-1">Call Purpose</label>
                             <select name="call_purpose" id="log_call_purpose" class="form-control">
                                 <option value="">Select Purpose</option>
@@ -885,6 +894,15 @@
                             <select name="call_type" id="schedule_call_type" class="form-control" required>
                                 <option value="outbound"> Outbound </option>
                                 <option value="inbound"> Inbound </option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label mb-1">Call Owner</label>
+                            <select name="call_owner" id="schedule_call_owner" class="form-control" required>
+                                <option value="">Select Call Owner</option>
+                                @foreach($users as $user)
+                                    <option value="{{ $user->id }}">{{ $user->username ?? $user->name }}</option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="form-group">
@@ -1833,7 +1851,7 @@
             }
 
             let html = '<div class="table-responsive"><table class="table table-sm table-hover">';
-            html += '<thead class="thead-light"><tr><th>Date</th><th>Type</th><th>Purpose</th><th>Duration</th><th>Status</th><th>Notes</th><th width="90">Actions</th></tr></thead><tbody>';
+            html += '<thead class="thead-light"><tr><th>Date</th><th>Type</th><th>Owner</th><th>Purpose</th><th>Duration</th><th>Status</th><th>Notes</th><th width="90">Actions</th></tr></thead><tbody>';
 
             calls.forEach(call => {
                 let statusBadge = call.status == 'completed' ? 'success' : (call.status == 'missed' ? 'danger' : (call.status == 'voicemail' ? 'info' : 'warning'));
@@ -1841,6 +1859,7 @@
                                                     <tr>
                                                         <td>${new Date(call.call_date).toLocaleString()}</td>
                                                         <td><span class="badge badge-${call.call_type == 'outbound' ? 'info' : 'warning'}">${call.call_type}</span></td>
+                                                        <td>${escapeHtml(call.call_owner_name || '-')}</td>
                                                         <td>${escapeHtml(call.call_purpose || '-')}</td>
                                                         <td>${call.duration || '-'}</td>
                                                         <td><span class="badge badge-${statusBadge}">${call.status}</span></td>
@@ -1871,13 +1890,14 @@
             }
 
             let html = '<div class="table-responsive"><table class="table table-sm table-hover">';
-            html += '<thead class="thead-light"><tr><th>Date</th><th>Type</th><th>Purpose</th><th>Notes</th><th width="150">Actions</th></tr></thead><tbody>';
+            html += '<thead class="thead-light"><tr><th>Date</th><th>Type</th><th>Owner</th><th>Purpose</th><th>Notes</th><th width="150">Actions</th></tr></thead><tbody>';
 
             calls.forEach(call => {
                 html += `
                                                     <tr>
                                                         <td>${new Date(call.call_date).toLocaleString()}</td>
                                                         <td><span class="badge badge-${call.call_type == 'outbound' ? 'info' : 'warning'}">${call.call_type}</span></td>
+                                                        <td>${escapeHtml(call.call_owner_name || '-')}</td>
                                                         <td>${escapeHtml(call.call_purpose || '-')}</td>
                                                         <td><small>${escapeHtml(call.notes ? call.notes.substring(0, 50) : '-')}</small></td>
                                                         <td>
@@ -1910,6 +1930,7 @@
             $('#log_call_id').val('');
             $('#logCall_lead_id').val(leadId);
             $('#log_call_type').val('outbound');
+            $('#log_call_owner').val('{{ auth()->id() }}');
             $('#log_call_purpose').val('');
             $('#log_call_status').val('completed');
             $('#log_call_duration').val('');
@@ -1923,6 +1944,7 @@
             $('#schedule_call_id').val('');
             $('#scheduleCall_lead_id').val(leadId);
             $('#schedule_call_type').val('outbound');
+            $('#schedule_call_owner').val('{{ auth()->id() }}');
             $('#schedule_call_purpose').val('');
             $('#schedule_call_notes').val('');
             let now = new Date();
@@ -1939,6 +1961,7 @@
             $('#log_call_id').val(call.id);
             $('#logCall_lead_id').val(call.lead_id || currentLeadId);
             $('#log_call_type').val(call.call_type || 'outbound');
+            $('#log_call_owner').val(call.call_owner || call.called_by || '');
             $('#log_call_purpose').val(call.call_purpose || '');
             $('#log_call_status').val(call.status || 'completed');
             $('#log_call_duration').val(call.duration || '');
@@ -1954,6 +1977,7 @@
             $('#schedule_call_id').val(call.id);
             $('#scheduleCall_lead_id').val(call.lead_id || currentLeadId);
             $('#schedule_call_type').val(call.call_type || 'outbound');
+            $('#schedule_call_owner').val(call.call_owner || call.called_by || '');
             $('#schedule_call_purpose').val(call.call_purpose || '');
             $('#schedule_call_notes').val(call.notes || '');
             $('#schedule_call_date').val(formatDateTimeLocal(call.call_date));
@@ -2043,6 +2067,7 @@
         function openCallAction(id, name) {
             $('#logCall_lead_id').val(id);
             $('#log_call_type').val('outbound');
+            $('#log_call_owner').val('{{ auth()->id() }}');
             $('#log_call_purpose').val('');
             $('#log_call_status').val('completed');
             $('#log_call_duration').val('');

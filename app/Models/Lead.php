@@ -109,7 +109,7 @@ class Lead extends Model
         return $this->hasMany(LeadCall::class)->orderBy('call_date', 'desc');
     }
 
-    public function addCall($callType, $callPurpose, $notes, $duration, $status, $callDate)
+    public function addCall($callType, $callPurpose, $notes, $duration, $status, $callDate, $callOwner = null)
     {
         return $this->calls()->create([
             'call_type' => $callType,
@@ -118,7 +118,8 @@ class Lead extends Model
             'duration' => $duration,
             'status' => $status,
             'call_date' => $callDate,
-            'called_by' => auth()->id()
+            'called_by' => auth()->id(),
+            'call_owner' => $callOwner ?: auth()->id()
         ]);
     }
 

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -37,6 +39,27 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
     Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
     Route::get('/leads/{id}/profile', [LeadController::class, 'show'])->name('lead.show');
+
+    Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
+    Route::get('/accounts/{id}', [AccountController::class, 'show'])->name('account.show');
+    Route::post('/accounts/store', [AccountController::class, 'store'])->name('account.store');
+    Route::put('/accounts/{id}', [AccountController::class, 'update'])->name('account.update');
+    Route::delete('/accounts/{id}', [AccountController::class, 'destroy'])->name('account.destroy');
+    Route::get('/accounts/{id}/edit', [AccountController::class, 'edit'])->name('account.edit');
+    
+     Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+    Route::post('/contacts/store', [ContactController::class, 'store'])->name('contact.store');
+    Route::put('/contacts/{id}', [ContactController::class, 'update'])->name('contact.update');
+    Route::delete('/contacts/{id}', [ContactController::class, 'destroy'])->name('contact.destroy');
+    Route::get('/contacts/{id}/edit', [ContactController::class, 'edit'])->name('contact.edit');    
+    Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+    Route::get('/contacts/{id}/profile', [ContactController::class, 'show'])->name('contact.show');
+    Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
+
+    Route::get('/contacts', [ContactController::class, 'index'])->name('contacts.index');
+    Route::get('/contacts/{id}/profile', [ContactController::class, 'show'])->name('contact.show');
+    Route::post('/contacts', [ContactController::class, 'store'])->name('contacts.store');
+
     Route::post('/leads/save', [LeadController::class, 'save'])->name('lead.save');
     Route::delete('/leads/{id}', [LeadController::class, 'delete'])->name('lead.delete');
     Route::get('/leads/{id}', [LeadController::class, 'get'])->name('lead.get');
@@ -60,6 +83,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::delete('/leads/meetings/{id}', [LeadController::class, 'deleteMeeting'])->name('lead.deleteMeeting');
     Route::post('/leads/meetings/{id}/complete', [LeadController::class, 'completeMeeting'])->name('lead.completeMeeting');
     Route::post('/leads/send-email', [LeadController::class, 'sendEmail'])->name('lead.sendEmail');
+    
     Route::get('/email-templates', [LeadController::class, 'getEmailTemplates'])->name('email.templates');
     Route::get('/email-template/{id}', [LeadController::class, 'getEmailTemplate'])->name('email.template.get');
     Route::post('/email-template/save', [LeadController::class, 'saveEmailTemplate'])->name('email.template.save');

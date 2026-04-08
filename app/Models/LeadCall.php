@@ -10,7 +10,7 @@ class LeadCall extends Model
     
     protected $fillable = [
         'lead_id', 'call_type', 'call_purpose', 'notes', 
-        'duration', 'status', 'call_date', 'called_by'
+        'duration', 'status', 'call_date', 'called_by', 'call_owner'
     ];
 
     protected $casts = [
@@ -25,6 +25,11 @@ class LeadCall extends Model
     public function calledBy()
     {
         return $this->belongsTo(User::class, 'called_by');
+    }
+
+    public function callOwner()
+    {
+        return $this->belongsTo(User::class, 'call_owner');
     }
 
     // Scope for upcoming calls
