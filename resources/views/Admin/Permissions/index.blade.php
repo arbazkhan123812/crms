@@ -350,7 +350,7 @@ $(document).ready(function() {
                                        class="custom-control-input module-checkbox" 
                                        id="module_${moduleName.replace(/ /g, '_')}"
                                        data-module="${moduleName}"> 
-                                <label class="custom-control-label font-weight-bold" for="module_${moduleName.replace(/ /g, '_')}">
+                                <label class="custom-control-label" for="module_${moduleName.replace(/ /g, '_')}">
                                     ${moduleName}
                                 </label>
                             </div>
