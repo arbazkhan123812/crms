@@ -54,7 +54,8 @@
                             <i class="minimize" data-feather="minimize"></i>
                         </a>
                     </li>
-
+                    
+                    @can('notifications_viewnotifications')
                     <li class="nav-item dropdown">
                         <a href="#"
                             class="nav-link header-notification-link"
@@ -111,13 +112,15 @@
                                 @endforelse
                             </div>
 
-                            <div class="notification-dropdown-footer">
-                                <a href="{{ route('admin.notifications.index') }}" class="btn btn-primary btn-block">
-                                    View All
-                                </a>
-                            </div>
+                            @can('notifications_viewallnotifications')
+                            <div class="notification-dropdown-footer text-center"> <a href="{{ route('admin.notifications.index') }}" class="btn btn-link ">
+                                                View All
+                                            </a>
+                                        </div>
+                                        @endcan
                         </div>
                     </li>
+                    @endcan
 
                     <li class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle user_manu" title="User menu" data-toggle="dropdown">

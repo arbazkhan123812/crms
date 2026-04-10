@@ -46,10 +46,13 @@
                 </div>
                 <div class="col-auto">
                     @can('leads_save')
-                        <button type="button" class="btn btn-primary" onclick="openLeadModal()">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="openLeadModal()">
                             <i class="fas fa-plus-circle mr-1"></i> New Lead
                         </button>
                     @endcan
+                    <button type="button" class="btn btn-danger btn-sm ml-2" id="bulkDeleteBtn" onclick="bulkDeleteLeads()" disabled>
+                        <i class="fas fa-trash-alt mr-1"></i> Delete Selected
+                    </button>
                 </div>
             </div>
         </div>
@@ -115,7 +118,13 @@
                     <table class="table table-hover mb-0" id="myTable">
                         <thead class="thead-light">
                             <tr>
-                                <th width="50"></th>
+                                <th width="20" class="text-center">
+                                    <div class="custom-control custom-checkbox mb-0 d-inline-block">
+                                        <input type="checkbox" class="custom-control-input" id="selectAllLeads">
+                                        <label class="custom-control-label" for="selectAllLeads"></label>
+                                    </div>
+                                </th>
+                                <th width="20"></th>
                                 <th>Lead Information</th>
                                 <th>Contact Details</th>
                                 <th>Lead Source</th>
@@ -127,7 +136,13 @@
                         </thead>
                         <tbody>
                             @foreach($leads as $lead)
-                                            <tr class="lead-row" data-href="{{ route('admin.lead.show', $lead->id) }}">
+                                            <tr class="lead-row" data-href="{{ route('admin.lead.show', $lead->id) }}" data-id="{{ $lead->id }}">
+                                                <td class="align-middle text-center">
+                                                    <div class="custom-control custom-checkbox mb-0 d-inline-block">
+                                                        <input type="checkbox" class="custom-control-input lead-checkbox" id="lead_checkbox_{{ $lead->id }}" value="{{ $lead->id }}">
+                                                        <label class="custom-control-label" for="lead_checkbox_{{ $lead->id }}"></label>
+                                                    </div>
+                                                </td>
                                                 <td class="align-middle text-center">
                                                     @if($lead->lead_image)
                                                         <img src="{{ asset($lead->lead_image) }}" class="rounded-circle" width="35" height="35"
@@ -1013,7 +1028,26 @@
         let loggedCallsCache = [];
         let scheduledCallsCache = [];
 
+        function getSelectedLeadIds() {
+            return $('.lead-checkbox:checked').map(function () {
+                return $(this).val();
+            }).get();
+        }
+
+        function updateBulkDeleteState() {
+            const selectedCount = getSelectedLeadIds().length;
+            $('#bulkDeleteBtn')
+                .prop('disabled', selectedCount === 0)
+                .html('<i class="fas fa-trash-alt mr-1"></i> Delete Selected' + (selectedCount ? ' (' + selectedCount + ')' : ''));
+
+            const totalCheckboxes = $('.lead-checkbox').length;
+            const allChecked = totalCheckboxes > 0 && selectedCount === totalCheckboxes;
+
+            $('#selectAllLeads').prop('checked', allChecked);
+        }
+
         $(document).ready(function () {
+            updateBulkDeleteState();
 
             $(document).on('click', '.lead-row', function () {
                 if ($(this).find('.dropdown.show').length) {
@@ -1026,8 +1060,17 @@
                 }
             });
 
-            $(document).on('click', '.lead-row a, .lead-row button, .lead-row .dropdown-menu, .lead-row .dropdown-toggle', function (e) {
+            $(document).on('click', '.lead-row a, .lead-row button, .lead-row input, .lead-row label, .lead-row .dropdown-menu, .lead-row .dropdown-toggle', function (e) {
                 e.stopPropagation();
+            });
+
+            $(document).on('change', '#selectAllLeads', function () {
+                $('.lead-checkbox').prop('checked', $(this).is(':checked'));
+                updateBulkDeleteState();
+            });
+
+            $(document).on('change', '.lead-checkbox', function () {
+                updateBulkDeleteState();
             });
 
             $(document).on('click', '.lead-action-toggle', function (e) {
@@ -2349,6 +2392,65 @@
             });
         }
 
+        function bulkDeleteLeads() {
+            const selectedLeadIds = getSelectedLeadIds();
+
+            if (!selectedLeadIds.length) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'No leads selected',
+                    text: 'Please select at least one lead to delete.'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Delete Selected Leads?',
+                text: 'You are about to delete ' + selectedLeadIds.length + ' selected lead(s). This action cannot be undone!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, delete them!',
+                cancelButtonText: 'Cancel'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: '{{ route("admin.lead.bulkDelete") }}',
+                        type: 'POST',
+                        data: {
+                            _token: '{{ csrf_token() }}',
+                            _method: 'DELETE',
+                            lead_ids: selectedLeadIds
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Deleted!',
+                                    text: response.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Error!', text: response.message });
+                            }
+                        },
+                        error: function (xhr) {
+                            let message = 'Error deleting selected leads!';
+                            if (xhr.responseJSON && xhr.responseJSON.message) {
+                                message = xhr.responseJSON.message;
+                            }
+
+                            Swal.fire({ icon: 'error', title: 'Error!', text: message });
+                        }
+                    });
+                }
+            });
+        }
+
         function previewImage(input) {
             if (input.files && input.files[0]) {
                 let reader = new FileReader();
@@ -2441,6 +2543,11 @@
             padding: 12px 8px;
         }
 
+        #bulkDeleteBtn:disabled {
+            opacity: .65;
+            cursor: not-allowed;
+        }
+
         .lead-row {
             cursor: pointer;
         }
@@ -2504,11 +2611,6 @@
         .dropdown-submenu>.dropdown-item:hover,
         .dropdown-submenu.show>.dropdown-item {
             background-color: #f1f5f9;
-        }
-
-        .table-responsive {
-            overflow-x: auto;
-            overflow-y: visible;
         }
 
         .dropdown-submenu-menu {

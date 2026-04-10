@@ -64,6 +64,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
     Route::post('/leads/save', [LeadController::class, 'save'])->name('lead.save');
     Route::delete('/leads/{id}', [LeadController::class, 'delete'])->name('lead.delete');
+    Route::delete('/leads', [LeadController::class, 'bulkDelete'])->name('lead.bulkDelete');
     Route::get('/leads/{id}', [LeadController::class, 'get'])->name('lead.get');
     Route::get('/leads/{id}/notes', [LeadController::class, 'getNotes'])->name('lead.notes');
     Route::post('/leads/add-note', [LeadController::class, 'addNote'])->name('lead.addNote');

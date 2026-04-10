@@ -191,6 +191,64 @@ class LeadController extends Controller
         }
     }
 
+    public function bulkDelete(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'lead_ids' => 'required|array|min:1',
+            'lead_ids.*' => 'integer|exists:leads,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => $validator->errors()->first(),
+            ], 422);
+        }
+
+        try {
+            $leadIds = collect($request->input('lead_ids', []))
+                ->map(fn ($id) => (int) $id)
+                ->unique()
+                ->values();
+
+            $query = Lead::whereIn('id', $leadIds);
+
+            if (!Auth::user()->hasRole('Admin')) {
+                $query->where(function ($q) {
+                    $q->where('created_by', Auth::id())
+                        ->orWhere('lead_owner', Auth::id());
+                });
+            }
+
+            $leads = $query->get();
+
+            if ($leads->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No valid leads were found for deletion.',
+                ], 404);
+            }
+
+            foreach ($leads as $lead) {
+                if ($lead->lead_image && file_exists(public_path($lead->lead_image))) {
+                    unlink(public_path($lead->lead_image));
+                }
+
+                $lead->delete();
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $leads->count() . ' lead(s) deleted successfully!',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error deleting selected leads!',
+            ], 500);
+        }
+    }
+
     public function get($id)
     {
         try {

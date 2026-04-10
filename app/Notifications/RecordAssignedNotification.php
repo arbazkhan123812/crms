@@ -36,3 +36,4 @@ class RecordAssignedNotification extends Notification
         ];
     }
 }
+''
