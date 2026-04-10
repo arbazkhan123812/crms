@@ -34,12 +34,7 @@ class LeadNote extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    // Scope for internal notes
-    public function scopeInternal($query)
-    {
-        return $query->where('type', 'internal');
-    }
-
+   
     // Scope for public notes
     public function scopePublic($query)
     {

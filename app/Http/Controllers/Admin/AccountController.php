@@ -47,10 +47,17 @@ class AccountController extends Controller
             'createdBy',
             'convertedFromLead',
             'accountOwner',
-            'parentAccount'
+            'parentAccount',
+            'notes.createdBy',
+            'tasks.assignedTo',
+            'calls.calledBy',
+            'calls.callOwner',
+            'meetings.assignedTo',
         ])->findOrFail($id);
 
-        return view('Admin.Accounts.show', compact('account'));
+        $users = User::orderBy('username')->get();
+
+        return view('Admin.Accounts.show', compact('account', 'users'));
     }
 
     public function store(Request $request)

@@ -68,11 +68,10 @@ class Lead extends Model
         return $this->hasMany(LeadNote::class)->orderBy('created_at', 'desc');
     }
 
-    public function addNote($note, $type = 'internal')
+    public function addNote($note)
     {
         return $this->notes()->create([
             'note' => $note,
-            'type' => $type,
             'created_by' => auth()->id()
         ]);
     }

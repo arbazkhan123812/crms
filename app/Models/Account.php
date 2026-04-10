@@ -65,6 +65,88 @@ class Account extends Model
         return $this->hasMany(Account::class, 'parent_account_id');
     }
 
+    public function notes()
+    {
+        return $this->hasMany(CrmNote::class, 'entity_id')
+            ->where('entity_type', 'account')
+            ->orderBy('created_at', 'desc');
+    }
+
+    public function tasks()
+    {
+        return $this->hasMany(CrmTask::class, 'entity_id')
+            ->where('entity_type', 'account')
+            ->orderBy('due_date', 'asc');
+    }
+
+    public function calls()
+    {
+        return $this->hasMany(CrmCall::class, 'entity_id')
+            ->where('entity_type', 'account')
+            ->orderBy('call_date', 'desc');
+    }
+
+    public function meetings()
+    {
+        return $this->hasMany(CrmMeeting::class, 'entity_id')
+            ->where('entity_type', 'account')
+            ->orderBy('meeting_date', 'desc');
+    }
+
+    public function addNote($note)
+    {
+        return $this->notes()->create([
+            'entity_type' => 'account',
+            'note' => $note,
+            'created_by' => auth()->id(),
+        ]);
+    }
+
+    public function addTask($subject, $description, $assignedTo, $dueDate = null)
+    {
+        return $this->tasks()->create([
+            'entity_type' => 'account',
+            'subject' => $subject,
+            'description' => $description,
+            'assigned_to' => $assignedTo,
+            'due_date' => $dueDate,
+            'status' => 'pending',
+            'created_by' => auth()->id(),
+        ]);
+    }
+
+    public function addCall($callType, $callPurpose, $notes, $duration, $status, $callDate, $callOwner = null)
+    {
+        return $this->calls()->create([
+            'entity_type' => 'account',
+            'call_type' => $callType,
+            'call_purpose' => $callPurpose,
+            'notes' => $notes,
+            'duration' => $duration,
+            'status' => $status,
+            'call_date' => $callDate,
+            'called_by' => auth()->id(),
+            'call_owner' => $callOwner ?: auth()->id(),
+        ]);
+    }
+
+    public function scheduleMeeting($title, $description, $meetingType, $location, $meetingLink, $meetingDate, $duration, $assignedTo)
+    {
+        return $this->meetings()->create([
+            'entity_type' => 'account',
+            'title' => $title,
+            'description' => $description,
+            'meeting_type' => $meetingType,
+            'location' => $location,
+            'meeting_link' => $meetingLink,
+            'meeting_date' => $meetingDate,
+            'duration' => $duration,
+            'status' => 'scheduled',
+            'assigned_to' => $assignedTo,
+            'created_by' => auth()->id(),
+        ]);
+    }
+
     // Accessors
     public function getFullAddressAttribute()
     {

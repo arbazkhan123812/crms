@@ -44,10 +44,17 @@ class ContactController extends Controller
             'account.contacts',
             'createdBy',
             'convertedFromLead',
-            'contactOwner'
+            'contactOwner',
+            'notes.createdBy',
+            'tasks.assignedTo',
+            'calls.calledBy',
+            'calls.callOwner',
+            'meetings.assignedTo',
         ])->findOrFail($id);
 
-        return view('Admin.Contacts.show', compact('contact'));
+        $users = User::orderBy('username')->get();
+
+        return view('Admin.Contacts.show', compact('contact', 'users'));
     }
 
     public function store(Request $request)

@@ -209,6 +209,8 @@
         </div>
         @endcan
 
+        @include('Admin.Partials.entity-activity-manager', ['entity' => $account, 'entityType' => 'account', 'users' => $users])
+
     </div>
     @include('Partials.email-modal')
     <script>
