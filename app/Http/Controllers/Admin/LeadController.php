@@ -12,6 +12,7 @@ use App\Models\LeadMeeting;
 use App\Models\LeadNote;
 use App\Models\LeadTask;
 use App\Models\User;
+use App\Notifications\RecordAssignedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
@@ -157,14 +158,18 @@ class LeadController extends Controller
 
             if ($id) {
                 $lead = Lead::findOrFail($id);
+                $previousOwnerId = $lead->lead_owner;
                 if ($request->hasFile('lead_image') && $lead->lead_image && file_exists(public_path($lead->lead_image))) {
                     unlink(public_path($lead->lead_image));
                 }
                 $lead->update($data);
+                $this->notifyAssignedLeadOwner($lead->fresh('owner'), $previousOwnerId);
                 return response()->json(['success' => true, 'message' => 'Lead updated successfully!']);
             } else {
                 $data['created_by'] = Auth::user()->id;
-                Lead::create($data);
+                $lead = Lead::create($data);
+                
+                $this->notifyAssignedLeadOwner($lead);
                 return response()->json(['success' => true, 'message' => 'Lead created successfully!']);
             }
         } catch (\Exception $e) {
@@ -1132,11 +1137,7 @@ class LeadController extends Controller
                 'lead_id' => 'required|exists:leads,id',
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'meeting_type' => 'required|in:virtual,physical,phone',
-                'location' => 'nullable|string|max:255',
                 'meeting_link' => 'nullable|url|max:500',
-                'meeting_date' => 'required|date|after:now',
-                'duration' => 'nullable|string|max:50',
                 'assigned_to' => 'required|exists:users,id'
             ]);
 
@@ -1240,11 +1241,8 @@ class LeadController extends Controller
             $validator = Validator::make($request->all(), [
                 'title' => 'required|string|max:255',
                 'description' => 'nullable|string',
-                'meeting_type' => 'required|in:virtual,physical,phone',
-                'location' => 'nullable|string|max:255',
                 'meeting_link' => 'nullable|url|max:500',
                 'meeting_date' => 'required|date',
-                'duration' => 'nullable|string|max:50',
                 'status' => 'required|in:scheduled,completed,cancelled,rescheduled',
                 'assigned_to' => 'required|exists:users,id'
             ]);
@@ -1415,4 +1413,26 @@ public function processConversion(Request $request, $id)
         return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
     }
 }
+
+    public function notifyAssignedLeadOwner(Lead $lead, ?int $previousOwnerId = null): void
+    {
+        if (!$lead->lead_owner || $lead->lead_owner === Auth::user()->id || $lead->lead_owner === $previousOwnerId) {
+            return;
+        }
+
+        $assignedUser = User::find($lead->lead_owner);
+
+        if (!$assignedUser) {
+            return;
+        }
+
+        $assignedUser->notify(new RecordAssignedNotification(
+            'Lead',
+            $lead->id,
+            'Lead Assigned',
+            'A new Lead has been assigned to you: ' . ($lead->full_name ?: 'Lead #' . $lead->id),
+            route('admin.lead.show', $lead->id),
+            Auth::id()
+        ));
+    }
 }

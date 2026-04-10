@@ -156,6 +156,12 @@
             });
         });
 
+        $('[data-toggle-tooltip="tooltip"]').tooltip();
+
+        if (window.feather) {
+            feather.replace();
+        }
+
         if ($('.image-popup').length) {
             $('.image-popup').magnificPopup({
                 type: 'image',

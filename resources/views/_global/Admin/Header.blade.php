@@ -56,6 +56,70 @@
                     </li>
 
                     <li class="nav-item dropdown">
+                        <a href="#"
+                            class="nav-link header-notification-link"
+                            data-toggle="dropdown"
+                            data-placement="bottom"
+                            data-trigger="hover"
+                            data-toggle-tooltip="tooltip"
+                            title="Notifications"
+                            aria-haspopup="true"
+                            aria-expanded="false">
+                            <i data-feather="bell"></i>
+                            @if(($headerUnreadNotificationsCount ?? 0) > 0)
+                                <span class="badge badge-danger">{{ $headerUnreadNotificationsCount > 99 ? '99+' : $headerUnreadNotificationsCount }}</span>
+                            @endif
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right notification-dropdown">
+                            <div class="notification-dropdown-header d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h6 class="mb-0">Notifications</h6>
+                                    <small class="text-muted">Latest 5 updates for you</small>
+                                </div>
+                                @if(($headerUnreadNotificationsCount ?? 0) > 0)
+                                    <span class="badge badge-primary badge-pill px-3 py-2">{{ $headerUnreadNotificationsCount }} unread</span>
+                                @endif
+                            </div>
+
+                            <div class="notification-dropdown-list">
+                                @forelse($headerNotifications ?? [] as $notification)
+                                    <a href="{{ route('admin.notifications.show', $notification->id) }}"
+                                        class="notification-dropdown-item {{ is_null($notification->read_at) ? 'is-unread' : '' }}">
+                                        <span class="notification-dropdown-item-icon">
+                                            <i data-feather="bell"></i>
+                                        </span>
+                                        <span class="flex-grow-1">
+                                            <span class="d-block font-weight-semibold text-dark">
+                                                {{ $notification->data['title'] ?? 'Notification' }}
+                                            </span>
+                                            <span class="d-block text-muted small">
+                                                {{ $notification->data['message'] ?? 'You have a new notification.' }}
+                                            </span>
+                                            <span class="d-block text-muted small mt-1">
+                                                {{ optional($notification->created_at)->diffForHumans() }}
+                                            </span>
+                                        </span>
+                                    </a>
+                                @empty
+                                    <div class="notification-dropdown-empty">
+                                        <div class="mb-2">
+                                            <i data-feather="bell-off"></i>
+                                        </div>
+                                        <div class="font-weight-semibold text-dark">No new notifications</div>
+                                        <small>Assigned leads and accounts will appear here.</small>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            <div class="notification-dropdown-footer">
+                                <a href="{{ route('admin.notifications.index') }}" class="btn btn-primary btn-block">
+                                    View All
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+
+                    <li class="nav-item dropdown">
                         <a href="#" class="nav-link dropdown-toggle user_manu" title="User menu" data-toggle="dropdown">
                             <figure class="avatar avatar-sm">
                                 <img src="{{ asset('assets/img/user.png') }}" class="rounded-circle" alt="avatar" />

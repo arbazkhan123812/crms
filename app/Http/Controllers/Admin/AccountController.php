@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Account;
 use App\Models\User;
+use App\Notifications\RecordAssignedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -74,7 +75,8 @@ class AccountController extends Controller
             $data = $request->all();
             $data['created_by'] = auth()->id();
             
-            Account::create($data);
+            $account = Account::create($data);
+            $this->notifyAssignedAccountOwner($account->fresh('accountOwner'));
             
             return response()->json([
                 'success' => true,
@@ -91,6 +93,7 @@ class AccountController extends Controller
     public function update(Request $request, $id)
     {
         $account = Account::findOrFail($id);
+        $previousOwnerId = $account->account_owner;
         
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
@@ -110,6 +113,7 @@ class AccountController extends Controller
 
         try {
             $account->update($request->all());
+            $this->notifyAssignedAccountOwner($account->fresh('accountOwner'), $previousOwnerId);
             
             return response()->json([
                 'success' => true,
@@ -164,5 +168,27 @@ class AccountController extends Controller
                 'message' => 'Account not found!'
             ]);
         }
+    }
+
+    protected function notifyAssignedAccountOwner(Account $account, ?int $previousOwnerId = null): void
+    {
+        if (!$account->account_owner || $account->account_owner === auth()->id() || $account->account_owner === $previousOwnerId) {
+            return;
+        }
+
+        $assignedUser = User::find($account->account_owner);
+
+        if (!$assignedUser) {
+            return;
+        }
+
+        $assignedUser->notify(new RecordAssignedNotification(
+            'Account',
+            $account->id,
+            'Account Assigned',
+            'A new Account has been assigned to you: ' . ($account->name ?: 'Account #' . $account->id),
+            route('admin.account.show', $account->id),
+            auth()->id()
+        ));
     }
 }

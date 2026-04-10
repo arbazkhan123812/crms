@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\LeadController;
+use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
@@ -101,6 +102,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::post('/leads/add-task', [LeadController::class, 'addTask'])->name('lead.addTask');
     Route::post('/email/send', [EmailController::class, 'sendEmail'])->name('email.send');
     Route::get('/emails/{entityType}/{entityId}', [EmailController::class, 'getEmails'])->name('emails.get');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/{id}', [NotificationController::class, 'show'])->name('notifications.show');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 });
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
