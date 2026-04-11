@@ -35,10 +35,10 @@
                 <div class="col-lg-4 text-lg-right mt-3 mt-lg-0">
                     <a href="{{ route('admin.leads.index') }}" class="btn btn-primary mr-2"><i
                             class="fas fa-arrow-left mr-1"></i>Back</a>
-                    @if($canSendEmails)
+                    @can('leads_email')
                         <button type="button" class="btn btn-primary" onclick="openComposeEmailModal()"><i
                                 class="fas fa-paper-plane mr-1"></i>Compose Email</button>
-                    @endif
+                    @endcan
                 </div>
             </div>
         </div>

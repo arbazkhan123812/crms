@@ -10,7 +10,7 @@ class LeadMeeting extends Model
     protected $table = 'lead_meetings';
     
     protected $fillable = [
-        'lead_id', 'title', 'description', 'meeting_type', 'location', 
+        'lead_id', 'title', 'description',  'location', 
         'meeting_link', 'meeting_date', 'duration', 'status', 'notes', 
         'assigned_to', 'created_by'
     ];

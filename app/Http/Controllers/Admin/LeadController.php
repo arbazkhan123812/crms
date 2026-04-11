@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Notifications\RecordAssignedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 
@@ -602,11 +603,11 @@ class LeadController extends Controller
             );
 
             $details = [
-                'subject'   => $request->subject, // User input se subject
-                'body'      => $request->body,    // User input se body (matter)
+                'subject'   => $request->subject, 
+                'body'      => $request->body,    
                 'lead_name' => $lead->first_name . ' ' . $lead->last_name,
             ];
-            Mail::to($request->to_email)->send(new LeadNotification($details));
+            Mail::to($request->to_email)->queue(new LeadNotification($details));
 
 
             return response()->json([
