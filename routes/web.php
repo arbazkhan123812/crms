@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DealController;
 use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\EntityActivityController;
 use App\Http\Controllers\Admin\LeadController;
@@ -42,6 +43,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
     Route::get('/leads', [LeadController::class, 'index'])->name('leads.index');
     Route::get('/leads/{id}/profile', [LeadController::class, 'show'])->name('lead.show');
+
+    Route::get('/deals', [DealController::class, 'index'])->name('deals.index');
+    Route::get('/deals/create', [DealController::class, 'create'])->name('deals.create');
+    Route::post('/deals', [DealController::class, 'store'])->name('deals.store');
+    Route::put('/deals/{id}/stage', [DealController::class, 'updateStage'])->name('deals.updateStage');
 
     Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
     Route::get('/accounts/{id}', [AccountController::class, 'show'])->name('account.show');

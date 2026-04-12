@@ -165,7 +165,7 @@
                         <li class="nav-item"><a class="nav-link {{ $defaultTab === 'activities-pane' ? 'active' : '' }}"
                                 data-toggle="pill" href="#activities-pane">Activities</a></li>
                     @endcan
-                    @can('leads_tasks')
+                    @can('leads_task')
                         <li class="nav-item"><a class="nav-link {{ $defaultTab === 'tasks-pane' ? 'active' : '' }}"
                                 data-toggle="pill" href="#tasks-pane">Tasks</a></li>
                     @endcan
@@ -258,7 +258,7 @@
                             </div>
                         </div>
                     @endcan
-                    @can('leads_tasks')
+                    @can('leads_task')
                         <div class="tab-pane fade {{ $defaultTab === 'tasks-pane' ? 'show active' : '' }}" id="tasks-pane">
                             <div class="section-toolbar mb-3">
                                 <h5 class="section-title mb-0">Tasks</h5>

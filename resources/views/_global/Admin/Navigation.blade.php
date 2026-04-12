@@ -67,7 +67,7 @@
                     </ul>
                 </li>
             @endcan
-            @can('leads_view')
+            @auth
 
                     <ul>
                         @can('leads_view')
@@ -93,6 +93,15 @@
                                 </a>
                             </li>
                         @endcan
+                        <li>
+                            <a href="{{ url('admin/deals') }}"
+                                class="{{ request()->is('admin/deals*') ? 'active' : '' }}">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-handshake"></i>
+                                </span>
+                                <span>Deals</span>
+                            </a>
+                        </li>
                         @can('contacts_view')
                             <li>
                                 <a href="{{ url('admin/contacts') }}"
@@ -109,7 +118,7 @@
                      
                     </ul>
                 
-            @endcan
+            @endauth
 
 
 
