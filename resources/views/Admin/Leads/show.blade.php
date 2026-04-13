@@ -156,39 +156,35 @@
 
         <div class="card detail-tabs-card">
             <div class="card-body">
-                <ul class="nav nav-pills lead-detail-tabs mb-4">
+                <div class="lead-section-nav mb-4">
                     @can('leads_notes')
-                        <li class="nav-item"><a class="nav-link {{ $defaultTab === 'notes-pane' ? 'active' : '' }}"
-                                data-toggle="pill" href="#notes-pane">Notes</a></li>
+                        <a class="lead-section-link" href="#notes-section">Notes</a>
                     @endcan
                     @can('leads_activities')
-                        <li class="nav-item"><a class="nav-link {{ $defaultTab === 'activities-pane' ? 'active' : '' }}"
-                                data-toggle="pill" href="#activities-pane">Activities</a></li>
+                        <a class="lead-section-link" href="#activities-section">Activities</a>
                     @endcan
                     @can('leads_task')
-                        <li class="nav-item"><a class="nav-link {{ $defaultTab === 'tasks-pane' ? 'active' : '' }}"
-                                data-toggle="pill" href="#tasks-pane">Tasks</a></li>
+                        <a class="lead-section-link" href="#tasks-section">Tasks</a>
                     @endcan
-
-
                     @can('leads_call')
-                        <li class="nav-item"><a class="nav-link {{ $defaultTab === 'calls-pane' ? 'active' : '' }}"
-                                data-toggle="pill" href="#calls-pane">Calls</a></li>
+                        <a class="lead-section-link" href="#calls-section">Calls</a>
                     @endcan
                     @can('leads_meeting')
-                        <li class="nav-item"><a class="nav-link {{ $defaultTab === 'meetings-pane' ? 'active' : '' }}"
-                                data-toggle="pill" href="#meetings-pane">Meetings</a></li>
+                        <a class="lead-section-link" href="#meetings-section">Meetings</a>
                     @endcan
                     @can('leads_email')
-                        <li class="nav-item"><a class="nav-link {{ $defaultTab === 'emails-pane' ? 'active' : '' }}"
-                                data-toggle="pill" href="#emails-pane">Emails</a></li>
+                        <a class="lead-section-link" href="#emails-section">Emails</a>
                     @endcan
-                </ul>
-                <div class="tab-content">
+                </div>
+
+                <div class="lead-section-stack">
                     @can('leads_notes')
-                        <div class="tab-pane fade {{ $defaultTab === 'notes-pane' ? 'show active' : '' }}" id="notes-pane">
+                        <section class="lead-detail-section" id="notes-section">
                             <div class="section-toolbar mb-3">
-                                <h5 class="section-title mb-0">Notes</h5>
+                                <div>
+                                    <div class="section-kicker">Lead Profile</div>
+                                    <h5 class="section-title mb-0">Notes</h5>
+                                </div>
                                 @can('leads_addnotes')
                                     <button class="btn btn-sm btn-primary" type="button" onclick="openNoteModal()">Add Note</button>
                                 @endcan
@@ -228,40 +224,55 @@
                             @empty
                                 <div class="empty-state">No notes available.</div>
                             @endforelse
-                        </div>
+                        </section>
                     @endcan
 
                     @can('leads_activities')
-                        <div class="tab-pane fade {{ $defaultTab === 'activities-pane' ? 'show active' : '' }}"
-                            id="activities-pane">
-                            <div class="row">
-                                <div class="col-lg-6 mb-4">
-                                    <h5 class="section-title">Open Activities</h5>@forelse($pendingActivities as $activity)<div
-                                        class="timeline-card">
-                                        <h6 class="mb-1">{{ $activity->subject }}</h6>
-                                        <div class="text-muted small mb-2">{{ ucfirst($activity->type) }}</div>
-                                        <p class="mb-1">{{ $activity->description ?: 'No description' }}</p><small
-                                            class="text-muted">Due
-                                            {{ optional($activity->due_date)->format('d M Y, h:i A') ?: '-' }}</small>
-                                    </div>@empty<div class="empty-state">No open activities.</div>@endforelse
-                                </div>
-                                <div class="col-lg-6 mb-4">
-                                    <h5 class="section-title">Completed Activities</h5>
-                                    @forelse($completedActivities as $activity)<div class="timeline-card">
-                                        <h6 class="mb-1">{{ $activity->subject }}</h6>
-                                        <div class="text-muted small mb-2">{{ ucfirst($activity->type) }}</div>
-                                        <p class="mb-1">{{ $activity->description ?: 'No description' }}</p><small
-                                            class="text-muted">Completed
-                                            {{ optional($activity->completed_at)->format('d M Y, h:i A') ?: optional($activity->created_at)->format('d M Y, h:i A') }}</small>
-                                    </div>@empty<div class="empty-state">No completed activities.</div>@endforelse
+                        <section class="lead-detail-section" id="activities-section">
+                            <div class="section-toolbar mb-3">
+                                <div>
+                                    <div class="section-kicker">Timeline</div>
+                                    <h5 class="section-title mb-0">Activities</h5>
                                 </div>
                             </div>
-                        </div>
+                            <div class="row">
+                                <div class="col-lg-6 mb-4 mb-lg-0">
+                                    <h6 class="subsection-title">Open Activities</h6>
+                                    @forelse($pendingActivities as $activity)
+                                        <div class="timeline-card">
+                                            <h6 class="mb-1">{{ $activity->subject }}</h6>
+                                            <div class="text-muted small mb-2">{{ ucfirst($activity->type) }}</div>
+                                            <p class="mb-1">{{ $activity->description ?: 'No description' }}</p>
+                                            <small class="text-muted">Due {{ optional($activity->due_date)->format('d M Y, h:i A') ?: '-' }}</small>
+                                        </div>
+                                    @empty
+                                        <div class="empty-state">No open activities.</div>
+                                    @endforelse
+                                </div>
+                                <div class="col-lg-6">
+                                    <h6 class="subsection-title">Completed Activities</h6>
+                                    @forelse($completedActivities as $activity)
+                                        <div class="timeline-card">
+                                            <h6 class="mb-1">{{ $activity->subject }}</h6>
+                                            <div class="text-muted small mb-2">{{ ucfirst($activity->type) }}</div>
+                                            <p class="mb-1">{{ $activity->description ?: 'No description' }}</p>
+                                            <small class="text-muted">Completed {{ optional($activity->completed_at)->format('d M Y, h:i A') ?: optional($activity->created_at)->format('d M Y, h:i A') }}</small>
+                                        </div>
+                                    @empty
+                                        <div class="empty-state">No completed activities.</div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </section>
                     @endcan
+
                     @can('leads_task')
-                        <div class="tab-pane fade {{ $defaultTab === 'tasks-pane' ? 'show active' : '' }}" id="tasks-pane">
+                        <section class="lead-detail-section" id="tasks-section">
                             <div class="section-toolbar mb-3">
-                                <h5 class="section-title mb-0">Tasks</h5>
+                                <div>
+                                    <div class="section-kicker">Execution</div>
+                                    <h5 class="section-title mb-0">Tasks</h5>
+                                </div>
                                 @can('leads_addtasks')
                                     <button class="btn btn-sm btn-primary" type="button" onclick="openTaskModal()">Add Task</button>
                                 @endcan
@@ -316,15 +327,21 @@
                             @empty
                                 <div class="empty-state">No tasks created for this lead.</div>
                             @endforelse
-                        </div>
+                        </section>
                     @endcan
 
                     @can('leads_call')
-                        <div class="tab-pane fade {{ $defaultTab === 'calls-pane' ? 'show active' : '' }}" id="calls-pane">
+                        <section class="lead-detail-section" id="calls-section">
+                            <div class="section-toolbar mb-4">
+                                <div>
+                                    <div class="section-kicker">Communication</div>
+                                    <h5 class="section-title mb-0">Calls</h5>
+                                </div>
+                            </div>
                             <div class="row">
                                 <div class="col-lg-6 mb-4">
                                     <div class="section-toolbar mb-3">
-                                        <h5 class="section-title mb-0">Scheduled Calls</h5>
+                                        <h6 class="subsection-title mb-0">Scheduled Calls</h6>
                                         @can('leads_createcall')
                                             <button class="btn btn-sm btn-primary" type="button"
                                                 onclick="openCallModal('scheduled')">Create Call</button>
@@ -422,16 +439,22 @@
                                     @endforelse
                                 </div>
                             </div>
-                        </div>
+                        </section>
                     @endcan
 
 
-                    <div class="tab-pane fade {{ $defaultTab === 'meetings-pane' ? 'show active' : '' }}"
-                        id="meetings-pane">
+                    @can('leads_meeting')
+                    <section class="lead-detail-section" id="meetings-section">
+                        <div class="section-toolbar mb-4">
+                            <div>
+                                <div class="section-kicker">Coordination</div>
+                                <h5 class="section-title mb-0">Meetings</h5>
+                            </div>
+                        </div>
                         <div class="row">
                             <div class="col-lg-6 mb-4">
                                 <div class="section-toolbar mb-3">
-                                    <h5 class="section-title mb-0">Scheduled Meetings</h5>
+                                    <h6 class="subsection-title mb-0">Scheduled Meetings</h6>
                                     @can('leads_schedulemeeting')
                                         <button class="btn btn-sm btn-primary" type="button"
                                             onclick="openMeetingModal()">Schedule
@@ -486,7 +509,7 @@
                                 @endif
                             </div>
                             <div class="col-lg-6 mb-4">
-                                <h5 class="section-title">Closed Meetings</h5>
+                                <h6 class="subsection-title">Closed Meetings</h6>
                                 @if(auth()->user()->can('leads_viewpastmeeting'))
                                     @forelse($completedMeetings as $meeting)
                                         <div class="timeline-card editable-record" data-kind="meeting" data-id="{{ $meeting->id }}"
@@ -532,13 +555,16 @@
                                 @endif
                             </div>
                         </div>
-                    </div>
+                    </section>
+                    @endcan
 
-
-
-                    <div class="tab-pane fade {{ $defaultTab === 'emails-pane' ? 'show active' : '' }}" id="emails-pane">
+                    @can('leads_email')
+                    <section class="lead-detail-section" id="emails-section">
                         <div class="section-toolbar mb-3">
-                            <h5 class="section-title mb-0">Emails</h5>
+                            <div>
+                                <div class="section-kicker">Messages</div>
+                                <h5 class="section-title mb-0">Emails</h5>
+                            </div>
                             @can('leads_sendemail')
                                 <button class="btn btn-primary" type="button" onclick="openComposeEmailModal()">Compose
                                     Email</button>
@@ -561,8 +587,8 @@
                                 </div>
                             @endforeach
                         @endif
-                    </div>
-
+                    </section>
+                    @endcan
                 </div>
             </div>
         </div>
@@ -863,18 +889,69 @@
             margin-bottom: .3rem
         }
 
-        .lead-detail-tabs .nav-link {
-            border-radius: 999px;
-            color: #475569;
-            font-weight: 500;
-            margin-right: .5rem;
-            padding: .55rem 1rem;
-            background: #f8fafc
+        .lead-section-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .75rem;
+            position: sticky;
+            top: 1rem;
+            z-index: 5;
+            padding: 1rem;
+            margin: -0.5rem -0.5rem 2rem;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            border: 1px solid #eef2f7;
+            border-radius: 16px
         }
 
-        .lead-detail-tabs .nav-link.active {
-            background: #35394F;
-            color: #fff
+        .lead-section-link {
+            display: inline-flex;
+            align-items: center;
+            border-radius: 999px;
+            color: #475569;
+            font-weight: 600;
+            padding: .6rem 1rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            text-decoration: none;
+            transition: all .2s ease
+        }
+
+        .lead-section-link:hover {
+            color: #1e293b;
+            background: #fff;
+            border-color: #cbd5e1;
+            text-decoration: none
+        }
+
+        .lead-section-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem
+        }
+
+        .lead-detail-section {
+            scroll-margin-top: 6rem;
+            background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
+            border: 1px solid #edf2f7;
+            border-radius: 18px;
+            padding: 1.5rem
+        }
+
+        .section-kicker {
+            font-size: .72rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: .2rem
+        }
+
+        .subsection-title {
+            font-size: .95rem;
+            font-weight: 700;
+            color: #334155;
+            margin-bottom: 1rem
         }
 
         .section-toolbar {
@@ -915,6 +992,18 @@
             text-align: center;
             color: #64748b;
             background: #f8fafc
+        }
+
+        @media (max-width: 991.98px) {
+            .lead-section-nav {
+                position: static;
+                margin: 0 0 1.5rem;
+                padding: .85rem
+            }
+
+            .lead-detail-section {
+                padding: 1.1rem
+            }
         }
     </style>
     <script>
