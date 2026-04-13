@@ -113,6 +113,24 @@
                                 </a>
                             </li>
                         @endcan
+                        <li>
+                            <a href="{{ route('admin.tasks.index') }}"
+                                class="{{ request()->is('admin/tasks*') ? 'active' : '' }}">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-tasks"></i>
+                                </span>
+                                <span>Tasks</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{{ route('admin.calls.index') }}"
+                                class="{{ request()->is('admin/calls*') ? 'active' : '' }}">
+                                <span class="nav-link-icon">
+                                    <i class="fas fa-phone-alt"></i>
+                                </span>
+                                <span>Calls</span>
+                            </a>
+                        </li>
 
 
                      

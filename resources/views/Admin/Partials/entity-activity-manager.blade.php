@@ -64,7 +64,10 @@
                                 <small class="text-muted">Due {{ optional($task->due_date)->format('d M Y, h:i A') ?: '-' }}</small>
                             </div>
                             <div class="text-right">
-                                <span class="badge badge-{{ $task->status === 'completed' ? 'success' : 'warning' }} d-block mb-2">{{ ucfirst($task->status) }}</span>
+                                @php
+                                    $taskBadgeClass = $task->status === 'completed' ? 'success' : ($task->status === 'in_progress' ? 'primary' : 'warning');
+                                @endphp
+                                <span class="badge badge-{{ $taskBadgeClass }} d-block mb-2">{{ ucfirst(str_replace('_', ' ', $task->status)) }}</span>
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-light" type="button" onclick="editEntityTask({{ $task->id }}, @js($task->subject), @js($task->description), '{{ $task->assigned_to }}', '{{ optional($task->due_date)->format('Y-m-d\\TH:i') }}', '{{ $task->status }}')">
                                         <i class="fas fa-edit"></i>
@@ -212,8 +215,10 @@
                     <div class="form-group"><label>Due Date</label><input type="datetime-local" class="form-control" id="entity_task_due_date"></div>
                     <div class="form-group mb-0"><label>Status</label>
                         <select class="form-control" id="entity_task_status">
-                            <option value="pending">Pending</option>
+                            <option value="deferred">Deferred</option>
+                            <option value="in_progress">In Progress</option>
                             <option value="completed">Completed</option>
+                            <option value="pending">Pending (Legacy)</option>
                         </select>
                     </div>
                 </div>
@@ -407,7 +412,7 @@
         $('#entity_task_description').val('');
         $('#entity_task_assigned_to').val('');
         $('#entity_task_due_date').val('');
-        $('#entity_task_status').val('pending');
+        $('#entity_task_status').val('deferred');
         $('#entityTaskModal').modal('show');
     }
 
@@ -418,7 +423,7 @@
         $('#entity_task_description').val(description || '');
         $('#entity_task_assigned_to').val(assignedTo || '');
         $('#entity_task_due_date').val(dueDate || '');
-        $('#entity_task_status').val(status || 'pending');
+        $('#entity_task_status').val(status || 'deferred');
         $('#entityTaskModal').modal('show');
     }
 

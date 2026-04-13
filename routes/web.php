@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\CallController;
 use App\Http\Controllers\Admin\ContactController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DealController;
@@ -10,6 +11,7 @@ use App\Http\Controllers\Admin\LeadController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\TaskController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -48,6 +50,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/deals/create', [DealController::class, 'create'])->name('deals.create');
     Route::post('/deals', [DealController::class, 'store'])->name('deals.store');
     Route::put('/deals/{id}/stage', [DealController::class, 'updateStage'])->name('deals.updateStage');
+
+    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+    Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::put('/crm-tasks/{task}/status', [TaskController::class, 'updateStatus'])->name('tasks.updateStatus');
+    Route::get('/calls', [CallController::class, 'index'])->name('calls.index');
+    Route::get('/calls/create', [CallController::class, 'create'])->name('calls.create');
+    Route::post('/calls', [CallController::class, 'store'])->name('calls.store');
 
     Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
     Route::get('/accounts/{id}', [AccountController::class, 'show'])->name('account.show');

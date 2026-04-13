@@ -93,11 +93,13 @@ class Contact extends Model
     {
         return $this->tasks()->create([
             'entity_type' => 'contact',
+            'account_id' => $this->account_id,
             'subject' => $subject,
             'description' => $description,
             'assigned_to' => $assignedTo,
             'due_date' => $dueDate,
-            'status' => 'pending',
+            'status' => CrmTask::STATUS_DEFERRED,
+            'priority' => CrmTask::PRIORITY_NORMAL,
             'created_by' => auth()->id(),
         ]);
     }

@@ -9,6 +9,9 @@ use App\Models\CrmCall;
 use App\Models\CrmMeeting;
 use App\Models\CrmNote;
 use App\Models\CrmTask;
+use App\Models\Lead;
+use App\Models\User;
+use App\Notifications\RecordAssignedNotification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -20,6 +23,7 @@ class EntityActivityController extends Controller
         return match ($entityType) {
             'account' => Account::findOrFail($entityId),
             'contact' => Contact::findOrFail($entityId),
+            'lead' => Lead::findOrFail($entityId),
             default => abort(404),
         };
     }
@@ -104,7 +108,7 @@ class EntityActivityController extends Controller
                     'status' => $task->status,
                     'assigned_to' => $task->assigned_to,
                     'assigned_to_name' => optional($task->assignedTo)->username ?? optional($task->assignedTo)->name ?? '-',
-                ];
+                ];                                
             });
 
         return response()->json(['success' => true, 'data' => $tasks]);
@@ -112,7 +116,7 @@ class EntityActivityController extends Controller
 
     public function addTask(Request $request, string $entityType, int $entityId)
     {
-        $validator = Validator::make($request->all(), [
+        $validator = Validator::make($request->all(), [     
             'subject' => 'required|string|min:3|max:255',
             'description' => 'nullable|string',
             'assigned_to' => 'required|exists:users,id',
@@ -130,6 +134,8 @@ class EntityActivityController extends Controller
             $request->assigned_to,
             $request->due_date
         );
+
+        $this->notifyAssignedTaskOwner($task);
 
         return response()->json(['success' => true, 'message' => 'Task created successfully!', 'data' => $task]);
     }
@@ -149,6 +155,7 @@ class EntityActivityController extends Controller
         }
 
         $task = CrmTask::findOrFail($id);
+        $previousAssignedTo = $task->assigned_to;
         $task->update([
             'subject' => $request->subject,
             'description' => $request->description,
@@ -157,6 +164,8 @@ class EntityActivityController extends Controller
             'status' => $request->status,
             'completed_at' => $request->status === 'completed' ? now() : null,
         ]);
+
+        $this->notifyAssignedTaskOwner($task->fresh(), $previousAssignedTo);
 
         return response()->json(['success' => true, 'message' => 'Task updated successfully!', 'data' => $task]);
     }
@@ -354,5 +363,37 @@ class EntityActivityController extends Controller
         CrmMeeting::findOrFail($id)->delete();
 
         return response()->json(['success' => true, 'message' => 'Meeting deleted successfully!']);
+    }
+
+    protected function notifyAssignedTaskOwner(CrmTask $task, ?int $previousAssignedTo = null): void
+    {
+        if (!$task->assigned_to || $task->assigned_to === auth()->id() || $task->assigned_to === $previousAssignedTo) {
+            return;
+        }
+
+        $assignedUser = User::find($task->assigned_to);
+
+        if (!$assignedUser) {
+            return;
+        }
+
+        $assignedUser->notify(new RecordAssignedNotification(
+            'Task',
+            $task->id,
+            'Task Assigned',
+            'A task has been assigned to you: ' . ($task->subject ?: 'Task #' . $task->id),
+            $this->taskUrl($task),
+            auth()->id()
+        ));
+    }
+
+    protected function taskUrl(CrmTask $task): string
+    {
+        return match ($task->entity_type) {
+            'lead' => route('admin.lead.show', $task->entity_id),
+            'contact' => route('admin.contact.show', $task->entity_id),
+            'account' => route('admin.account.show', $task->entity_id),
+            default => route('admin.tasks.index'),
+        };
     }
 }
