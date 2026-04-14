@@ -10,17 +10,19 @@
                 </h3>
                 <p class="text-muted mb-0">See scheduled and logged calls together across leads, contacts, and accounts.</p>
             </div>
-            <div class="col-lg-4 col-md-5 text-md-right mt-3 mt-md-0">
-                <div class="btn-group">
-                    <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-                        <i class="fas fa-plus-circle mr-1"></i> Create Call
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-right">
-                        <a class="dropdown-item" href="{{ route('admin.calls.create', ['mode' => 'schedule']) }}">Schedule Call</a>
-                        <a class="dropdown-item" href="{{ route('admin.calls.create', ['mode' => 'log']) }}">Log Call</a>
+            @can('calls_create')
+                <div class="col-lg-4 col-md-5 text-md-right mt-3 mt-md-0">
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-plus-circle mr-1"></i> Create Call
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right">
+                            <a class="dropdown-item" href="{{ route('admin.calls.create', ['mode' => 'schedule']) }}">Schedule Call</a>
+                            <a class="dropdown-item" href="{{ route('admin.calls.create', ['mode' => 'log']) }}">Log Call</a>
+                        </div>
                     </div>
                 </div>
-            </div>
+            @endcan
         </div>
     </div>
 
@@ -71,6 +73,7 @@
                             <th>Start Time</th>
                             <th>Duration</th>
                             <th>Outgoing Status</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,10 +102,28 @@
                                 <td>{{ optional($call['start_time'])->format('d M Y, h:i A') ?: '-' }}</td>
                                 <td>{{ $call['duration'] }}</td>
                                 <td>{{ $call['outgoing_call_status'] }}</td>
+                                <td class="text-right">
+                                    <div class="btn-group btn-group-sm">
+                                        @can('calls_edit')
+                                            <a href="{{ route('admin.calls.edit', ['source' => $call['source_key'], 'id' => $call['id']]) }}" class="btn btn-light">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endcan
+                                        @can('calls_delete')
+                                            <form method="POST" action="{{ route('admin.calls.destroy', ['source' => $call['source_key'], 'id' => $call['id']]) }}" onsubmit="return confirm('Delete this call?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-light text-danger">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        @endcan
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="10" class="text-center py-5">
+                                <td colspan="11" class="text-center py-5">
                                     <div class="call-empty-state">No calls found yet.</div>
                                 </td>
                             </tr>

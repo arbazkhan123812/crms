@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
        $this->call(PermissionSeeder::class);
+       $this->call(CrmActivityPermissionSeeder::class);
 
         // Step 2: Roles & Assign Permissions
         $this->call(RoleSeeder::class);

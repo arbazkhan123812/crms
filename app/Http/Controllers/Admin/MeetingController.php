@@ -17,6 +17,14 @@ use Illuminate\Validation\Rule;
 
 class MeetingController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('permission:meetings_view')->only(['index']);
+        $this->middleware('permission:meetings_create')->only(['create', 'store']);
+        $this->middleware('permission:meetings_edit')->only(['edit', 'update']);
+        $this->middleware('permission:meetings_delete')->only(['destroy']);
+    }
+
     public function index()
     {
         $meetings = $this->baseMeetingQuery()->with(['assignedTo', 'createdBy'])->latest('starts_at')->get();

@@ -1,12 +1,18 @@
 @extends('layout.admin')
 
 @section('content')
+@php
+    $callEntityType = old('entity_type', isset($call) ? ($source === 'lead' ? 'lead' : $call->entity_type) : request('entity_type'));
+    $callEntityId = old('entity_id', isset($call) ? ($source === 'lead' ? $call->lead_id : $call->entity_id) : request('entity_id'));
+    $callRelatedType = old('related_to_type', $call->related_to_type ?? request('related_to_type'));
+    $callRelatedId = old('related_to_id', $call->related_to_id ?? request('related_to_id'));
+@endphp
 <div class="content call-create-page">
     <div class="page-header mb-4">
         <div class="row align-items-center">
             <div class="col-lg-8">
                 <h3 class="page-title text-dark mb-2">
-                    <i class="fas fa-phone-volume text-primary mr-2"></i>{{ $mode === 'schedule' ? 'Schedule Call' : 'Log Call' }}
+                    <i class="fas fa-phone-volume text-primary mr-2"></i>{{ isset($call) ? 'Edit Call' : ($mode === 'schedule' ? 'Schedule Call' : 'Log Call') }}
                 </h3>
                 <p class="text-muted mb-0">Choose the owner, connect the call with the right CRM record, and save it in the central calls list.</p>
             </div>
@@ -26,14 +32,19 @@
 
     <div class="card call-form-card">
         <div class="card-body p-4 p-lg-5">
-            <form method="POST" action="{{ route('admin.calls.store') }}">
+            <form method="POST" action="{{ isset($call) ? route('admin.calls.update', ['source' => $source, 'id' => $call->id]) : route('admin.calls.store') }}">
                 @csrf
+                @if(isset($call))
+                    @method('PUT')
+                @endif
                 <input type="hidden" name="mode" id="mode" value="{{ old('mode', $mode) }}">
 
-                <div class="call-mode-switch mb-4">
-                    <a href="{{ route('admin.calls.create', ['mode' => 'schedule']) }}" class="btn {{ old('mode', $mode) === 'schedule' ? 'btn-primary' : 'btn-light border' }}">Schedule Call</a>
-                    <a href="{{ route('admin.calls.create', ['mode' => 'log']) }}" class="btn {{ old('mode', $mode) === 'log' ? 'btn-primary' : 'btn-light border' }}">Log Call</a>
-                </div>
+                @can('calls_create')
+                    <div class="call-mode-switch mb-4">
+                        <a href="{{ route('admin.calls.create', ['mode' => 'schedule']) }}" class="btn {{ old('mode', $mode) === 'schedule' ? 'btn-primary' : 'btn-light border' }}">Schedule Call</a>
+                        <a href="{{ route('admin.calls.create', ['mode' => 'log']) }}" class="btn {{ old('mode', $mode) === 'log' ? 'btn-primary' : 'btn-light border' }}">Log Call</a>
+                    </div>
+                @endcan
 
                 <div class="row">
                     <div class="col-lg-6">
@@ -42,7 +53,7 @@
                             <select name="call_owner" id="call_owner" class="form-control" required>
                                 <option value="">Select Call Owner</option>
                                 @foreach($users as $user)
-                                    <option value="{{ $user->id }}" @selected(old('call_owner', auth()->id()) == $user->id)>
+                                    <option value="{{ $user->id }}" @selected(old('call_owner', $call->call_owner ?? auth()->id()) == $user->id)>
                                         {{ $user->full_name ?: $user->username ?: $user->name }}
                                     </option>
                                 @endforeach
@@ -53,10 +64,10 @@
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label for="entity_type">Call For</label>
-                            <select name="entity_type" id="entity_type" class="form-control" required data-selected="{{ old('entity_type', request('entity_type')) }}">
+                            <select name="entity_type" id="entity_type" class="form-control" required data-selected="{{ $callEntityType }}">
                                 <option value="">Select Type</option>
                                 @foreach($entityTypeOptions as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('entity_type', request('entity_type')) === $value)>{{ $label }}</option>
+                                    <option value="{{ $value }}" @selected($callEntityType === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -65,7 +76,7 @@
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label for="entity_id">Record</label>
-                            <select name="entity_id" id="entity_id" class="form-control" required data-selected="{{ old('entity_id', request('entity_id')) }}">
+                            <select name="entity_id" id="entity_id" class="form-control" required data-selected="{{ $callEntityId }}">
                                 <option value="">Select Record</option>
                             </select>
                         </div>
@@ -74,10 +85,10 @@
                     <div class="col-lg-6 related-group" style="display:none;">
                         <div class="form-group">
                             <label for="related_to_type">Related To</label>
-                            <select name="related_to_type" id="related_to_type" class="form-control" data-selected="{{ old('related_to_type', request('related_to_type')) }}">
+                            <select name="related_to_type" id="related_to_type" class="form-control" data-selected="{{ $callRelatedType }}">
                                 <option value="">Select Related Type</option>
                                 @foreach($entityTypeOptions as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('related_to_type', request('related_to_type')) === $value)>{{ $label }}</option>
+                                    <option value="{{ $value }}" @selected($callRelatedType === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -86,7 +97,7 @@
                     <div class="col-lg-6 related-group" style="display:none;">
                         <div class="form-group">
                             <label for="related_to_id">Related Record</label>
-                            <select name="related_to_id" id="related_to_id" class="form-control" data-selected="{{ old('related_to_id', request('related_to_id')) }}">
+                            <select name="related_to_id" id="related_to_id" class="form-control" data-selected="{{ $callRelatedId }}">
                                 <option value="">Select Related Record</option>
                             </select>
                         </div>
@@ -98,7 +109,7 @@
                             <select name="call_type" id="call_type" class="form-control" required>
                                 <option value="">Select Call Type</option>
                                 @foreach($callTypeOptions as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('call_type', 'outbound') === $value)>{{ $label }}</option>
+                                    <option value="{{ $value }}" @selected(old('call_type', $call->call_type ?? 'outbound') === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -110,7 +121,7 @@
                             <select name="outgoing_call_status" id="outgoing_call_status" class="form-control">
                                 <option value="">Select Outgoing Status</option>
                                 @foreach($outgoingCallStatusOptions as $value => $label)
-                                    <option value="{{ $value }}" @selected(old('outgoing_call_status') === $value)>{{ $label }}</option>
+                                    <option value="{{ $value }}" @selected(old('outgoing_call_status', $call->outgoing_call_status ?? '') === $value)>{{ $label }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -119,28 +130,28 @@
                     <div class="col-lg-6">
                         <div class="form-group">
                             <label for="start_time">Call Start Time</label>
-                            <input type="datetime-local" name="start_time" id="start_time" class="form-control" value="{{ old('start_time') }}" required>
+                            <input type="datetime-local" name="start_time" id="start_time" class="form-control" value="{{ old('start_time', optional($call->start_time ?? $call->call_date ?? null)->format('Y-m-d\TH:i')) }}" required>
                         </div>
                     </div>
 
                     <div class="col-lg-6 schedule-outbound-group" style="display:none;">
                         <div class="form-group">
                             <label for="end_time">Call End Time</label>
-                            <input type="datetime-local" name="end_time" id="end_time" class="form-control" value="{{ old('end_time') }}">
+                            <input type="datetime-local" name="end_time" id="end_time" class="form-control" value="{{ old('end_time', optional($call->end_time ?? null)->format('Y-m-d\TH:i')) }}">
                         </div>
                     </div>
 
                     <div class="col-lg-6 log-group" style="display:none;">
                         <div class="form-group">
                             <label for="duration">Call Duration</label>
-                            <input type="text" name="duration" id="duration" class="form-control" value="{{ old('duration') }}" placeholder="e.g. 15 min">
+                            <input type="text" name="duration" id="duration" class="form-control" value="{{ old('duration', $call->duration ?? '') }}" placeholder="e.g. 15 min">
                         </div>
                     </div>
 
                     <div class="col-lg-6 log-group" style="display:none;">
                         <div class="form-group">
                             <label for="subject">Subject</label>
-                            <input type="text" name="subject" id="subject" class="form-control" value="{{ old('subject') }}">
+                            <input type="text" name="subject" id="subject" class="form-control" value="{{ old('subject', $call->subject ?? $call->call_purpose ?? '') }}">
                         </div>
                     </div>
                 </div>
@@ -148,7 +159,7 @@
                 <div class="call-form-actions mt-4">
                     <a href="{{ route('admin.calls.index') }}" class="btn btn-light border">Cancel</a>
                     <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save mr-1"></i> Save Call
+                        <i class="fas fa-save mr-1"></i> {{ isset($call) ? 'Update Call' : 'Save Call' }}
                     </button>
                 </div>
             </form>

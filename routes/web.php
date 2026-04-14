@@ -59,6 +59,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/calls', [CallController::class, 'index'])->name('calls.index');
     Route::get('/calls/create', [CallController::class, 'create'])->name('calls.create');
     Route::post('/calls', [CallController::class, 'store'])->name('calls.store');
+    Route::get('/calls/{source}/{id}/edit', [CallController::class, 'edit'])->name('calls.edit');
+    Route::put('/calls/{source}/{id}', [CallController::class, 'update'])->name('calls.update');
+    Route::delete('/calls/{source}/{id}', [CallController::class, 'destroy'])->name('calls.destroy');
     Route::get('/meetings', [MeetingController::class, 'index'])->name('meetings.index');
     Route::get('/meetings/create', [MeetingController::class, 'create'])->name('meetings.create');
     Route::post('/meetings', [MeetingController::class, 'store'])->name('meetings.store');

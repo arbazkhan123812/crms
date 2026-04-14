@@ -10,11 +10,13 @@
                 </h3>
                 <p class="text-muted mb-0">Manage all CRM meetings in one place and keep hosts aligned across the system.</p>
             </div>
-            <div class="col-lg-4 col-md-5 text-md-right mt-3 mt-md-0">
-                <a href="{{ route('admin.meetings.create') }}" class="btn btn-primary">
-                    <i class="fas fa-plus-circle mr-1"></i> Create Meeting
-                </a>
-            </div>
+            @can('meetings_create')
+                <div class="col-lg-4 col-md-5 text-md-right mt-3 mt-md-0">
+                    <a href="{{ route('admin.meetings.create') }}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle mr-1"></i> Create Meeting
+                    </a>
+                </div>
+            @endcan
         </div>
     </div>
 
@@ -62,16 +64,20 @@
                                 <td><span class="badge badge-primary">{{ ucfirst($meeting->status) }}</span></td>
                                 <td class="text-right">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="{{ route('admin.meetings.edit', $meeting) }}" class="btn btn-light">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <form method="POST" action="{{ route('admin.meetings.destroy', $meeting) }}" onsubmit="return confirm('Delete this meeting?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-light text-danger">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </button>
-                                        </form>
+                                        @can('meetings_edit')
+                                            <a href="{{ route('admin.meetings.edit', $meeting) }}" class="btn btn-light">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        @endcan
+                                        @can('meetings_delete')
+                                            <form method="POST" action="{{ route('admin.meetings.destroy', $meeting) }}" onsubmit="return confirm('Delete this meeting?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-light text-danger">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        @endcan
                                     </div>
                                 </td>
                             </tr>

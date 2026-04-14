@@ -122,24 +122,28 @@
                                 <span>Tasks</span>
                             </a>
                         </li>
-                        <li>
-                            <a href="{{ route('admin.calls.index') }}"
-                                class="{{ request()->is('admin/calls*') ? 'active' : '' }}">
-                                <span class="nav-link-icon">
-                                    <i class="fas fa-phone-alt"></i>
-                                </span>
-                                <span>Calls</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{{ route('admin.meetings.index') }}"
-                                class="{{ request()->is('admin/meetings*') ? 'active' : '' }}">
-                                <span class="nav-link-icon">
-                                    <i class="fas fa-calendar-alt"></i>
-                                </span>
-                                <span>Meetings</span>
-                            </a>
-                        </li>
+                        @can('calls_view')
+                            <li>
+                                <a href="{{ route('admin.calls.index') }}"
+                                    class="{{ request()->is('admin/calls*') ? 'active' : '' }}">
+                                    <span class="nav-link-icon">
+                                        <i class="fas fa-phone-alt"></i>
+                                    </span>
+                                    <span>Calls</span>
+                                </a>
+                            </li>
+                        @endcan
+                        @can('meetings_view')
+                            <li>
+                                <a href="{{ route('admin.meetings.index') }}"
+                                    class="{{ request()->is('admin/meetings*') ? 'active' : '' }}">
+                                    <span class="nav-link-icon">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </span>
+                                    <span>Meetings</span>
+                                </a>
+                            </li>
+                        @endcan
 
 
                      
