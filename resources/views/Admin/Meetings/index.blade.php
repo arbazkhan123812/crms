@@ -27,7 +27,7 @@
     <div class="card meeting-table-card">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0" id="myTable">
                     <thead>
                         <tr>
                             <th>Title</th>
