@@ -170,7 +170,8 @@ class LeadController extends Controller
                 $data['created_by'] = Auth::user()->id;
                 $lead = Lead::create($data);
                 
-                $this->notifyAssignedLeadOwner($lead);
+                            $this->notifyAssignedActivitiesForLead($lead, 'lead');
+
                 return response()->json(['success' => true, 'message' => 'Lead created successfully!']);
             }
         } catch (\Exception $e) {
@@ -399,6 +400,7 @@ class LeadController extends Controller
                 $request->assigned_to,
                 $request->due_date
             );
+            
 
             $lead->addActivity(
                 'task',
@@ -407,6 +409,8 @@ class LeadController extends Controller
                 $request->due_date,
                 $request->assigned_to
             );
+            $this->notifyAssignedActivitiesForLead($task , 'task');
+
             return response()->json([
                 'success' => true,
                 'message' => 'Task created successfully!',
@@ -724,14 +728,19 @@ class LeadController extends Controller
                 $request->call_owner
             );
 
+            
+            
+            
             $lead->addActivity(
                 'call',
                 'Call logged: ' . ($request->call_purpose ?? 'Call'),
                 'Type: ' . $request->call_type . "\nStatus: " . $request->status . "\nDuration: " . ($request->duration ?? 'N/A') . "\nNotes: " . ($request->notes ?? ''),
                 null,
                 auth()->id()
-            );
+                );
 
+            $this->notifyAssignedActivitiesForLead($call, 'call');
+                
             // Update lead's last_contacted_at
             $lead->last_contacted_at = now();
             $lead->save();
@@ -900,6 +909,8 @@ class LeadController extends Controller
             // Update lead's last_contacted_at
             $lead->last_contacted_at = now();
             $lead->save();
+                        $this->notifyAssignedActivitiesForLead($call, 'call');
+
 
             return response()->json([
                 'success' => true,
@@ -992,6 +1003,7 @@ class LeadController extends Controller
                     $lead->save();
                 }
             }
+
 
             return response()->json([
                 'success' => true,
@@ -1228,6 +1240,8 @@ class LeadController extends Controller
                 null,
                 auth()->id()
             );
+
+            $this->notifyAssignedActivitiesForLead($meeting, 'meeting');
 
             return response()->json([
                 'success' => true,
@@ -1473,6 +1487,7 @@ public function processConversion(Request $request, $id)
     }
 }
 
+    
     public function notifyAssignedLeadOwner(Lead $lead, ?int $previousOwnerId = null): void
     {
         if (!$lead->lead_owner || $lead->lead_owner === Auth::user()->id || $lead->lead_owner === $previousOwnerId) {
@@ -1493,5 +1508,120 @@ public function processConversion(Request $request, $id)
             route('admin.lead.show', $lead->id),
             Auth::id()
         ));
+    }
+    public function notifyAssignedTaskOwner($lead_task, ?int $previousOwnerId = null): void
+    {
+        if (!$lead_task || $lead_task->assigned_to === Auth::user()->id) {
+            return;
+        }
+
+        $assignedUser = User::find($lead_task->assigned_to);
+
+        if (!$assignedUser) {
+            return;
+        }
+
+        $assignedUser->notify(new RecordAssignedNotification(
+            'Task',
+            $lead_task->id,
+            'Task Assigned',
+            'A new Task has been assigned to you ' . (''),
+            route('admin.lead.show', $lead_task->lead_id),
+            Auth::id()
+        ));
+    }
+    public function notifyAssignedLeadCallOwner($call_assign, ?int $previousOwnerId = null): void
+    {
+        if (!$call_assign || $call_assign->assigned_to === Auth::user()->id) {
+            return;
+        }
+
+        $assignedUser = User::find($call_assign->assigned_to);
+
+        if (!$assignedUser) {
+            return;
+        }
+
+        $assignedUser->notify(new RecordAssignedNotification(
+            'Call',
+            $call_assign->id,
+            'Call Assigned',
+            'A new Call has been assigned to you for lead ' . (''),
+            route('admin.lead.show', $call_assign->lead_id),
+            Auth::id()
+        ));
+    }
+
+    public function notifyAssignedActivitiesForLead($hh, $type): void
+    {
+        switch ($type) {
+            case "task" :
+
+            $assignedUser = User::find($hh->assigned_to);
+    
+        if (!$assignedUser) {
+            return;
+        }
+
+        $assignedUser->notify(new RecordAssignedNotification(
+            'Task',
+            $hh->id,
+            'Task Assigned',
+            'A new Task has been assigned to you for lead ' . (''),
+            route('admin.lead.show', $hh->lead_id),
+            Auth::id()
+        ));
+        break ;
+        
+        case 'call':
+            
+            $assignedUser = User::find($hh->assigned_to);
+    
+        if (!$assignedUser) {
+            return;
+        }
+
+        $assignedUser->notify(new RecordAssignedNotification(
+            'Call',
+            $hh->id,
+            'Call Assigned',
+            'A new Call has been assigned to you for lead ' . (''),
+            route('admin.lead.show', $hh->lead_id),
+            Auth::id()
+        ));
+        break;
+
+        case 'meeting':
+
+             $assignedUser = User::find($hh->assigned_to);
+    
+        if (!$assignedUser) {
+            return;
+        }
+            $assignedUser->notify(new RecordAssignedNotification(
+            'Meeting',
+            $hh->id,
+            'Meeting Assigned',
+            'A new Meeting has been assigned to you ' . (''),
+            route('admin.lead.show', $hh->lead_id),
+            Auth::id()
+        ));
+        case 'lead':
+
+             $assignedUser = User::find($hh->lead_owner);
+    
+        if (!$assignedUser) {
+            return;
+        }
+            $assignedUser->notify(new RecordAssignedNotification(
+            'Lead',
+            $hh->id,
+            'Lead Assigned',
+            'A new Lead has been assigned to you ' . (''),
+            route('admin.lead.show', $hh->id),
+            Auth::id()
+        ));
+        break;
+        }        
     }
 }

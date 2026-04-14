@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DealController;
 use App\Http\Controllers\Admin\EmailController;
 use App\Http\Controllers\Admin\EntityActivityController;
 use App\Http\Controllers\Admin\LeadController;
+use App\Http\Controllers\Admin\MeetingController;
 use App\Http\Controllers\Admin\NotificationController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
@@ -58,6 +59,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/calls', [CallController::class, 'index'])->name('calls.index');
     Route::get('/calls/create', [CallController::class, 'create'])->name('calls.create');
     Route::post('/calls', [CallController::class, 'store'])->name('calls.store');
+    Route::get('/meetings', [MeetingController::class, 'index'])->name('meetings.index');
+    Route::get('/meetings/create', [MeetingController::class, 'create'])->name('meetings.create');
+    Route::post('/meetings', [MeetingController::class, 'store'])->name('meetings.store');
+    Route::get('/meetings/{meeting}/edit', [MeetingController::class, 'edit'])->name('meetings.edit');
+    Route::put('/meetings/{meeting}', [MeetingController::class, 'update'])->name('meetings.update');
+    Route::delete('/meetings/{meeting}', [MeetingController::class, 'destroy'])->name('meetings.destroy');
 
     Route::get('/accounts', [AccountController::class, 'index'])->name('accounts.index');
     Route::get('/accounts/{id}', [AccountController::class, 'show'])->name('account.show');

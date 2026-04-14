@@ -14,9 +14,12 @@ class CrmMeeting extends Model
         'title',
         'description',
         'meeting_type',
+        'location_type',
         'location',
         'meeting_link',
         'meeting_date',
+        'starts_at',
+        'ends_at',
         'duration',
         'status',
         'notes',
@@ -26,6 +29,8 @@ class CrmMeeting extends Model
 
     protected $casts = [
         'meeting_date' => 'datetime',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
     ];
 
     public function assignedTo()

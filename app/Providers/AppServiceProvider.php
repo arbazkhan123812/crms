@@ -32,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('_global.Admin.Header', function ($view) {
             $user = Auth::user();
 
+            
             if (!$user) {
                 $view->with([
                     'headerNotifications' => collect(),
