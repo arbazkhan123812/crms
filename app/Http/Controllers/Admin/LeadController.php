@@ -7,7 +7,6 @@ use App\Mail\LeadNotification;
 use App\Models\EmailTemplate;
 use App\Models\Lead;
 use App\Models\LeadCall;
-use App\Models\LeadEmail;
 use App\Models\LeadMeeting;
 use App\Models\LeadNote;
 use App\Models\LeadTask;
@@ -287,7 +286,6 @@ class LeadController extends Controller
         }
     }
 
-    // Add Note Method
     public function addNote(Request $request)
     {
         try {
@@ -1488,69 +1486,6 @@ public function processConversion(Request $request, $id)
 }
 
     
-    public function notifyAssignedLeadOwner(Lead $lead, ?int $previousOwnerId = null): void
-    {
-        if (!$lead->lead_owner || $lead->lead_owner === Auth::user()->id || $lead->lead_owner === $previousOwnerId) {
-            return;
-        }
-
-        $assignedUser = User::find($lead->lead_owner);
-
-        if (!$assignedUser) {
-            return;
-        }
-
-        $assignedUser->notify(new RecordAssignedNotification(
-            'Lead',
-            $lead->id,
-            'Lead Assigned',
-            'A new Lead has been assigned to you: ' . ($lead->full_name ?: 'Lead #' . $lead->id),
-            route('admin.lead.show', $lead->id),
-            Auth::id()
-        ));
-    }
-    public function notifyAssignedTaskOwner($lead_task, ?int $previousOwnerId = null): void
-    {
-        if (!$lead_task || $lead_task->assigned_to === Auth::user()->id) {
-            return;
-        }
-
-        $assignedUser = User::find($lead_task->assigned_to);
-
-        if (!$assignedUser) {
-            return;
-        }
-
-        $assignedUser->notify(new RecordAssignedNotification(
-            'Task',
-            $lead_task->id,
-            'Task Assigned',
-            'A new Task has been assigned to you ' . (''),
-            route('admin.lead.show', $lead_task->lead_id),
-            Auth::id()
-        ));
-    }
-    public function notifyAssignedLeadCallOwner($call_assign, ?int $previousOwnerId = null): void
-    {
-        if (!$call_assign || $call_assign->assigned_to === Auth::user()->id) {
-            return;
-        }
-
-        $assignedUser = User::find($call_assign->assigned_to);
-
-        if (!$assignedUser) {
-            return;
-        }
-
-        $assignedUser->notify(new RecordAssignedNotification(
-            'Call',
-            $call_assign->id,
-            'Call Assigned',
-            'A new Call has been assigned to you for lead ' . (''),
-            route('admin.lead.show', $call_assign->lead_id),
-            Auth::id()
-        ));
-    }
 
     public function notifyAssignedActivitiesForLead($hh, $type): void
     {
